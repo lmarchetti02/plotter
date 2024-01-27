@@ -10,16 +10,18 @@ version = "0.1.0"
 requires-python = ">=3.8"
 readme = "README.MD"
 license = { text = "MIT" }
-dependencies = ["matplotlib", "logging"]
+dependencies = ["matplotlib"]
 
 [tool.setuptools.packages.find]
-where = ["utils"]
+where = ["src"]
+
+[tool.setuptools.package-data]
+plotter = ["utils/*"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
-
 
 [project.urls]
 Repository = "https://github.com/lmarchetti02/plotter"
