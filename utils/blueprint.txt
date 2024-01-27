@@ -1,0 +1,9 @@
+text = g.Text("text/text.txt")
+
+canvas = g.Canvas(text, save="test")
+
+g.ScatterPlot().draw(canvas, text, x, y, y_err)
+
+g.Plot().draw(canvas, text, x, lambda x: x, 5)
+
+canvas.mainloop(show=True)

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+authors = [{ name = "Luca Marchetti" }]
+name = "plotter"
+description = "A small Python program for plotting beautiful graphs."
+version = "0.1.0"
+requires-python = ">=3.8"
+readme = "README.MD"
+license = { text = "MIT" }
+dependencies = ["matplotlib", "logging"]
+
+[tool.setuptools.packages.find]
+where = ["utils"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+
+[project.urls]
+Repository = "https://github.com/lmarchetti02/plotter"
