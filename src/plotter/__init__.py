@@ -3,14 +3,17 @@ import importlib.metadata as im
 
 # create necessary directories
 parent_dir = "./plotter"
-os.mkdir(parent_dir)
+try:
+    os.mkdir(parent_dir)
+except OSError as _:
+    print(f"{parent_dir} directory already exists.")
 
 dirs = ("/img", "/log", "/text", "/info")
 for d in dirs:
     try:
         os.mkdir((destination := parent_dir + d))
     except OSError as _:
-        print(f"The {destination} directory already exists.")
+        print(f"{destination} directory already exists.")
 
 # copy data-files to info/
 package_name = "plotter"
