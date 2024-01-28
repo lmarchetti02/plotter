@@ -10,7 +10,7 @@ version = "0.1.0"
 requires-python = ">=3.8"
 readme = "README.MD"
 license = { text = "MIT" }
-dependencies = ["matplotlib"]
+dependencies = ["matplotlib", "scipy", "numpy"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -22,6 +22,9 @@ plotter = ["utils/*"]
 minversion = "6.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
+
+[tool.black]
+line-length = 119
 
 [project.urls]
 Repository = "https://github.com/lmarchetti02/plotter"
