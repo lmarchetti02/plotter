@@ -1,4 +1,11 @@
 import numpy as np
+import logging.config
+import logging.handlers
+import json
+import pathlib
+import os
+
+logger = logging.getLogger(__name__)
 
 
 def denser(data: np.ndarray, ratio: int) -> np.ndarray:
@@ -29,10 +36,15 @@ def denser(data: np.ndarray, ratio: int) -> np.ndarray:
     2.25882353 2.36470588 2.47058824 2.57647059 2.68235294 2.78823529
     2.89411765 3.        ]
     """
+    logger.info("Called 'denser()' function")
+    logger.debug(f"Initial array:\n{data}")
+
     # find minimum distance
     minimum_dist = np.min(np.abs(data - np.append(data[1:], 0))[:-1])
+    logger.debug(f"Minimum distance: {minimum_dist}")
 
     if minimum_dist == 0:
+        logger.warning("There are at least two repeated consecutive elements")
         return data
 
     # make denser
@@ -49,4 +61,19 @@ def denser(data: np.ndarray, ratio: int) -> np.ndarray:
 
         increment += n_elements - 1
 
+    logger.debug(f"Final array:\n{result}")
+
     return result
+
+
+def setup_logging() -> None:
+    """
+    This functions sets up the loggers that will
+    be used throughout the library.
+    """
+    config_file = pathlib.Path(os.getcwd() + "/plotter/utils/log_config.json")
+
+    with open(config_file) as f_in:
+        config = json.load(f_in)
+
+    logging.config.dictConfig(config)

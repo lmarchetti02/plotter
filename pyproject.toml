@@ -16,7 +16,7 @@ dependencies = ["matplotlib", "scipy", "numpy"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-plotter = ["utils/*"]
+plotter = ["data/*"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
