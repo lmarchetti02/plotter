@@ -1,0 +1,7 @@
+text.usetex: True
+
+font.size: 10
+font.family: STIXGeneral
+
+xtick.minor.size: 0
+xtick.minor.width: 0
