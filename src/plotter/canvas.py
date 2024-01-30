@@ -13,40 +13,36 @@ logger = logging.getLogger(__name__)
 
 class Canvas:
     """
-    Inizializza un piano cartesiano su cui è possibile disegnare dataset e
-    funzioni.
+    Class used for creating a canvas (xy-plane) where to plot
+    datasets, graphs,...
 
-    Parametri
+    Parameters
     ---
     text: str
-        Nome del file .txt in cui è memorizzato il testo da mostrare
-        nel grafico.
+        The name of the json file in which the text to be added
+        to the plot is stored.
     fs: tuple
-        Tupla contenente le dimensioni dell'immagine. Se non viene
-        specificata, `fs=(12,8)`.
+        The tuple containing the dimensions of the canvas.
+        Set to `(12,8)` by default.
     dpi: int
-        'Dots per inches' dell'immagine (vedi documentazione matplotlib).
-        Se non viene specificata, `dpi=150`.
+        The number of 'dots per inches' of the image (see matplotlib
+        documentation). Set to `150` by default.
 
-    Parametri opzionali
+    Optional Parameters
     ---
-    xlim: list
-        Lista con limite sx e dx dell'asse delle ascisse.
-    ylim: list
-        Lista con limite inf e sup dell'asse delle ordinate.
-    yscale: str
-        Scala dell'asse delle ordinate. Può essere: 'linear' (default),
-        'log' o 'symlog'.
+    xlim: tuple
+        The tuple containing the limits of the abscissa axis.
+    ylim: tuple
+        The tuple containing the limits of the ordinate axis.
     xscale: str
-        Scala dell'asse delle ascisse. Può essere: 'linear' (default),
+        The abscissa axis scale. It can be: 'linear' (default),
+        'log' o 'symlog'.
+    yscale: str
+        The ordinate axis scale. It can be: 'linear' (default),
         'log' o 'symlog'.
     save: str
-        Se passata come parametro, l'immagine creata viene salvata nella
-        cartella ~/img con il nome indicato da tale parametro.
-    log_file: str
-        Specifica dove si vuole salvare il log della libreria.
-
-
+        The name of the file in which to store the plot. The
+        plots are stored in 'plotter/img/'.
     """
 
     def __init__(
@@ -56,54 +52,52 @@ class Canvas:
         dpi: Optional[int] = 150,
         **kwargs,
     ) -> None:
+        # logging
         setup_logging()
 
-        logger.info("Creato oggetto Canvas")
+        logger.info("Created 'Canvas' object")
 
         self.counter_scatter_plots = 0
         self.counter_graphs = 0
 
-        # def proprietà grafico
+        # plot properties
         self.fig, self.ax = plt.subplots(figsize=(fs[0], fs[1]), dpi=dpi)
         self.kwargs = kwargs
 
-        # testo
+        # plot text
         self.text = Text(text_file)
 
-        # griglia
+        # grid
         self.ax.grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
 
-        # limiti assi
+        # axis limits
         if "xlim" in self.kwargs.keys():
             self.ax.set_xlim(self.kwargs["xlim"][0], self.kwargs["xlim"][1])
 
         if "ylim" in self.kwargs.keys():
             self.ax.set_ylim(self.kwargs["ylim"][0], self.kwargs["ylim"][1])
 
-        # scala assi
+        # axis scales
         if "yscale" in self.kwargs.keys():
             self.ax.set_yscale(self.kwargs["yscale"])
 
         if "xscale" in self.kwargs.keys():
             self.ax.set_xscale(self.kwargs["xscale"])
 
-        try:
-            # nome assi
-            self.ax.set_xlabel(self.text.get_ascisse())
-            self.ax.set_ylabel(self.text.get_ordinate())
+        # axis labels
+        self.ax.set_xlabel(self.text.abscissa)
+        self.ax.set_ylabel(self.text.ordinate)
 
-            # titolo
-            plt.title(self.text.get_titolo(), y=1)
+        # title
+        plt.title(self.text.title, y=1)
 
-            logger.debug("Testo del canvas inserito.")
-        except Exception:
-            logger.exception("Errore nell'ottenimento del testo relativo al canvas.")
-
-    def __legenda(self) -> None:
+    def __legend(self) -> None:
         """
-        Quando chiamata, questa funzione mostra la legenda nel grafico.
-        Fa parte del mainloop dell'oggetto `Canvas`.
+        This function generates the plot legend.
         """
+
+        logger.info("Called 'Canvas.__legend()'")
+
         try:
             self.ax.legend(loc=0)
             plt.legend(labelspacing=1)
@@ -114,34 +108,44 @@ class Canvas:
 
     def __save(self) -> None:
         """
-        Se l'utente lo vuole, questa funzione salva l'immagine
-        nella cartella 'img'.
-
-        Fa parte del mainloop dell'oggetto `Canvas`.
+        If specified by the user, this function saves
+        the plot that has been generated to a file.
         """
+
+        logger.info("Called 'Canvas.__save()'")
 
         if "save" in self.kwargs.keys():
-            self.fig.savefig(f"img/{self.kwargs['save']}")
-            logger.debug("File salvato.")
+            file_path = pathlib.Path("./plotter/img").joinpath(self.kwargs["save"])
+            self.fig.savefig(file_path)
+            logger.debug(f"Plot saved to {file_path}")
         else:
-            logger.warning("File non salvato.")
+            logger.warning("Plot not saved to any file")
 
-    def mainloop(self, show: Optional[bool] = True) -> None:
+    def end(self, show: Optional[bool] = True) -> None:
         """
-        Funzione necessaria per renderizzare il grafico voluto. Ciò
-        che viene dopo questa funzione non modifica in alcun modo il
-        grafico.
+        This functions finished the plots and renders it.
+
+        It is meant to be called at the end of everything, as
+        anything after it will not affect the plot.
+
+        Parameters
+        ---
+        show: bool
+            Whether to actually show the plot. True by default.
         """
 
-        self.__legenda()
+        logger.info("Called 'Canvas.end()'")
+
+        self.__legend()
         self.__save()
-        logger.info("Fine disegno")
+        logger.info("Plot finished")
 
-        # mostra il grafico s
-        if show:
-            plt.show()
-        elif not show:
+        # show plot
+        if not show:
             plt.close()
+            return
+
+        plt.show()
 
 
 if __name__ == "__main__":

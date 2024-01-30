@@ -20,7 +20,7 @@ class Text:
         """
         logger.info("'Text' object created")
 
-        self.title = "p"
+        self.title = ""
         self.abscissa = ""
         self.ordinate = ""
         self.datasets = []

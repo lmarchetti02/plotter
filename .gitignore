@@ -161,3 +161,4 @@ cython_debug/
 
 /tests
 build_install.sh
+/.vscode
