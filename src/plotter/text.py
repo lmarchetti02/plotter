@@ -36,8 +36,20 @@ class Text:
             logger.error(f"Impossible to open '{file_path}'")
 
     def __get_data(self) -> None:
-        self.title = self.data_dict["title"]
-        self.abscissa = self.data_dict["abscissa"]
-        self.ordinate = self.data_dict["ordinate"]
+        """
+        This function pulls the data out of the
+        json file and stores it into the data members
+        of the class.
+        """
+
+        self.title = str(self.data_dict["title"])
+        self.abscissa = str(self.data_dict["abscissa"])
+        self.ordinate = str(self.data_dict["ordinate"])
+
         self.datasets = self.data_dict["datasets"]
+        for i in self.datasets:
+            i = str(i)
+
         self.functions = self.data_dict["functions"]
+        for i in self.functions:
+            i = str(i)

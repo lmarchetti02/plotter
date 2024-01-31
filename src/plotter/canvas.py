@@ -1,5 +1,4 @@
-from .functions import denser, setup_logging
-import numpy as np
+from .functions import setup_logging
 import logging
 import matplotlib.pyplot as plt
 import pathlib
@@ -62,7 +61,7 @@ class Canvas:
 
         # plot properties
         self.fig, self.ax = plt.subplots(figsize=(fs[0], fs[1]), dpi=dpi)
-        self.kwargs = kwargs
+        self.__kwargs = kwargs
 
         # plot text
         self.text = Text(text_file)
@@ -71,18 +70,18 @@ class Canvas:
         self.ax.grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
 
         # axis limits
-        if "xlim" in self.kwargs.keys():
-            self.ax.set_xlim(self.kwargs["xlim"][0], self.kwargs["xlim"][1])
+        if "xlim" in self.__kwargs.keys():
+            self.ax.set_xlim(self.__kwargs["xlim"][0], self.__kwargs["xlim"][1])
 
-        if "ylim" in self.kwargs.keys():
-            self.ax.set_ylim(self.kwargs["ylim"][0], self.kwargs["ylim"][1])
+        if "ylim" in self.__kwargs.keys():
+            self.ax.set_ylim(self.__kwargs["ylim"][0], self.__kwargs["ylim"][1])
 
         # axis scales
-        if "yscale" in self.kwargs.keys():
-            self.ax.set_yscale(self.kwargs["yscale"])
+        if "yscale" in self.__kwargs.keys():
+            self.ax.set_yscale(self.__kwargs["yscale"])
 
-        if "xscale" in self.kwargs.keys():
-            self.ax.set_xscale(self.kwargs["xscale"])
+        if "xscale" in self.__kwargs.keys():
+            self.ax.set_xscale(self.__kwargs["xscale"])
 
         # axis labels
         self.ax.set_xlabel(self.text.abscissa)
@@ -102,9 +101,10 @@ class Canvas:
             self.ax.legend(loc=0)
             plt.legend(labelspacing=1)
 
-            logger.debug("Mostrata la legenda.")
+            logger.debug("Legend added.")
+        # TODO: change thus exception
         except Exception:
-            logger.exception("Errore nel mostrare la legenda.")
+            self.logger.exception("Impossible to show the legend.")
 
     def __save(self) -> None:
         """
@@ -114,8 +114,8 @@ class Canvas:
 
         logger.info("Called 'Canvas.__save()'")
 
-        if "save" in self.kwargs.keys():
-            file_path = pathlib.Path("./plotter/img").joinpath(self.kwargs["save"])
+        if "save" in self.__kwargs.keys():
+            file_path = pathlib.Path("./plotter/img").joinpath(self.__kwargs["save"])
             self.fig.savefig(file_path)
             logger.debug(f"Plot saved to {file_path}")
         else:

@@ -100,3 +100,7 @@ class ScatterPlot:
             label=canvas.text.datasets[canvas.counter_scatter_plots - 1],
         )
         logger.debug(f"ScatterPlot {canvas.counter_scatter_plots-1} drawn")
+
+
+if __name__ == "__main__":
+    pass
