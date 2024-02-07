@@ -2,6 +2,10 @@ import os
 import importlib.metadata as im
 import pathlib
 
+from .canvas import Canvas
+from .plot import Plot
+from .scatter import ScatterPlot
+
 # create necessary directories
 parent_dir = "./plotter"
 try:
