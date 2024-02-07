@@ -67,6 +67,9 @@ class ScatterPlot:
         canvas: Canvas
             The canvas object to which the scatter plot
             is to be attached.
+
+        Optional Parameters
+        ---
         color: str
             The matplotlib color of the scatter plot. It is
             set to `"firebrick"` by default.
