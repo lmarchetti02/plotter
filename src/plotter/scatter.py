@@ -2,7 +2,6 @@ import logging
 from typing import Optional
 from .canvas import Canvas
 import numpy as np
-import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +17,9 @@ class ScatterPlot:
         The array containing the x values.
     y: numpy.ndarray
         The array containing the y values.
+
+    Optional Parameters
+    ---
     xerr: numpy.ndarray
         The array containing the errors in
         the x values.
@@ -83,10 +85,6 @@ class ScatterPlot:
 
         logger.info("Called 'ScatterPlot.draw()'")
 
-        self.__color = color
-        self.__marker = marker
-        self.__ms = ms
-
         canvas.counter_scatter_plots += 1
 
         canvas.ax.errorbar(
@@ -94,9 +92,9 @@ class ScatterPlot:
             self.__y,
             yerr=self.__yerr,
             xerr=self.__xerr,
-            marker=self.__marker,
-            color=self.__color,
-            ms=self.__ms,  # marker size
+            marker=marker,
+            color=color,
+            ms=ms,
             zorder=2,  # layer
             ls="none",  # line size (none for disconnected dots)
             capsize=2,  # error bars ticks

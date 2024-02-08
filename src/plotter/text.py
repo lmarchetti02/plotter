@@ -25,6 +25,7 @@ class Text:
         self.ordinate = ""
         self.datasets = []
         self.functions = []
+        self.histograms = []
 
         file_path = pathlib.Path("./plotter/text").joinpath(text_file)
         try:
@@ -52,4 +53,8 @@ class Text:
 
         self.functions = self.data_dict["functions"]
         for i in self.functions:
+            i = str(i)
+
+        self.histograms = self.data_dict["histograms"]
+        for i in self.histograms:
             i = str(i)

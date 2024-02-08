@@ -60,6 +60,7 @@ class Canvas:
 
         self.counter_scatter_plots = 0
         self.counter_plots = 0
+        self.counter_histograms = 0
 
         # plot properties
         self.fig, self.ax = plt.subplots(figsize=(fs[0], fs[1]), dpi=dpi)
