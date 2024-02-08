@@ -6,6 +6,8 @@ from typing import Optional
 from .text import Text
 
 plt.style.use(pathlib.Path("./plotter/utils/style.mplstyle"))
+logging.getLogger("matplotlib").setLevel(logging.CRITICAL)  # remove matplotlib logger
+logging.getLogger("PIL").setLevel(logging.CRITICAL)  # remove PIL logger
 
 logger = logging.getLogger(__name__)
 
