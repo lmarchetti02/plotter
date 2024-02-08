@@ -92,6 +92,7 @@ canvas.end()
 
 ## Images
 
+![example](/src/plotter/data/info/example_1.png "Example")
 
 ## License
 
