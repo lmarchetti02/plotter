@@ -162,3 +162,4 @@ cython_debug/
 /tests
 build_install.sh
 /.vscode
+src/plotter/data/info/.DS_Store
