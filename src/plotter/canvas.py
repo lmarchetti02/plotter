@@ -95,7 +95,7 @@ class Canvas:
         self.ax.set_ylabel(self.text.ordinate)
 
         # title
-        plt.title(self.text.title, y=1)
+        self.ax.set_title(self.text.title, y=1)
 
     def __legend(self) -> None:
         """
