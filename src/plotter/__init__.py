@@ -40,4 +40,4 @@ for f in files_info:
 from .canvas import Canvas
 from .plot import Plot
 from .scatter import ScatterPlot
-from .histograms import Hist
+from .histograms import Hist, Hist2D

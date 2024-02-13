@@ -44,6 +44,8 @@ class Canvas:
     save: str
         The name of the file in which to store the plot. The
         plots are stored in 'plotter/img/'.
+    nogrid: bool
+        `True` if the grid is to be removed, `False` otherwise.
     """
 
     def __init__(
@@ -61,7 +63,6 @@ class Canvas:
         self.counter_scatter_plots = 0
         self.counter_plots = 0
         self.counter_histograms = 0
-        self.counter_histograms2d = 0
 
         # plot properties
         self.fig, self.ax = plt.subplots(figsize=(fs[0], fs[1]), dpi=dpi)
@@ -71,7 +72,9 @@ class Canvas:
         self.text = Text(text_file)
 
         # grid
-        self.ax.grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
+        self.no_grid = kwargs.get("nogrid", False)
+        if not self.no_grid:
+            self.ax.grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
 
         # axis limits
         if "xlim" in self.__kwargs.keys():
@@ -140,7 +143,10 @@ class Canvas:
 
         logger.info("Called 'Canvas.end()'")
 
-        self.__legend()
+        # if only Hist2D, no legend
+        if self.counter_histograms != 0 or self.counter_plots != 0 or self.counter_scatter_plots != 0:
+            self.__legend()
+
         self.__save()
         logger.info("Plot finished")
 

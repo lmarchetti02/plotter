@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 from .canvas import Canvas
 import numpy as np
+import matplotlib.colors as colors
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,8 @@ class Hist:
     data: numpy.ndarray
         The array containing the data to plot.
     nbins: int
-        The number of bins of the histogram.
+        The number of bins of the histogram or
+        the array containing the edges of the bins.
         See matplotlib documentation. It is set to
         `"auto"` by default.
     density: bool
@@ -30,7 +32,7 @@ class Hist:
     def __init__(
         self,
         data: np.ndarray,
-        nbins: Optional[int | str] = "auto",
+        nbins: Optional[int | str | np.ndarray] = "auto",
         density: Optional[bool] = False,
         cumulative: Optional[bool] = False,
     ) -> None:
@@ -61,8 +63,6 @@ class Hist:
     def bin_vals(self, value):
         logger.info("Called 'Hist.bin_vals' setter")
 
-        # TODO: add checks
-
         self._bin_vals = value
 
     @property
@@ -83,14 +83,12 @@ class Hist:
     def bins(self, value):
         logger.info("Called 'Hist.bins' setter")
 
-        logger.debug("First call => modified 'bins'")
-
         self._bins = value
 
     def draw(
         self,
         canvas: Canvas,
-        range: Optional[tuple] = None,
+        range: Optional[tuple | list | np.ndarray] = None,
         color: Optional[str] = "cornflowerblue",
         alpha: Optional[float] = 1,
     ) -> None:
@@ -106,8 +104,8 @@ class Hist:
 
         Optional Parameters
         ---
-        range: tuple
-            The tuple with the left and right limits
+        range: array-like shape(1,2)
+            The array with the left and right limits
             of the bins. It is set to `None` by default.
         color: str
             The matplotlib color of the histogram.
@@ -141,31 +139,34 @@ class Hist2D:
 
     Parameters
     ---
-    data: numpy.ndarray
-        The array containing the data to plot.
+    x: numpy.ndarray
+        The array containing the x values to plot.
+    y: numpy.ndarray
+        The array containing the y values to plot.
     nbins: int
-        The number of bins of the histogram.
-        See matplotlib documentation. It is set to
-        `"auto"` by default.
+        Ether:
+        - an int corresponding to the number of bins
+            of both axis;
+        - a tuple or a list with two int, corresponding
+            to the number of bin per axis;
+        - a 2D array containing the edges of the bins.
     density: bool
         Whether to normalize the histogram. It is
         set to `False` by default.
-    cumulative: bool
-        Whether to plot the cumulative histogram
-        or not. It is set to `False` by default.
     """
 
     def __init__(
         self,
         x: np.ndarray,
         y: np.ndarray,
+        nbins: int | np.ndarray | tuple | list,
         density: Optional[bool] = False,
-        **kwargs,  # bins
     ) -> None:
         logger.info("Created 'Hist2D' object")
 
         self.__x = x
         self.__y = y
+        self.__nbins = nbins
         self.__density = density
 
         self.bin_vals = None
@@ -174,22 +175,70 @@ class Hist2D:
 
     @property
     def bin_vals(self):
+        """
+        The `bin_vals` getter/setter.
+
+        The data member `bin_vals` is an array containing the values
+        corresponding to each bin.
+
+        It is a array of n arrays of m elements, where 'n' is the number
+        of bin along x and 'm' the number of bins along y.
+        """
+        logger.info("Called 'Hist2D.bin_vals' getter")
+
         return self._bin_vals
+
+    @bin_vals.setter
+    def bin_vals(self, value):
+        logger.info("Called 'Hist2D.bin_vals' setter")
+
+        self._bin_vals = value
 
     @property
     def xbins(self):
+        """
+        The `xbins` getter/setter.
+
+        The data member `xbins` is an array containing the edges of
+        the bins along the x axis. Therefore, its size is equal to
+        the number of bins along x +1.
+        """
+        logger.info("Called 'Hist2D.xbins' getter")
+
         return self._xbins
+
+    @xbins.setter
+    def xbins(self, value):
+        logger.info("Called 'Hist2D.xbins' setter")
+
+        self._xbins = value
 
     @property
     def ybins(self):
+        """
+        The `ybins` getter/setter.
+
+        The data member `ybins` is an array containing the edges of
+        the bins along the y axis. Therefore, its size is equal to
+        the number of bins along y +1.
+        """
+        logger.info("Called 'Hist2D.ybins' getter")
+
         return self._ybins
+
+    @ybins.setter
+    def ybins(self, value):
+        logger.info("Called 'Hist2D.ybins' setter")
+
+        self._ybins = value
 
     def draw(
         self,
         canvas: Canvas,
-        range: Optional[tuple] = None,
-        color: Optional[str] = "cornflowerblue",
+        range: Optional[tuple | list | np.ndarray] = None,
+        colormap: Optional[str] = "plasma",
         alpha: Optional[float] = 1,
+        log: Optional[tuple[bool, float]] = (False, 0),
     ) -> None:
         """
         This function draws the histogram in the canvas
@@ -203,29 +252,43 @@ class Hist2D:
 
         Optional Parameters
         ---
-        range: tuple
+        range: array-like shape(2,2)
             The tuple with the left and right limits
-            of the bins. It is set to `None` by default.
-        color: str
-            The matplotlib color of the histogram.
+            of the bins (in x and y). It is set to `None` by default.
+        colormap: str
+            The matplotlib colormap of the histogram.
         alpha: float
             The transparency of the histogram.
+        log: tuple
+            The tuple with:
+            - a bool for indicating if the scale is to be
+              set to logarithmic;
+            - the range of linearity in case the desired scale
+              is of type 'symlog'.
         """
 
         logger.info("Called 'Hist.draw()'")
 
-        canvas.counter_histograms += 1
+        # get normalization
+        if log[0]:
+            if log[1]:
+                self.__normalization = colors.SymLogNorm(log[1])
+            else:
+                self.__normalization = colors.LogNorm()
+        else:
+            self.__normalization = colors.Normalize()
 
-        self.bin_vals, self.bins, _ = canvas.ax.hist(
-            self.__data,
+        self.bin_vals, self.xbins, self.ybins, self.__patches = canvas.ax.hist2d(
+            self.__x,
+            self.__y,
             bins=self.__nbins,
             range=range,
             density=self.__density,
-            cumulative=self.__cumulative,
-            histtype="stepfilled",
-            color=color,
+            cmap=colormap,
             alpha=alpha,
-            label=canvas.text.histograms[canvas.counter_histograms - 1],
+            norm=self.__normalization,
         )
+
+        canvas.fig.colorbar(self.__patches)
 
         logger.debug(f"Hist {canvas.counter_histograms-1} drawn")
