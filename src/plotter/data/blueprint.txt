@@ -1,9 +1,10 @@
-text = g.Text("text/text.txt")
+# canvas = p.Canvas("*.json", save="*")
 
-canvas = g.Canvas(text, save="test")
+# p.ScatterPlot(x, y, y_err, x_err).draw(canvas)
+# p.Plot(x, f, (0.01, 0.01)).draw(canvas)
 
-g.ScatterPlot().draw(canvas, text, x, y, y_err)
+# hist = p.Hist(data, density=True)
+# hist.draw(canvas)
+# p.Plot(hist.bins, fit).draw(canvas)
 
-g.Plot().draw(canvas, text, x, lambda x: x, 5)
-
-canvas.mainloop(show=True)
+# canvas.end(False)

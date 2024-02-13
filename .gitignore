@@ -163,3 +163,4 @@ cython_debug/
 build_install.sh
 /.vscode
 src/plotter/data/info/.DS_Store
+.DS_Store
