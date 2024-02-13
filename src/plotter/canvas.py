@@ -51,6 +51,7 @@ class Canvas:
     def __init__(
         self,
         text_file: str,
+        rows_cols: Optional[tuple] = (1, 1),
         fs: Optional[tuple[int, int]] = (12, 8),
         dpi: Optional[int] = 150,
         **kwargs,
@@ -60,12 +61,15 @@ class Canvas:
 
         logger.info("Created 'Canvas' object")
 
-        self.counter_scatter_plots = 0
-        self.counter_plots = 0
-        self.counter_histograms = 0
+        self.__rows = rows_cols[0]
+        self.__cols = rows_cols[1]
+
+        self.counter_scatter_plots = [0 for _ in range(self.__rows + self.__cols)]
+        self.counter_plots = [0 for _ in range(self.__rows + self.__cols)]
+        self.counter_histograms = [0 for _ in range(self.__rows + self.__cols)]
 
         # plot properties
-        self.fig, self.ax = plt.subplots(figsize=(fs[0], fs[1]), dpi=dpi)
+        self.fig, self.ax = plt.subplots(nrows=rows_cols[0], ncols=rows_cols[1], figsize=(fs[0], fs[1]), dpi=dpi)
         self.__kwargs = kwargs
 
         # plot text

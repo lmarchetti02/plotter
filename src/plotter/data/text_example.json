@@ -1,14 +1,30 @@
-{
-    "title": "",
-    "abscissa": "",
-    "ordinate": "",
-    "datasets": [
-        ""
-    ],
-    "functions": [
-        ""
-    ],
-    "histograms": [
-        ""
-    ]
-}
+[
+    {
+        "title": "",
+        "abscissa": "",
+        "ordinate": "",
+        "datasets": [
+            ""
+        ],
+        "functions": [
+            ""
+        ],
+        "histograms": [
+            ""
+        ]
+    },
+    {
+        "title": "",
+        "abscissa": "",
+        "ordinate": "",
+        "datasets": [
+            ""
+        ],
+        "functions": [
+            ""
+        ],
+        "histograms": [
+            ""
+        ]
+    }
+]
