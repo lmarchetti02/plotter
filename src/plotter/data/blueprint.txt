@@ -8,4 +8,7 @@ hist = p.Hist(data, density=True)
 hist.draw(canvas)
 p.Plot(hist.bins, fit).draw(canvas)
 
+hist2d = p.Hist2D(a, b, 100)
+hist2d.draw(canvas)
+
 canvas.end(False)

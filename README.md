@@ -81,6 +81,7 @@ def f(x):
 
 # create canvas
 canvas = p.Canvas("prova.json")
+canvas.setup()
 
 # add scatter plot and 1D graph to canvas
 p.ScatterPlot(x, y, y_err, x_err).draw(canvas)
@@ -92,7 +93,8 @@ canvas.end()
 
 ## Images
 
-![example](/src/plotter/data/info/example_1.png "Example")
+![example1](/src/plotter/data/info/example_1.png "Example 1")
+![example2](/src/plotter/data/info/example_2.png "Example 2")
 
 ## License
 
