@@ -9,29 +9,34 @@ class Text:
     """
     Class used for storing and accessing the
     text to be displayed in the canvas.
+
+    Parameters
+    ---
+    text_file: str
+        The name of the json file where the text belonging
+        to the canvases is stored.
+    n_plots: int
+        The number of subplots in the canvas.
     """
 
-    def __init__(self, text_file: str) -> None:
-        """
-        The class constructor.
+    def __init__(self, text_file: str, n_plots: int) -> None:
 
-        It opens the json file where the text to be shown
-        is stored and saves it into its data members.
-        """
         logger.info("'Text' object created")
 
-        self.title = ""
-        self.abscissa = ""
-        self.ordinate = ""
-        self.datasets = []
-        self.functions = []
-        self.histograms = []
+        self.__n_plots = n_plots
+
+        self.title = ["" for _ in range(self.__n_plots)]
+        self.abscissa = ["" for _ in range(self.__n_plots)]
+        self.ordinate = ["" for _ in range(self.__n_plots)]
+        self.datasets = [[] for _ in range(self.__n_plots)]
+        self.functions = [[] for _ in range(self.__n_plots)]
+        self.histograms = [[] for _ in range(self.__n_plots)]
 
         file_path = pathlib.Path("./plotter/text").joinpath(text_file)
         try:
             with open(file_path) as json_file:
                 logger.debug(f"Opened '{file_path}'")
-                self.data_dict = json.load(json_file)
+                self.__data_dict = json.load(json_file)
                 self.__get_data()
         except FileNotFoundError as _:
             logger.error(f"Impossible to open '{file_path}'")
@@ -43,18 +48,28 @@ class Text:
         of the class.
         """
 
-        self.title = str(self.data_dict["title"])
-        self.abscissa = str(self.data_dict["abscissa"])
-        self.ordinate = str(self.data_dict["ordinate"])
+        logger.info("Called 'Text.__get_data()'")
 
-        self.datasets = self.data_dict["datasets"]
-        for i in self.datasets:
-            i = str(i)
+        for i in range(self.__n_plots):
+            self.title[i] = str(self.__data_dict[i]["title"])
+            self.abscissa[i] = str(self.__data_dict[i]["abscissa"])
+            self.ordinate[i] = str(self.__data_dict[i]["ordinate"])
 
-        self.functions = self.data_dict["functions"]
-        for i in self.functions:
-            i = str(i)
+            self.datasets[i] = self.__data_dict[i]["datasets"]
+            for j in self.datasets:
+                j = str(j)
 
-        self.histograms = self.data_dict["histograms"]
-        for i in self.histograms:
-            i = str(i)
+            self.functions[i] = self.__data_dict[i]["functions"]
+            for j in self.functions:
+                j = str(j)
+
+            self.histograms[i] = self.__data_dict[i]["histograms"]
+            for j in self.histograms:
+                j = str(j)
+
+        logger.debug(f"Titles: {self.title}")
+        logger.debug(f"Abscissas: {self.abscissa}")
+        logger.debug(f"Ordinates: {self.ordinate}")
+        logger.debug(f"Datasets: {self.datasets}")
+        logger.debug(f"Functions: {self.functions}")
+        logger.debug(f"Histograms: {self.histograms}")

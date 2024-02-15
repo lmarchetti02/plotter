@@ -88,6 +88,7 @@ class Hist:
     def draw(
         self,
         canvas: Canvas,
+        plot_n: Optional[int] = 0,
         range: Optional[tuple | list | np.ndarray] = None,
         color: Optional[str] = "cornflowerblue",
         alpha: Optional[float] = 1,
@@ -104,6 +105,10 @@ class Hist:
 
         Optional Parameters
         ---
+        plot_n: int
+            The index of the subplot. It is set to 0 by
+            default, so the histogram is assigned to the
+            first canvas if otherwise not specified.
         range: array-like shape(1,2)
             The array with the left and right limits
             of the bins. It is set to `None` by default.
@@ -115,9 +120,7 @@ class Hist:
 
         logger.info("Called 'Hist.draw()'")
 
-        canvas.counter_histograms += 1
-
-        self.bin_vals, self.bins, _ = canvas.ax.hist(
+        self.bin_vals, self.bins, _ = canvas.ax[plot_n].hist(
             self.__data,
             bins=self.__nbins,
             range=range,
@@ -126,10 +129,11 @@ class Hist:
             histtype="stepfilled",
             color=color,
             alpha=alpha,
-            label=canvas.text.histograms[canvas.counter_histograms - 1],
+            label=canvas.text.histograms[plot_n][(n := canvas.counter_histograms[plot_n])],
         )
+        logger.debug(f"Hist {n} drawn")
 
-        logger.debug(f"Hist {canvas.counter_histograms-1} drawn")
+        canvas.counter_histograms[plot_n] += 1
 
 
 class Hist2D:
@@ -235,6 +239,7 @@ class Hist2D:
     def draw(
         self,
         canvas: Canvas,
+        plot_n: Optional[int] = 0,
         range: Optional[tuple | list | np.ndarray] = None,
         colormap: Optional[str] = "plasma",
         alpha: Optional[float] = 1,
@@ -252,6 +257,10 @@ class Hist2D:
 
         Optional Parameters
         ---
+        plot_n: int
+            The index of the subplot. It is set to 0 by
+            default, so the histogram is assigned to the
+            first canvas if otherwise not specified.
         range: array-like shape(2,2)
             The tuple with the left and right limits
             of the bins (in x and y). It is set to `None` by default.
@@ -278,7 +287,7 @@ class Hist2D:
         else:
             self.__normalization = colors.Normalize()
 
-        self.bin_vals, self.xbins, self.ybins, self.__patches = canvas.ax.hist2d(
+        self.bin_vals, self.xbins, self.ybins, self.__patches = canvas.ax[plot_n].hist2d(
             self.__x,
             self.__y,
             bins=self.__nbins,
@@ -288,7 +297,10 @@ class Hist2D:
             alpha=alpha,
             norm=self.__normalization,
         )
+        logger.debug(f"2D Hist drawn")
 
         canvas.fig.colorbar(self.__patches)
 
-        logger.debug(f"Hist {canvas.counter_histograms-1} drawn")
+
+if __name__ == "__main__":
+    pass
