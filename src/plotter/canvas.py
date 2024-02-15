@@ -1,5 +1,6 @@
 from .functions import setup_logging
 import logging
+import numpy as np
 import matplotlib.pyplot as plt
 import pathlib
 from typing import Optional
@@ -19,42 +20,33 @@ class Canvas:
 
     Parameters
     ---
-    text: str
+    text_file: str
         The name of the json file in which the text to be added
         to the plot is stored.
+
+    Optional Parameters
+    ---
+    rows_cols: tuple
+        The tuple with the number of rows and columns
+        of subplots '(rows, cols)'.
     fs: tuple
         The tuple containing the dimensions of the canvas.
         Set to `(12,8)` by default.
     dpi: int
         The number of 'dots per inches' of the image (see matplotlib
         documentation). Set to `150` by default.
-
-    Optional Parameters
-    ---
-    xlim: tuple
-        The tuple containing the limits of the abscissa axis.
-    ylim: tuple
-        The tuple containing the limits of the ordinate axis.
-    xscale: str
-        The abscissa axis scale. It can be: 'linear' (default),
-        'log' o 'symlog'.
-    yscale: str
-        The ordinate axis scale. It can be: 'linear' (default),
-        'log' o 'symlog'.
     save: str
         The name of the file in which to store the plot. The
         plots are stored in 'plotter/img/'.
-    nogrid: bool
-        `True` if the grid is to be removed, `False` otherwise.
     """
 
     def __init__(
         self,
         text_file: str,
-        rows_cols: Optional[tuple] = (1, 1),
+        rows_cols: Optional[tuple[int, int]] = (1, 1),
         fs: Optional[tuple[int, int]] = (12, 8),
         dpi: Optional[int] = 150,
-        **kwargs,
+        save: Optional[str] = "",
     ) -> None:
         # logging
         setup_logging()
@@ -63,6 +55,7 @@ class Canvas:
 
         self.__rows = rows_cols[0]
         self.__cols = rows_cols[1]
+        self.__n_plots = self.__get_n_plots()
 
         self.counter_scatter_plots = [0 for _ in range(self.__rows + self.__cols)]
         self.counter_plots = [0 for _ in range(self.__rows + self.__cols)]
@@ -70,36 +63,84 @@ class Canvas:
 
         # plot properties
         self.fig, self.ax = plt.subplots(nrows=rows_cols[0], ncols=rows_cols[1], figsize=(fs[0], fs[1]), dpi=dpi)
-        self.__kwargs = kwargs
+        if self.__n_plots < 2:
+            self.ax = np.array([self.ax, None])
+        else:
+            self.ax = self.ax.flatten()
 
         # plot text
-        self.text = Text(text_file)
+        self.text = Text(text_file, self.__n_plots)
+
+        # save plot
+        self.__save_plot = save
+
+    def setup(self, plot_n: int, **kwargs) -> None:
+        """
+        This functions sets up the properties of the
+        subplots created.
+
+        Parameters
+        ---
+        plot_n: int
+            The index of the subplot (0,1,...,n-1).
+
+        Extra Parameters
+        ---
+        xlim: tuple
+            The tuple containing the limits of the abscissa axis.
+        ylim: tuple
+            The tuple containing the limits of the ordinate axis.
+        xscale: str
+            The abscissa axis scale. It can be: 'linear' (default),
+            'log' o 'symlog'.
+        yscale: str
+            The ordinate axis scale. It can be: 'linear' (default),
+            'log' o 'symlog'.
+        nogrid: bool
+            `True` if the grid is to be removed, `False` otherwise.
+        """
 
         # grid
         self.no_grid = kwargs.get("nogrid", False)
         if not self.no_grid:
-            self.ax.grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
+            self.ax[plot_n].grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
 
         # axis limits
-        if "xlim" in self.__kwargs.keys():
-            self.ax.set_xlim(self.__kwargs["xlim"][0], self.__kwargs["xlim"][1])
+        if "xlim" in kwargs.keys():
+            self.ax[plot_n].set_xlim(kwargs["xlim"][0], kwargs["xlim"][1])
 
-        if "ylim" in self.__kwargs.keys():
-            self.ax.set_ylim(self.__kwargs["ylim"][0], self.__kwargs["ylim"][1])
+        if "ylim" in kwargs.keys():
+            self.ax[plot_n].set_ylim(kwargs["ylim"][0], kwargs["ylim"][1])
 
         # axis scales
-        if "yscale" in self.__kwargs.keys():
-            self.ax.set_yscale(self.__kwargs["yscale"])
+        if "yscale" in kwargs.keys():
+            self.ax[plot_n].set_yscale(kwargs["yscale"])
 
-        if "xscale" in self.__kwargs.keys():
-            self.ax.set_xscale(self.__kwargs["xscale"])
+        if "xscale" in kwargs.keys():
+            self.ax[plot_n].set_xscale(kwargs["xscale"])
 
         # axis labels
-        self.ax.set_xlabel(self.text.abscissa)
-        self.ax.set_ylabel(self.text.ordinate)
+        self.ax[plot_n].set_xlabel(self.text.abscissa[plot_n])
+        self.ax[plot_n].set_ylabel(self.text.ordinate[plot_n])
 
         # title
-        self.ax.set_title(self.text.title, y=1)
+        self.ax[plot_n].set_title(self.text.title[plot_n], y=1)
+
+    def __get_n_plots(self) -> int:
+        """
+        This function obtains the number of subplots
+        of the canvas.
+        """
+
+        _n_plots = 0
+        if self.__rows == 1:
+            _n_plots = self.__cols
+        elif self.__cols == 1:
+            _n_plots = self.__rows
+        else:
+            _n_plots = self.__rows + self.__cols
+
+        return _n_plots
 
     def __legend(self) -> None:
         """
@@ -109,13 +150,13 @@ class Canvas:
         logger.info("Called 'Canvas.__legend()'")
 
         try:
-            self.ax.legend(loc=0)
-            plt.legend(labelspacing=1)
+            for i in range(self.__n_plots):
+                self.ax[i].legend(loc=0, labelspacing=1)
 
             logger.debug("Legend added.")
-        # TODO: change thus exception
+        # TODO: change this exception
         except Exception:
-            self.logger.exception("Impossible to show the legend.")
+            logger.exception("Impossible to show the legend.")
 
     def __save(self) -> None:
         """
@@ -125,8 +166,8 @@ class Canvas:
 
         logger.info("Called 'Canvas.__save()'")
 
-        if "save" in self.__kwargs.keys():
-            file_path = pathlib.Path("./plotter/img").joinpath(self.__kwargs["save"])
+        if self.__save_plot:
+            file_path = pathlib.Path("./plotter/img").joinpath(self.__save_plot)
             self.fig.savefig(file_path)
             logger.debug(f"Plot saved to {file_path}")
         else:

@@ -56,6 +56,7 @@ class ScatterPlot:
     def draw(
         self,
         canvas: Canvas,
+        plot_n: Optional[int] = 0,
         color: Optional[str] = "firebrick",
         marker: Optional[str] = "o",
         ms: Optional[float] = 4,
@@ -85,9 +86,9 @@ class ScatterPlot:
 
         logger.info("Called 'ScatterPlot.draw()'")
 
-        canvas.counter_scatter_plots += 1
+        canvas.counter_scatter_plots[plot_n] += 1
 
-        canvas.ax.errorbar(
+        canvas.ax[plot_n].errorbar(
             self.__x,
             self.__y,
             yerr=self.__yerr,
@@ -98,9 +99,9 @@ class ScatterPlot:
             zorder=2,  # layer
             ls="none",  # line size (none for disconnected dots)
             capsize=2,  # error bars ticks
-            label=canvas.text.datasets[canvas.counter_scatter_plots - 1],
+            label=canvas.text.datasets[plot_n][(n := canvas.counter_scatter_plots[plot_n] - 1)],
         )
-        logger.debug(f"ScatterPlot {canvas.counter_scatter_plots-1} drawn")
+        logger.debug(f"ScatterPlot {n} drawn")
 
 
 if __name__ == "__main__":
