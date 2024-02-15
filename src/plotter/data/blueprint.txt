@@ -1,10 +1,11 @@
-# canvas = p.Canvas("*.json", save="*")
+canvas = p.Canvas("*.json", save="*")
+canvas.setup() 
 
-# p.ScatterPlot(x, y, y_err, x_err).draw(canvas)
-# p.Plot(x, f, (0.01, 0.01)).draw(canvas)
+p.ScatterPlot(x, y, y_err, x_err).draw(canvas)
+p.Plot(x, f, (0.01, 0.01)).draw(canvas)
 
-# hist = p.Hist(data, density=True)
-# hist.draw(canvas)
-# p.Plot(hist.bins, fit).draw(canvas)
+hist = p.Hist(data, density=True)
+hist.draw(canvas)
+p.Plot(hist.bins, fit).draw(canvas)
 
-# canvas.end(False)
+canvas.end(False)

@@ -90,8 +90,6 @@ class ScatterPlot:
 
         logger.info("Called 'ScatterPlot.draw()'")
 
-        canvas.counter_scatter_plots[plot_n] += 1
-
         canvas.ax[plot_n].errorbar(
             self.__x,
             self.__y,
@@ -103,9 +101,11 @@ class ScatterPlot:
             zorder=2,  # layer
             ls="none",  # line size (none for disconnected dots)
             capsize=2,  # error bars ticks
-            label=canvas.text.datasets[plot_n][(n := canvas.counter_scatter_plots[plot_n] - 1)],
+            label=canvas.text.datasets[plot_n][(n := canvas.counter_scatter_plots[plot_n])],
         )
         logger.debug(f"ScatterPlot {n} drawn")
+
+        canvas.counter_scatter_plots[plot_n] += 1
 
 
 if __name__ == "__main__":

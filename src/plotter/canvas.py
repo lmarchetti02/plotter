@@ -74,15 +74,16 @@ class Canvas:
         # save plot
         self.__save_plot = save
 
-    def setup(self, plot_n: int, **kwargs) -> None:
+    def setup(self, plot_n: Optional[int] = 0, **kwargs) -> None:
         """
         This functions sets up the properties of the
         subplots created.
 
-        Parameters
+        Optional Parameters
         ---
         plot_n: int
             The index of the subplot (0,1,...,n-1).
+            It is set to `0` by default.
 
         Extra Parameters
         ---

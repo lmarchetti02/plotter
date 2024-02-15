@@ -77,8 +77,6 @@ class Plot:
         self.color = color
         self.lw = lw
 
-        canvas.counter_plots[plot_n] += 1
-
         if inverted:
             _ = self.__x
             self.__x = self.__y
@@ -90,6 +88,12 @@ class Plot:
             color=self.color,
             zorder=1,
             lw=self.lw,
-            label=canvas.text.functions[plot_n][(n := canvas.counter_plots[plot_n] - 1)],
+            label=canvas.text.functions[plot_n][(n := canvas.counter_plots[plot_n])],
         )
         logger.debug(f"Plot {n} drawn")
+
+        canvas.counter_plots[plot_n] += 1
+
+
+if __name__ == "__main__":
+    pass
