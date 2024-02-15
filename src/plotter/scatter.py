@@ -73,6 +73,10 @@ class ScatterPlot:
 
         Optional Parameters
         ---
+        plot_n: int
+            The index of the subplot. It is set to 0 by
+            default, so the scatter plot is assigned to the
+            first canvas if otherwise not specified.
         color: str
             The matplotlib color of the scatter plot. It is
             set to `"firebrick"` by default.

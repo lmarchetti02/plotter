@@ -42,6 +42,7 @@ class Plot:
     def draw(
         self,
         canvas: Canvas,
+        plot_n: Optional[int] = 0,
         color: Optional[str] = "black",
         lw: Optional[float] = 1.5,
         inverted: Optional[bool] = False,
@@ -58,6 +59,10 @@ class Plot:
 
         Optional Parameters
         ---
+        plot_n: int
+            The index of the subplot. It is set to 0 by
+            default, so the graph is assigned to the
+            first canvas if otherwise not specified.
         color: str
             The matplotlib color of the scatter plot. It is
             set to `"firebrick"` by default.
@@ -72,19 +77,19 @@ class Plot:
         self.color = color
         self.lw = lw
 
-        canvas.counter_plots += 1
+        canvas.counter_plots[plot_n] += 1
 
         if inverted:
             _ = self.__x
             self.__x = self.__y
             self.__y = _
 
-        canvas.ax.plot(
+        canvas.ax[plot_n].plot(
             self.__x,
             self.__y,
             color=self.color,
             zorder=1,
             lw=self.lw,
-            label=canvas.text.functions[canvas.counter_plots - 1],
+            label=canvas.text.functions[plot_n][(n := canvas.counter_plots[plot_n] - 1)],
         )
-        logger.debug(f"Plot {canvas.counter_plots-1} drawn")
+        logger.debug(f"Plot {n} drawn")
