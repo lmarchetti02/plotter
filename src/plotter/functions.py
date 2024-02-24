@@ -1,9 +1,9 @@
+import os
+import json
+import pathlib
 import numpy as np
 import logging.config
 import logging.handlers
-import json
-import pathlib
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ def _make_denser(data: np.ndarray, density: int) -> np.ndarray:
     return result
 
 
-def make_wider(data: np.ndarray, left: float, right: float, density: int):
+def make_wider(data: np.ndarray, left: float, right: float, density: int) -> np.ndarray:
     """
     This function takes a 1D array and makes it longer by an mount specified
     by `left` and `right`.

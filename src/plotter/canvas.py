@@ -1,10 +1,11 @@
-from .functions import setup_logging
 import logging
-import numpy as np
-import matplotlib.pyplot as plt
 import pathlib
+import numpy as np
 from typing import Optional
+import matplotlib.pyplot as plt
+
 from .text import Text
+from .functions import setup_logging
 
 plt.style.use(pathlib.Path("./plotter/utils/style.mplstyle"))
 logging.getLogger("matplotlib").setLevel(logging.CRITICAL)  # remove matplotlib logger
@@ -150,14 +151,14 @@ class Canvas:
 
         logger.info("Called 'Canvas.__legend()'")
 
-        try:
-            for i in range(self.__n_plots):
-                self.ax[i].legend(loc=0, labelspacing=1)
+        for i in range(self.__n_plots):
+            legend = self.ax[i].legend(loc=0, labelspacing=1)
+
+            if not legend.get_texts():
+                legend.remove()
+                logger.warning("Empty legend.")
 
             logger.debug("Legend added.")
-        # TODO: change this exception
-        except Exception:
-            logger.exception("Impossible to show the legend.")
 
     def __save(self) -> None:
         """

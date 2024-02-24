@@ -1,8 +1,9 @@
-from typing import Optional, Callable
 import logging
+from numpy import ndarray
+from typing import Optional, Callable
+
 from .canvas import Canvas
 from .functions import make_wider
-from numpy import ndarray
 
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,9 @@
 import logging
-from typing import Optional
-from .canvas import Canvas
 import numpy as np
+from typing import Optional
 import matplotlib.colors as colors
+
+from .canvas import Canvas
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 import os
-import importlib.metadata as im
 import pathlib
+import importlib.metadata as im
 
 # create necessary directories
 parent_dir = "./plotter"

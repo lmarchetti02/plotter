@@ -1,7 +1,8 @@
 import logging
-from typing import Optional
-from .canvas import Canvas
 import numpy as np
+from typing import Optional
+
+from .canvas import Canvas
 
 logger = logging.getLogger(__name__)
 
