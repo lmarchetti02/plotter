@@ -1,3 +1,7 @@
+"""
+A small Python library for plotting beautiful graphs.
+"""
+
 import os
 import pathlib
 import importlib.metadata as im
