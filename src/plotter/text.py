@@ -73,3 +73,7 @@ class Text:
         logger.debug(f"Datasets: {self.datasets}")
         logger.debug(f"Functions: {self.functions}")
         logger.debug(f"Histograms: {self.histograms}")
+
+
+if __name__ == "__main__":
+    pass

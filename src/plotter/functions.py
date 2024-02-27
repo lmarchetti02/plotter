@@ -138,3 +138,7 @@ def setup_logging() -> None:
         config = json.load(f_in)
 
     logging.config.dictConfig(config)
+
+
+if __name__ == "__main__":
+    pass
