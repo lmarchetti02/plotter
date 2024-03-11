@@ -100,6 +100,10 @@ class Canvas:
             'log' o 'symlog'.
         nogrid: bool
             `True` if the grid is to be removed, `False` otherwise.
+        inverted: tuple
+            The tuple with the info on whether to invert the axis.
+            The first element corresponds to the x-axis, the second
+            to the y-axis.
         """
 
         # grid
@@ -113,6 +117,13 @@ class Canvas:
 
         if "ylim" in kwargs.keys():
             self.ax[plot_n].set_ylim(kwargs["ylim"][0], kwargs["ylim"][1])
+
+        # invert axis
+        if "inverted" in kwargs.keys():
+            if kwargs["inverted"][0]:
+                self.ax[plot_n].invert_xaxis()
+            if kwargs["inverted"][1]:
+                self.ax[plot_n].invert_yaxis()
 
         # axis scales
         if "yscale" in kwargs.keys():
