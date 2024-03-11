@@ -181,7 +181,7 @@ class Canvas:
 
         if self.__save_plot:
             file_path = pathlib.Path("./plotter/img").joinpath(self.__save_plot)
-            self.fig.savefig(file_path)
+            self.fig.savefig(file_path, bbox_inches="tight")
             logger.debug(f"Plot saved to {file_path}")
         else:
             logger.warning("Plot not saved to any file")
