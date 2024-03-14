@@ -31,14 +31,14 @@ class Plot:
     def __init__(
         self,
         x: ndarray,
-        f: Callable[[ndarray], ndarray],
+        f: Callable[[ndarray], ndarray] | ndarray,
         wider: Optional[tuple[float]] = (0, 0),
         dens: Optional[int] = 2,
     ) -> None:
         logger.info("Created 'Plot' object")
 
         self.__x = make_wider(x, wider[0], wider[1], dens)
-        self.__y = f(self.__x)
+        self.__y = f(self.__x) if callable(f) else f
 
     def draw(
         self,

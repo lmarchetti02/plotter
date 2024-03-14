@@ -61,6 +61,7 @@ class ScatterPlot:
         color: Optional[str] = "firebrick",
         marker: Optional[str] = "o",
         ms: Optional[float] = 4,
+        ticks_size: Optional[float] = 2,
     ) -> None:
         """
         This function draws the scatter plot in the canvas
@@ -101,7 +102,7 @@ class ScatterPlot:
             ms=ms,
             zorder=2,  # layer
             ls="none",  # line size (none for disconnected dots)
-            capsize=2,  # error bars ticks
+            capsize=ticks_size,  # error bars ticks
             label=canvas.text.datasets[plot_n][(n := canvas.counter_scatter_plots[plot_n])],
         )
         logger.debug(f"ScatterPlot {n} drawn")
