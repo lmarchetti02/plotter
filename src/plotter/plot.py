@@ -32,7 +32,7 @@ class Plot:
         self,
         x: ndarray,
         f: Callable[[ndarray], ndarray] | ndarray,
-        wider: Optional[tuple[float]] = (0, 0),
+        wider: Optional[tuple[float, float]] = (0, 0),
         dens: Optional[int] = 2,
     ) -> None:
         logger.info("Created 'Plot' object")
