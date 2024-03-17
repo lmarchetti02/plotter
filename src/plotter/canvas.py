@@ -139,6 +139,39 @@ class Canvas:
         # title
         self.ax[plot_n].set_title(self.text.title[plot_n], y=1)
 
+    def draw_line(
+        self,
+        type: str,
+        point: Optional[float] = 0,
+        plot_n: Optional[int] = 0,
+        color="black",
+        style: Optional[str] = "-",
+        width: Optional[float] = 0.5,
+    ) -> None:
+        """
+        This function draws horizontal and vertical lines
+        on the canvas.
+
+        Parameters
+        ---
+        type: str
+            `"v"` for vertical lines, `"h"` for horizontal lines
+
+        Optional Parameters
+        ---
+
+        #TODO: finish doc
+
+        """
+        if type not in ("v", "h"):
+            raise ValueError("Invalid line type")
+
+        if type == "v":
+            self.ax[plot_n].axvline(x=point, color=color, linestyle=style, lw=width)
+            return
+
+        self.ax[plot_n].axhline(y=point, color=color, linestyle=style, lw=width)
+
     def __get_n_plots(self) -> int:
         """
         This function obtains the number of subplots
