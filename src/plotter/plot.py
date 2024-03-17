@@ -44,7 +44,7 @@ class Plot:
         self,
         canvas: Canvas,
         plot_n: Optional[int] = 0,
-        color: Optional[str] = "black",
+        color: Optional[str] = "darkgreen",
         lw: Optional[float] = 1.5,
         inverted: Optional[bool] = False,
     ) -> None:
@@ -65,8 +65,8 @@ class Plot:
             default, so the graph is assigned to the
             first canvas if otherwise not specified.
         color: str
-            The matplotlib color of the scatter plot. It is
-            set to `"firebrick"` by default.
+            The matplotlib color of the plot. It is
+            set to `"darkgreen"` by default.
         lw: str
             The matplotlib line width of the plot. It is
             set to `1.5` by default.

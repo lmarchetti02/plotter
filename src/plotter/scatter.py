@@ -59,8 +59,10 @@ class ScatterPlot:
         canvas: Canvas,
         plot_n: Optional[int] = 0,
         color: Optional[str] = "firebrick",
+        err_color: Optional[str] = "black",
         marker: Optional[str] = "o",
         ms: Optional[float] = 4,
+        err_width: Optional[float] = 1,
         ticks_size: Optional[float] = 2,
     ) -> None:
         """
@@ -80,7 +82,10 @@ class ScatterPlot:
             default, so the scatter plot is assigned to the
             first canvas if otherwise not specified.
         color: str
-            The matplotlib color of the scatter plot. It is
+            The matplotlib color of the points. It is
+            set to `"firebrick"` by default.
+        err_color: str
+            The matplotlib color of the error bars. It is
             set to `"firebrick"` by default.
         marker: str
             The kind of matplotlib marker to use. It is set
@@ -88,6 +93,12 @@ class ScatterPlot:
         ms: float
             The dimensions of the markers. It is set to `4`
             by default.
+        err_witdth: float
+            The width of the error bars. It is set to `1`
+            by default.
+        ticks_size: float
+            The size of the ticks on the error bars. It is
+            set to `2` by default.
         """
 
         logger.info("Called 'ScatterPlot.draw()'")
@@ -99,7 +110,9 @@ class ScatterPlot:
             xerr=self.__xerr,
             marker=marker,
             color=color,
+            ecolor=err_color,
             ms=ms,
+            elinewidth=err_width,
             zorder=2,  # layer
             ls="none",  # line size (none for disconnected dots)
             capsize=ticks_size,  # error bars ticks
