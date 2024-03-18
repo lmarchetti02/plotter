@@ -46,6 +46,7 @@ class Plot:
         plot_n: Optional[int] = 0,
         color: Optional[str] = "darkgreen",
         lw: Optional[float] = 1.5,
+        style: Optional[str] = "-",
         inverted: Optional[bool] = False,
     ) -> None:
         """
@@ -70,13 +71,12 @@ class Plot:
         lw: str
             The matplotlib line width of the plot. It is
             set to `1.5` by default.
+        style: str
+            The line style. It is set to solid (`"-"`) by default.
         inverted: bool
             Whether to plot f(x) or its inverse function.
             It is set to `False` by default.
         """
-
-        self.color = color
-        self.lw = lw
 
         if inverted:
             _ = self.__x
@@ -86,9 +86,10 @@ class Plot:
         canvas.ax[plot_n].plot(
             self.__x,
             self.__y,
-            color=self.color,
+            color=color,
             zorder=1,
-            lw=self.lw,
+            lw=lw,
+            ls=style,
             label=canvas.text.functions[plot_n][(n := canvas.counter_plots[plot_n])],
         )
         logger.debug(f"Plot {n} drawn")

@@ -75,6 +75,9 @@ class Canvas:
         # save plot
         self.__save_plot = save
 
+        # legend
+        self.__loc_legend = [0] * self.__get_n_plots()
+
     def setup(self, plot_n: Optional[int] = 0, **kwargs) -> None:
         """
         This functions sets up the properties of the
@@ -104,6 +107,8 @@ class Canvas:
             The tuple with the info on whether to invert the axis.
             The first element corresponds to the x-axis, the second
             to the y-axis.
+        legend: int
+            Force the position of the legend to a specified one.
         """
 
         # grid
@@ -131,6 +136,10 @@ class Canvas:
 
         if "xscale" in kwargs.keys():
             self.ax[plot_n].set_xscale(kwargs["xscale"])
+
+        # legend
+        if "legend" in kwargs.keys():
+            self.__loc_legend[plot_n] = kwargs["legend"]
 
         # axis labels
         self.ax[plot_n].set_xlabel(self.text.abscissa[plot_n])
@@ -196,7 +205,7 @@ class Canvas:
         logger.info("Called 'Canvas.__legend()'")
 
         for i in range(self.__n_plots):
-            legend = self.ax[i].legend(loc=0, labelspacing=1)
+            legend = self.ax[i].legend(loc=self.__loc_legend[i], labelspacing=1)
 
             if not legend.get_texts():
                 legend.remove()
