@@ -156,6 +156,7 @@ class Canvas:
         color="black",
         style: Optional[str] = "-",
         width: Optional[float] = 0.5,
+        label: Optional[str] = None,
     ) -> None:
         """
         This function draws horizontal and vertical lines
@@ -176,10 +177,10 @@ class Canvas:
             raise ValueError("Invalid line type")
 
         if type == "v":
-            self.ax[plot_n].axvline(x=point, color=color, linestyle=style, lw=width)
+            self.ax[plot_n].axvline(x=point, color=color, linestyle=style, lw=width, label=label)
             return
 
-        self.ax[plot_n].axhline(y=point, color=color, linestyle=style, lw=width)
+        self.ax[plot_n].axhline(y=point, color=color, linestyle=style, lw=width, label=label)
 
     def __get_n_plots(self) -> int:
         """
