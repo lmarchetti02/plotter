@@ -46,4 +46,5 @@ except OSError as _:
 from .canvas import Canvas
 from .plot import Plot
 from .scatter import ScatterPlot
-from .histograms import Hist, Hist2D
+from .histograms import Hist
+from .histograms_2d import Hist2D
