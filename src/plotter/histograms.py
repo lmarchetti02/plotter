@@ -1,7 +1,6 @@
 import logging
 import numpy as np
 from typing import Optional
-import matplotlib.colors as colors
 
 from .canvas import Canvas
 
