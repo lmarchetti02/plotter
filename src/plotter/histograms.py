@@ -92,6 +92,7 @@ class Hist:
         range: Optional[tuple | list | np.ndarray] = None,
         color: Optional[str] = "cornflowerblue",
         alpha: Optional[float] = 1,
+        filled: Optional[bool] = True,
     ) -> None:
         """
         This function draws the histogram in the canvas
@@ -116,6 +117,8 @@ class Hist:
             The matplotlib color of the histogram.
         alpha: float
             The transparency of the histogram.
+        filled: bool
+            Whether the histogram is to be filled or not.
         """
 
         logger.info("Called 'Hist.draw()'")
@@ -126,7 +129,7 @@ class Hist:
             range=range,
             density=self.__density,
             cumulative=self.__cumulative,
-            histtype="stepfilled",
+            histtype="stepfilled" if filled else "step",
             color=color,
             alpha=alpha,
             label=canvas.text.histograms[plot_n][(n := canvas.counter_histograms[plot_n])],
