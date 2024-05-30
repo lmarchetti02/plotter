@@ -93,6 +93,7 @@ class Hist:
         color: Optional[str] = "cornflowerblue",
         alpha: Optional[float] = 1,
         filled: Optional[bool] = True,
+        **kwargs,
     ) -> None:
         """
         This function draws the histogram in the canvas
@@ -119,9 +120,19 @@ class Hist:
             The transparency of the histogram.
         filled: bool
             Whether the histogram is to be filled or not.
+
+        Extra Parameters
+        ---
+        ecolor: str
+            The color of the edges of the histogram.
+        lw: float
+            The width of the edges.
         """
 
         logger.info("Called 'Hist.draw()'")
+
+        self.__ecolor = kwargs.get("ecolor", "cornflowerblue")
+        self.__lw = kwargs.get("lw", None)
 
         self.bin_vals, self.bins, _ = canvas.ax[plot_n].hist(
             self.__data,
@@ -133,6 +144,8 @@ class Hist:
             color=color,
             alpha=alpha,
             label=canvas.text.histograms[plot_n][(n := canvas.counter_histograms[plot_n])],
+            edgecolor=self.__ecolor,
+            lw=self.__lw,
         )
         logger.debug(f"Hist {n} drawn")
 
