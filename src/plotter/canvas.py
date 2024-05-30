@@ -153,7 +153,7 @@ class Canvas:
         type: str,
         point: Optional[float] = 0,
         plot_n: Optional[int] = 0,
-        color="black",
+        color: Optional[str] = "black",
         style: Optional[str] = "-",
         width: Optional[float] = 0.5,
         label: Optional[str] = None,
@@ -169,10 +169,23 @@ class Canvas:
 
         Optional Parameters
         ---
-
-        #TODO: finish doc
-
+        point: float
+            The coordinate of the line. Set to 0 by default.
+        plot_n: int
+            The number of the canvas to consider. Set to 0
+            by default.
+        color: str
+            The color of the line. Set to 'black' by default.
+        style: str
+            The style of the line. See info directory. Set to
+            '-' (solid) by default.
+        width: float
+            The width of the line. Set to 0.5 by default.
+        label: str
+            The name to give to the line in the legend. Set to
+            `None` by default.
         """
+
         if type not in ("v", "h"):
             raise ValueError("Invalid line type")
 
@@ -181,6 +194,37 @@ class Canvas:
             return
 
         self.ax[plot_n].axhline(y=point, color=color, linestyle=style, lw=width, label=label)
+
+    def turn_scientific(
+        self, axis: str, plot_n: Optional[int] = 0, limits: Optional[tuple[int, int] | int] = (0, 0)
+    ) -> None:
+        """
+        Function for setting the ticks of the axis to
+        scientific notation.
+
+        Parameters
+        ---
+        axis: str
+            The axis to consider: 'x', 'y', or 'both'.
+
+        Optional parameters
+        ---
+        plot_n: int
+            The number of the canvas to consider. Set to 0
+            by default.
+        limits: tuple or int
+            Use `(m,n)` for scientific notation outside
+            10^m-10^n. Use `0` to include all numbers.
+            Use `m` to fix the order of magnitude to 10^m.
+        """
+
+        if axis not in ("x", "y", "both"):
+            raise ValueError(f"{axis} is not a valid axis.")
+
+        if type(limits) == int:
+            limits = (limits, limits)
+
+        self.ax[plot_n].ticklabel_format(style="sci", axis=axis, scilimits=(limits[0], limits[1]))
 
     def __get_n_plots(self) -> int:
         """
