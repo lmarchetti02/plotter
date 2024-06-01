@@ -132,7 +132,7 @@ class Hist:
         logger.info("Called 'Hist.draw()'")
 
         self.__ecolor = kwargs.get("ecolor", "cornflowerblue")
-        self.__lw = kwargs.get("lw", 0)
+        self.__lw = kwargs.get("lw", 0 if filled else 1.5)
 
         self.bin_vals, self.bins, _ = canvas.ax[plot_n].hist(
             self.__data,
