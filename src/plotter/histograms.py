@@ -90,8 +90,8 @@ class Hist:
         canvas: Canvas,
         plot_n: Optional[int] = 0,
         range: Optional[tuple | list | np.ndarray] = None,
-        color: Optional[str] = "cornflowerblue",
-        alpha: Optional[float] = 1,
+        color: Optional[str] = "royalblue",
+        alpha: Optional[float] = 0.8,
         filled: Optional[bool] = True,
         **kwargs,
     ) -> None:
