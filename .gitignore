@@ -160,6 +160,7 @@ cython_debug/
 #.idea/
 
 /tests
+/tests_trash
 build_install.sh
 /.vscode
 src/plotter/data/info/.DS_Store

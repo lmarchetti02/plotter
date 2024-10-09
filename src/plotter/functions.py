@@ -72,7 +72,7 @@ def _make_denser(data: np.ndarray, density: int) -> np.ndarray:
 
 def make_wider(data: np.ndarray, left: float, right: float, density: int) -> np.ndarray:
     """
-    This function takes a 1D array and makes it longer by an mount specified
+    This function takes a 1D array and makes it longer by an amount specified
     by `left` and `right`.
 
     It also makes the input array denser, by make use of the internal
@@ -120,7 +120,9 @@ def make_wider(data: np.ndarray, left: float, right: float, density: int) -> np.
         wider_data = np.insert(wider_data, 0, m - left * delta)
 
     if right != 0:
-        wider_data = np.insert(wider_data, len(wider_data) - 1, M + right * delta)
+        wider_data = wider_data[::-1]
+        wider_data = np.insert(wider_data, 0, M + right * delta)
+        wider_data = wider_data[::-1]
 
     logger.debug(f"Dataset to be made denser:\n {wider_data}")
 
