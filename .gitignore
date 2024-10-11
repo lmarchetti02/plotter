@@ -159,8 +159,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-/tests
-/tests_trash
+/tests/plotter
+/trash
 build_install.sh
 /.vscode
 src/plotter/data/info/.DS_Store
