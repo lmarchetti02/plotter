@@ -37,7 +37,7 @@ class Plot:
     ) -> None:
         logger.info("Created 'Plot' object")
 
-        self.__x = make_wider(x, wider[0], wider[1], dens)
+        self.__x = make_wider(x, wider[0], wider[1], dens if not isinstance(f, ndarray) else 1)
         self.__y = f(self.__x) if callable(f) else f
 
     def draw(
