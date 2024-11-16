@@ -32,7 +32,12 @@ class Text:
         self.functions = [[] for _ in range(self.__n_plots)]
         self.histograms = [[] for _ in range(self.__n_plots)]
 
+        # add json extension if necessary
+        if text_file[-5:] != ".json":
+            text_file += ".json"
+            logger.debug("Appended json extension to text file.")
         file_path = pathlib.Path("./plotter/text").joinpath(text_file)
+
         try:
             with open(file_path) as json_file:
                 logger.debug(f"Opened '{file_path}'")
