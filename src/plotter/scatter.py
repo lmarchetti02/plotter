@@ -108,7 +108,7 @@ class ScatterPlot:
         logger.info("Called 'ScatterPlot.draw()'")
 
         # label
-        n = canvas.counter_plots[plot_n]
+        n = canvas.counter_scatter_plots[plot_n]
         self.__label = label if label else canvas.text.datasets[plot_n][n]
 
         canvas.ax[plot_n].errorbar(

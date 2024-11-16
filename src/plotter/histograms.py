@@ -139,7 +139,7 @@ class Hist:
         self.__lw = kwargs.get("lw", 0 if filled else 1.5)
 
         # label
-        n = canvas.counter_plots[plot_n]
+        n = canvas.counter_histograms[plot_n]
         self.__label = label if label else canvas.text.histograms[plot_n][n]
 
         self.bin_vals, self.bins, _ = canvas.ax[plot_n].hist(
