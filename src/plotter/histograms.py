@@ -93,6 +93,7 @@ class Hist:
         color: Optional[str] = "royalblue",
         alpha: Optional[float] = 0.8,
         filled: Optional[bool] = True,
+        label: Optional[str] = None,
         **kwargs,
     ) -> None:
         """
@@ -120,6 +121,9 @@ class Hist:
             The transparency of the histogram.
         filled: bool
             Whether the histogram is to be filled or not.
+        label: str
+            The label to assign to the histogram. Alternative
+            to the json file definition.
 
         Extra Parameters
         ---
@@ -134,6 +138,10 @@ class Hist:
         self.__ecolor = kwargs.get("ecolor", "cornflowerblue")
         self.__lw = kwargs.get("lw", 0 if filled else 1.5)
 
+        # label
+        n = canvas.counter_plots[plot_n]
+        self.__label = label if label else canvas.text.histograms[plot_n][n]
+
         self.bin_vals, self.bins, _ = canvas.ax[plot_n].hist(
             self.__data,
             bins=self.__nbins,
@@ -143,7 +151,7 @@ class Hist:
             histtype="stepfilled" if filled else "step",
             color=color,
             alpha=alpha,
-            label=canvas.text.histograms[plot_n][(n := canvas.counter_histograms[plot_n])],
+            label=self.__label,
             edgecolor=self.__ecolor,
             lw=self.__lw,
         )

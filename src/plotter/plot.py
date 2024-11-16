@@ -48,6 +48,7 @@ class Plot:
         lw: Optional[float] = 1.5,
         style: Optional[str] = "-",
         inverted: Optional[bool] = False,
+        label: Optional[str] = None,
     ) -> None:
         """
         This function draws the plot in the canvas
@@ -76,12 +77,20 @@ class Plot:
         inverted: bool
             Whether to plot f(x) or its inverse function.
             It is set to `False` by default.
+        label: str
+            The label to assign to the plot. Alternative to
+            the json file definition.
         """
 
+        # exchange x and y
         if inverted:
             _ = self.__x
             self.__x = self.__y
             self.__y = _
+
+        # label
+        n = canvas.counter_plots[plot_n]
+        self.__label = label if label else canvas.text.functions[plot_n][n]
 
         canvas.ax[plot_n].plot(
             self.__x,
@@ -90,7 +99,7 @@ class Plot:
             zorder=1,
             lw=lw,
             ls=style,
-            label=canvas.text.functions[plot_n][(n := canvas.counter_plots[plot_n])],
+            label=self.__label,
         )
         logger.debug(f"Plot {n} drawn")
 

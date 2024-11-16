@@ -64,6 +64,7 @@ class ScatterPlot:
         ms: Optional[float] = 4,
         err_width: Optional[float] = 1,
         ticks_size: Optional[float] = 2,
+        label: Optional[str] = None,
     ) -> None:
         """
         This function draws the scatter plot in the canvas
@@ -99,9 +100,16 @@ class ScatterPlot:
         ticks_size: float
             The size of the ticks on the error bars. It is
             set to `2` by default.
+        label: str
+            The label to assign to the scatter plot. Alternative
+            to the json file definition.
         """
 
         logger.info("Called 'ScatterPlot.draw()'")
+
+        # label
+        n = canvas.counter_plots[plot_n]
+        self.__label = label if label else canvas.text.datasets[plot_n][n]
 
         canvas.ax[plot_n].errorbar(
             self.__x,
@@ -116,7 +124,7 @@ class ScatterPlot:
             zorder=2,  # layer
             ls="none",  # line size (none for disconnected dots)
             capsize=ticks_size,  # error bars ticks
-            label=canvas.text.datasets[plot_n][(n := canvas.counter_scatter_plots[plot_n])],
+            label=self.__label,
         )
         logger.debug(f"ScatterPlot {n} drawn")
 
