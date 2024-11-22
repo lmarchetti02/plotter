@@ -1,6 +1,7 @@
 import logging
 import pathlib
 import numpy as np
+from enum import Enum
 from typing import Optional
 import matplotlib.pyplot as plt
 
@@ -150,7 +151,7 @@ class Canvas:
 
     def draw_line(
         self,
-        type: str,
+        orientation: str,
         point: Optional[float] = 0,
         plot_n: Optional[int] = 0,
         color: Optional[str] = "black",
@@ -164,7 +165,7 @@ class Canvas:
 
         Parameters
         ---
-        type: str
+        orientation: str
             `"v"` for vertical lines, `"h"` for horizontal lines
 
         Optional Parameters
@@ -186,10 +187,10 @@ class Canvas:
             `None` by default.
         """
 
-        if type not in ("v", "h"):
+        if orientation not in ("v", "h"):
             raise ValueError("Invalid line type")
 
-        if type == "v":
+        if orientation == "v":
             self.ax[plot_n].axvline(x=point, color=color, linestyle=style, lw=width, label=label)
             return
 
@@ -225,6 +226,42 @@ class Canvas:
             limits = (limits, limits)
 
         self.ax[plot_n].ticklabel_format(style="sci", axis=axis, scilimits=(limits[0], limits[1]))
+
+    def set_ticks(
+        self,
+        axis: str,
+        positions: tuple[float, ...],
+        labels: tuple[str, ...] = None,
+        plot_n: int = 0,
+    ) -> None:
+        """
+        This function modifies the ticks of the axis.
+
+        Parameters
+        ---
+        axis: str
+            `"x"` for x axis, `"y"` for y axis.
+        positions: tuple
+            A tuple with the positions of the ticks.
+
+        Optional Parameters
+        ---
+        labels: tuple
+            A tuple with the labels of the ticks. Set to 0
+            by default, which means labels=positions.
+        plot_n: int
+            The number of the canvas to consider. Set to 0
+            by default.
+        """
+
+        if axis not in ("x", "y"):
+            raise ValueError("Invalid axis type")
+
+        if axis == "x":
+            self.ax[plot_n].set_xticks(positions, labels=labels)
+            return
+
+        self.ax[plot_n].set_yticks(positions, labels=labels)
 
     def __get_n_plots(self) -> int:
         """
