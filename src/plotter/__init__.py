@@ -44,6 +44,12 @@ try:
         f_destination = destination_info.joinpath(f.name)
         with open(f_destination, "wb") as d_file:
             d_file.write(f.read_binary())
+
+    # text example in text folder
+    text_file = [p for p in im.files(package_name) if "text_example.json" in str(p)][0]
+    text_destination = pathlib.Path(os.getcwd() + "/plotter/text/text_example.json")
+    with open(text_destination, "wb") as d_file:
+        d_file.write(text_file.read_binary())
 except OSError as _:
     print(f"{parent_dir} directory already exists.")
 

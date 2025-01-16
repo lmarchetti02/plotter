@@ -1,7 +1,6 @@
 import logging
 import pathlib
 import numpy as np
-from enum import Enum
 from typing import Optional
 import matplotlib.pyplot as plt
 
