@@ -1,6 +1,6 @@
 """
 -----------------------------------------------------
-PLOTTER 
+PLOTTER
 by Luca Marchetti
 
 A small Python library for plotting beautiful graphs.
@@ -59,3 +59,4 @@ from .plot import Plot
 from .scatter import ScatterPlot
 from .histograms import Hist
 from .histograms_2d import Hist2D
+from .images import Image
