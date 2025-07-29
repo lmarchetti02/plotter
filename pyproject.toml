@@ -9,7 +9,7 @@ description = "A small Python program for plotting beautiful graphs."
 version = "0.1.0"
 requires-python = ">=3.8"
 readme = "README.MD"
-license = { text = "MIT" }
+license = "MIT"
 dependencies = ["matplotlib", "numpy", "pathlib"]
 
 [tool.setuptools.packages.find]
