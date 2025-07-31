@@ -1,7 +1,8 @@
 import logging
 import numpy as np
-import matplotlib.colors as colors
 from typing import Optional
+import matplotlib.colors as colors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from .canvas import Canvas
 
@@ -119,7 +120,10 @@ class Image:
         )
         logger.debug(f"Image drawn")
 
-        canvas.fig.colorbar(self.__img, label=cb_label)
+        # make colorbar that fits the image
+        divider = make_axes_locatable(canvas.ax[plot_n])
+        cax = divider.append_axes("right", size="5%", pad=0.1)
+        canvas.fig.colorbar(self.__img, cax=cax, label=cb_label)
 
 
 if __name__ == "__main__":

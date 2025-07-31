@@ -2,6 +2,7 @@ import logging
 import numpy as np
 from typing import Optional
 import matplotlib.colors as colors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from .canvas import Canvas
 
@@ -116,6 +117,7 @@ class Hist2D:
         colormap: Optional[str] = "plasma",
         alpha: Optional[float] = 1,
         log: Optional[tuple[bool, float]] = (False, 0),
+        cb_label: Optional[str] = None,
     ) -> None:
         """
         This function draws the histogram in the canvas
@@ -146,6 +148,8 @@ class Hist2D:
               set to logarithmic;
             - the range of linearity in case the desired scale
               is of type 'symlog'.
+        cb_label: str
+            The label of the colorbar relative to the image.
         """
 
         logger.info("Called 'Hist.draw()'")
@@ -171,7 +175,10 @@ class Hist2D:
         )
         logger.debug(f"2D Hist drawn")
 
-        canvas.fig.colorbar(self.__patches)
+        # make colorbar that fits the histogram
+        divider = make_axes_locatable(canvas.ax[plot_n])
+        cax = divider.append_axes("right", size="5%", pad=0.1)
+        canvas.fig.colorbar(self.__patches, cax=cax, label=cb_label)
 
 
 if __name__ == "__main__":
