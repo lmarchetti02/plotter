@@ -11,22 +11,16 @@ logger = logging.getLogger(__name__)
 
 class Image:
     """
-    Class used for creating an image,
-    which is then drawn in a canvas.
+    Class for creating an image to be drawn on a canvas.
 
-    Parameters
-    ---
-    x: numpy.ndarray
-        The values of the independent variable.
-    f: numpy.ndarray
-        The function that defines the plot.
+    Args:
+        data (np.ndarray): The 2D or 3D numpy array containing the image data.
+            If 3D, the third dimension must contain 3 (RGB) or 4 (RGBA) values.
 
-    Optional Parameters
-    ---
-    wider: tuple
-        The percentages (left, right) to which
-        the domain of the function `f` is to be
-        widened. See `make_wider()`.
+    Raises:
+        ValueError: If the data is not a 2D or 3D array.
+        ValueError: If the third dimension of a 3D array is not 3 or 4.
+        ValueError: If the data is not real.
     """
 
     def __init__(self, data: np.ndarray) -> None:
@@ -56,43 +50,26 @@ class Image:
         cb_label: Optional[str] = None,
     ) -> None:
         """
-        This function draws the image in the canvas
-        to which it belongs.
+        Draws the image on the canvas.
 
-        Parameters
-        ---
-        canvas: Canvas
-            The canvas object to which the scatter plot
-            is to be attached.
-
-        Optional Parameters
-        ---
-        plot_n: int
-            The index of the subplot. It is set to 0 by
-            default, so the graph is assigned to the
-            first canvas if otherwise not specified.
-        colormap: str
-            The matplotlib colormap of the histogram.
-        log: tuple
-            The tuple with:
-            - a bool for indicating if the scale is to be
-              set to logarithmic;
-            - the range of linearity in case the desired scale
-              is of type 'symlog'.
-            Ignored if data is RGB(A)
-        v_range: tuple[min,max]
-            The minimum and maximum intensity values.
-            Ignored if the data is RGB(A).
-        aspect: str
-            The aspect ration of the axis: `equal` for squared
-            pixels, `auto` for squared image.
-        origin: str
-            Where to place the [0,0] element: `upper` for top left
-            and `lower` for bottom left.
-        limits: list[left,right,bottom,top]
-            The limits of the x (rows) and y (cols) axes.
-        cb_label: str
-            The label of the colorbar relative to the image.
+        Args:
+            canvas (Canvas): The canvas object to draw the image on.
+            plot_n (int, optional): The index of the subplot to draw on.
+                Defaults to 0.
+            colormap (str, optional): The Matplotlib colormap to use. Defaults to "plasma".
+            log (bool or tuple[bool, float], optional): Controls the scale of the colormap.
+                - `bool`: `True` for logarithmic scale.
+                - `tuple`: `(True, float)` for a 'symlog' scale with a linear range of `float`.
+                This parameter is ignored if the data is RGB(A). Defaults to `False`.
+            v_range (tuple[float, float], optional): The minimum and maximum intensity
+                values. Ignored if the data is RGB(A). Defaults to `(None, None)`.
+            aspect (str, optional): The aspect ratio of the axes. `equal` for squared
+                pixels, `auto` for a squared image. Defaults to "equal".
+            origin (str, optional): The placement of the [0,0] element of the data.
+                `upper` for the top-left, `lower` for the bottom-left. Defaults to "upper".
+            limits (list[float], optional): The limits of the x and y axes in the format
+                `[left, right, bottom, top]`. Defaults to `None`.
+            cb_label (str, optional): The label for the colorbar. Defaults to `None`.
         """
 
         logger.info("Called 'Image.draw()'")
@@ -101,7 +78,7 @@ class Image:
         if log:
             v_range = (None, None)
 
-            if type(log) == tuple:
+            if isinstance(log, tuple):
                 self.__normalization = colors.SymLogNorm(log[1])
             else:
                 self.__normalization = colors.LogNorm()
