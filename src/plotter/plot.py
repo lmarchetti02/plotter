@@ -10,22 +10,19 @@ logger = logging.getLogger(__name__)
 
 class Plot:
     """
-    Class used for creating a 1D function
-    plot, which is then drawn in a canvas.
+    Class for creating a 1D function plot to be drawn on a canvas.
 
-    Parameters
-    ---
-    x: numpy.ndarray
-        The values of the independent variable.
-    f: numpy.ndarray
-        The function that defines the plot.
+    Args:
+        x (ndarray): The values of the independent variable.
+        f (Callable[[ndarray], ndarray] | ndarray): The function that defines the plot,
+            or an array of y-values.
+        wider (tuple[float, float], optional): The percentages (left, right) to which
+            the domain of the function `f` is to be widened. Defaults to `(0, 0)`.
+        dens (int, optional): The density factor to be passed to `make_wider()`.
+            Defaults to 2.
 
-    Optional Parameters
-    ---
-    wider: tuple
-        The percentages (left, right) to which
-        the domain of the function `f` is to be
-        widened. See `make_wider()`.
+    Raises:
+        ValueError: If x and f as an array do not have the same dimensions.
     """
 
     def __init__(
@@ -37,8 +34,15 @@ class Plot:
     ) -> None:
         logger.info("Created 'Plot' object")
 
-        self.__x = make_wider(x, wider[0], wider[1], dens if not isinstance(f, ndarray) else 1)
-        self.__y = f(self.__x) if callable(f) else f
+        if isinstance(f, ndarray):
+            if len(x) != len(f):
+                raise ValueError("x-values and y-values must have the same dimension")
+
+            self.__x = x
+            self.__y = f
+        else:
+            self.__x = make_wider(x, wider[0], wider[1], dens)
+            self.__y = f(self.__x)
 
     def draw(
         self,
@@ -51,35 +55,18 @@ class Plot:
         label: Optional[str] = None,
     ) -> None:
         """
-        This function draws the plot in the canvas
-        to which it belongs.
+        Draws the plot on the canvas.
 
-        Parameters
-        ---
-        canvas: Canvas
-            The canvas object to which the scatter plot
-            is to be attached.
-
-        Optional Parameters
-        ---
-        plot_n: int
-            The index of the subplot. It is set to 0 by
-            default, so the graph is assigned to the
-            first canvas if otherwise not specified.
-        color: str
-            The matplotlib color of the plot. It is
-            set to `"darkgreen"` by default.
-        lw: str
-            The matplotlib line width of the plot. It is
-            set to `1.5` by default.
-        style: str
-            The line style. It is set to solid (`"-"`) by default.
-        inverted: bool
-            Whether to plot f(x) or its inverse function.
-            It is set to `False` by default.
-        label: str
-            The label to assign to the plot. Alternative to
-            the json file definition.
+        Args:
+            canvas (Canvas): The canvas object to draw the plot on.
+            plot_n (int, optional): The index of the subplot. Defaults to 0.
+            color (str, optional): The Matplotlib color of the plot. Defaults to "darkgreen".
+            lw (float, optional): The line width. Defaults to 1.5.
+            style (str, optional): The line style. Defaults to `"-"`.
+            inverted (bool, optional): If `True`, plots the inverse function.
+                Defaults to `False`.
+            label (str, optional): The label for the plot in the legend.
+                Defaults to `None`.
         """
 
         # exchange x and y

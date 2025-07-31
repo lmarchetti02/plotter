@@ -9,24 +9,17 @@ logger = logging.getLogger(__name__)
 
 class ScatterPlot:
     """
-    Class used for creating a scatter plot with
-    error bars, which is then drawn in a canvas.
+    Class for creating a scatter plot with error bars.
 
-    Parameters
-    ---
-    x: numpy.ndarray
-        The array containing the x values.
-    y: numpy.ndarray
-        The array containing the y values.
+    Args:
+        x (np.ndarray): The array containing the x values.
+        y (np.ndarray): The array containing the y values.
+        xerr (np.ndarray, optional): The array containing the errors in the x values.
+        yerr (np.ndarray, optional): The array containing the errors in the y values.
 
-    Optional Parameters
-    ---
-    xerr: numpy.ndarray
-        The array containing the errors in
-        the x values.
-    yerr: numpy.ndarray
-        The array containing the errors in
-        the y values.
+    Raises:
+        ValueError: If x and y values do not have the same dimensions.
+        ValueError: If x or y error values do not have the same dimensions as their corresponding data arrays.
     """
 
     def __init__(
@@ -67,42 +60,20 @@ class ScatterPlot:
         label: Optional[str] = None,
     ) -> None:
         """
-        This function draws the scatter plot in the canvas
-        to which it belongs.
+        Draws the scatter plot on the canvas.
 
-        Parameters
-        ---
-        canvas: Canvas
-            The canvas object to which the scatter plot
-            is to be attached.
-
-        Optional Parameters
-        ---
-        plot_n: int
-            The index of the subplot. It is set to 0 by
-            default, so the scatter plot is assigned to the
-            first canvas if otherwise not specified.
-        color: str
-            The matplotlib color of the points. It is
-            set to `"firebrick"` by default.
-        err_color: str
-            The matplotlib color of the error bars. It is
-            set to `"firebrick"` by default.
-        marker: str
-            The kind of matplotlib marker to use. It is set
-            to `"o"` by default (filled circular dots).
-        ms: float
-            The dimensions of the markers. It is set to `4`
-            by default.
-        err_witdth: float
-            The width of the error bars. It is set to `1`
-            by default.
-        ticks_size: float
-            The size of the ticks on the error bars. It is
-            set to `2` by default.
-        label: str
-            The label to assign to the scatter plot. Alternative
-            to the json file definition.
+        Args:
+            canvas (Canvas): The canvas object to which the scatter plot
+                is to be attached.
+            plot_n (int, optional): The index of the subplot. Defaults to 0.
+            color (str, optional): The Matplotlib color of the points. Defaults to "firebrick".
+            err_color (str, optional): The Matplotlib color of the error bars. Defaults to "firebrick".
+            marker (str, optional): The kind of Matplotlib marker to use. Defaults to `"o"`.
+            ms (float, optional): The dimensions of the markers. Defaults to 4.
+            err_width (float, optional): The width of the error bars. Defaults to 1.
+            ticks_size (float, optional): The size of the ticks on the error bars. Defaults to 2.
+            label (str, optional): The label for the scatter plot in the legend.
+                Defaults to `None`.
         """
 
         logger.info("Called 'ScatterPlot.draw()'")
