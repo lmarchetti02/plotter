@@ -9,24 +9,16 @@ logger = logging.getLogger(__name__)
 
 class Hist:
     """
-    Class used for creating a 1D histogram,
-    which is then drawn in a canvas.
+    Class for creating a 1D histogram.
 
-    Parameters
-    ---
-    data: numpy.ndarray
-        The array containing the data to plot.
-    nbins: int
-        The number of bins of the histogram or
-        the array containing the edges of the bins.
-        See matplotlib documentation. It is set to
-        `"auto"` by default.
-    density: bool
-        Whether to normalize the histogram. It is
-        set to `False` by default.
-    cumulative: bool
-        Whether to plot the cumulative histogram
-        or not. It is set to `False` by default.
+    Args:
+        data (np.ndarray): The array containing the data to plot.
+        nbins (int | str | np.ndarray, optional): The number of bins of the histogram
+            or the array containing the edges of the bins. Defaults to "auto".
+        density (bool, optional): If `True`, the histogram is normalized such that
+            the integral over the range is 1. Defaults to `False`.
+        cumulative (bool, optional): If `True`, the cumulative histogram is plotted.
+            Defaults to `False`.
     """
 
     def __init__(
@@ -49,10 +41,7 @@ class Hist:
     @property
     def bin_vals(self):
         """
-        The `bin_vals` setter/getter.
-
-        The data member `bin_vals` is an array containing
-        the values corresponding to each bin of the histogram.
+        An array containing the values corresponding to each bin of the histogram.
         """
 
         logger.info("Called 'Hist.bin_vals' getter")
@@ -68,11 +57,9 @@ class Hist:
     @property
     def bins(self):
         """
-        The `bins` setter/getter.
+        An array containing the edges of the bins.
 
-        The data member `bins` is an array containing the
-        edges of the bins. Therefore, its size is equal
-        to the number of bins +1.
+        The size of this array is equal to the number of bins plus one.
         """
 
         logger.info("Called 'Hist.bins' getter")
@@ -97,40 +84,25 @@ class Hist:
         **kwargs,
     ) -> None:
         """
-        This function draws the histogram in the canvas
-        to which it belongs.
+        Draws the histogram on the canvas.
 
-        Parameters
-        ---
-        canvas: Canvas
-            The canvas object to which the histogram
-            is to be attached.
-
-        Optional Parameters
-        ---
-        plot_n: int
-            The index of the subplot. It is set to 0 by
-            default, so the histogram is assigned to the
-            first canvas if otherwise not specified.
-        range: array-like shape(1,2)
-            The array with the left and right limits
-            of the bins. It is set to `None` by default.
-        color: str
-            The matplotlib color of the histogram.
-        alpha: float
-            The transparency of the histogram.
-        filled: bool
-            Whether the histogram is to be filled or not.
-        label: str
-            The label to assign to the histogram. Alternative
-            to the json file definition.
-
-        Extra Parameters
-        ---
-        ecolor: str
-            The color of the edges of the histogram.
-        lw: float
-            The width of the edges.
+        Args:
+            canvas (Canvas): The canvas object to draw the histogram on.
+            plot_n (int, optional): The index of the subplot to draw on.
+                Defaults to 0.
+            range (array-like, optional): The array with the left and right limits
+                of the bins. Defaults to `None`.
+            color (str, optional): The Matplotlib color of the histogram.
+                Defaults to "royalblue".
+            alpha (float, optional): The transparency of the histogram.
+                Defaults to 0.8.
+            filled (bool, optional): If `True`, the histogram is filled.
+                Defaults to `True`.
+            label (str, optional): The label for the histogram in the legend.
+                Defaults to `None`.
+            **kwargs: Additional keyword arguments.
+                ecolor (str): The color of the histogram edges.
+                lw (float): The width of the histogram edges.
         """
 
         logger.info("Called 'Hist.draw()'")

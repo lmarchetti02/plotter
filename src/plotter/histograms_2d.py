@@ -11,25 +11,19 @@ logger = logging.getLogger(__name__)
 
 class Hist2D:
     """
-    Class used for creating a 1D histogram,
-    which is then drawn in a canvas.
+    Class for creating a 2D histogram.
 
-    Parameters
-    ---
-    x: numpy.ndarray
-        The array containing the x values to plot.
-    y: numpy.ndarray
-        The array containing the y values to plot.
-    nbins: int
-        Ether:
-        - an int corresponding to the number of bins
-            of both axis;
-        - a tuple or a list with two int, corresponding
-            to the number of bin per axis;
-        - a 2D array containing the edges of the bins.
-    density: bool
-        Whether to normalize the histogram. It is
-        set to `False` by default.
+    Args:
+        x (np.ndarray): The array containing the x values to plot.
+        y (np.ndarray): The array containing the y values to plot.
+        nbins (int | np.ndarray | tuple | list): The number of bins for the
+            histogram. It can be:
+                - an `int` for the same number of bins for both axes.
+                - a `tuple` or `list` of two ints for the number of bins
+                  for x and y respectively.
+                - a 2D `np.ndarray` for the edges of the bins.
+        density (bool, optional): If `True`, the histogram is normalized
+            such that the integral over the range is 1. Defaults to `False`.
     """
 
     def __init__(
@@ -53,13 +47,11 @@ class Hist2D:
     @property
     def bin_vals(self):
         """
-        The `bin_vals` getter/setter.
+        An array containing the values corresponding to each bin.
 
-        The data member `bin_vals` is an array containing the values
-        corresponding to each bin.
-
-        It is a array of n arrays of m elements, where 'n' is the number
-        of bin along x and 'm' the number of bins along y.
+        This is a 2D array where the first dimension corresponds to the number of
+        bins along the x-axis and the second dimension corresponds to the number
+        of bins along the y-axis.
         """
         logger.info("Called 'Hist2D.bin_vals' getter")
 
@@ -74,11 +66,9 @@ class Hist2D:
     @property
     def xbins(self):
         """
-        The `xbins` getter/setter.
+        An array containing the edges of the bins along the x-axis.
 
-        The data member `xbins` is an array containing the edges of
-        the bins along the x axis. Therefore, its size is equal to
-        the number of bins along x +1.
+        The size of this array is equal to the number of bins along the x-axis plus one.
         """
         logger.info("Called 'Hist2D.xbins' getter")
 
@@ -93,11 +83,9 @@ class Hist2D:
     @property
     def ybins(self):
         """
-        The `ybins` getter/setter.
+        An array containing the edges of the bins along the y-axis.
 
-        The data member `ybins` is an array containing the edges of
-        the bins along the y axis. Therefore, its size is equal to
-        the number of bins along y +1.
+        The size of this array is equal to the number of bins along the y-axis plus one.
         """
         logger.info("Called 'Hist2D.ybins' getter")
 
@@ -120,36 +108,22 @@ class Hist2D:
         cb_label: Optional[str] = None,
     ) -> None:
         """
-        This function draws the histogram in the canvas
-        to which it belongs.
+        Draws the 2D histogram on the canvas.
 
-        Parameters
-        ---
-        canvas: Canvas
-            The canvas object to which the histogram
-            is to be attached.
-
-        Optional Parameters
-        ---
-        plot_n: int
-            The index of the subplot. It is set to 0 by
-            default, so the histogram is assigned to the
-            first canvas if otherwise not specified.
-        range: array-like shape(2,2)
-            The tuple with the left and right limits
-            of the bins (in x and y). It is set to `None` by default.
-        colormap: str
-            The matplotlib colormap of the histogram.
-        alpha: float
-            The transparency of the histogram.
-        log: tuple
-            The tuple with:
-            - a bool for indicating if the scale is to be
-              set to logarithmic;
-            - the range of linearity in case the desired scale
-              is of type 'symlog'.
-        cb_label: str
-            The label of the colorbar relative to the image.
+        Args:
+            canvas (Canvas): The canvas object to draw the histogram on.
+            plot_n (int, optional): The index of the subplot to draw on.
+                Defaults to 0.
+            range (array-like, optional): The tuple with the left and right limits
+                of the bins (in x and y). Defaults to `None`.
+            colormap (str, optional): The Matplotlib colormap to use for the histogram.
+                Defaults to "plasma".
+            alpha (float, optional): The transparency of the histogram. Defaults to 1.
+            log (tuple[bool, float], optional): A tuple controlling the scale.
+                The first element is a boolean to indicate if the scale should be
+                logarithmic. The second element is a float for the range of
+                linearity in case of a 'symlog' scale. Defaults to `(False, 0)`.
+            cb_label (str, optional): The label for the colorbar. Defaults to None.
         """
 
         logger.info("Called 'Hist.draw()'")
