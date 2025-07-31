@@ -4,6 +4,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+BLUEPRINT = {"title": "", "abscissa": "", "ordinate": "", "datasets": [""], "functions": [""], "histograms": [""]}
+
 
 class Text:
     """
@@ -39,12 +41,24 @@ class Text:
         file_path = pathlib.Path("./plotter/text").joinpath(text_file)
 
         try:
-            with open(file_path) as json_file:
+            with open(file_path, "r") as json_file:
                 logger.debug(f"Opened '{file_path}'")
                 self.__data_dict = json.load(json_file)
                 self.__get_data()
         except FileNotFoundError as _:
-            logger.error(f"Impossible to open '{file_path}'")
+            logger.debug(f"Creating {file_path}.")
+
+            # create json file
+            with open(file_path, "w") as json_file:
+                json.dump([BLUEPRINT for _ in range(self.__n_plots)], json_file)
+
+            # read newly created file
+            with open(file_path, "r") as json_file:
+                logger.debug(f"Opened '{file_path}'")
+                self.__data_dict = json.load(json_file)
+                self.__get_data()
+        except json.JSONDecodeError as _:
+            logger.error(f"Impossible to open {file_path}")
 
     def __get_data(self) -> None:
         """
