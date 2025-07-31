@@ -56,7 +56,7 @@ class Canvas:
 
         self.__rows = rows_cols[0]
         self.__cols = rows_cols[1]
-        self.__n_plots = self.__get_n_plots()
+        self.__n_plots = self.__rows * self.__cols
 
         self.counter_scatter_plots = [0 for _ in range(self.__rows + self.__cols)]
         self.counter_plots = [0 for _ in range(self.__rows + self.__cols)]
@@ -76,7 +76,7 @@ class Canvas:
         self.__save_plot = save
 
         # legend
-        self.__loc_legend = [0] * self.__get_n_plots()
+        self.__loc_legend = [0] * self.__n_plots
 
     def setup(self, plot_n: Optional[int] = 0, **kwargs) -> None:
         """
@@ -261,22 +261,6 @@ class Canvas:
             return
 
         self.ax[plot_n].set_yticks(positions, labels=labels)
-
-    def __get_n_plots(self) -> int:
-        """
-        This function obtains the number of subplots
-        of the canvas.
-        """
-
-        _n_plots = 0
-        if self.__rows == 1:
-            _n_plots = self.__cols
-        elif self.__cols == 1:
-            _n_plots = self.__rows
-        else:
-            _n_plots = self.__rows + self.__cols
-
-        return _n_plots
 
     def __legend(self) -> None:
         """
