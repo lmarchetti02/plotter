@@ -16,29 +16,19 @@ logger = logging.getLogger(__name__)
 
 class Canvas:
     """
-    Class used for creating a canvas (xy-plane) where to plot
-    datasets, graphs,...
+    Class for creating a canvas (xy-plane) to plot datasets and graphs.
 
-    Parameters
-    ---
-    text_file: str
-        The name of the json file in which the text to be added
-        to the plot is stored.
-
-    Optional Parameters
-    ---
-    rows_cols: tuple
-        The tuple with the number of rows and columns
-        of subplots '(rows, cols)'.
-    fs: tuple
-        The tuple containing the dimensions of the canvas.
-        Set to `(12,8)` by default.
-    dpi: int
-        The number of 'dots per inches' of the image (see matplotlib
-        documentation). Set to `150` by default.
-    save: str
-        The name of the file in which to store the plot. The
-        plots are stored in 'plotter/img/'.
+    Args:
+        text_file (str): The name of the JSON file containing the text to be
+            added to the plot.
+        rows_cols (tuple[int, int], optional): A tuple with the number of rows
+            and columns of subplots. Defaults to (1, 1).
+        fs (tuple[int, int], optional): A tuple containing the dimensions of
+            the canvas (width, height). Defaults to (12, 8).
+        dpi (int, optional): The number of dots per inch (DPI) of the image.
+            Defaults to 150.
+        save (str, optional): The name of the file to save the plot to. The
+            plots are stored in 'plotter/img/'. Defaults to an empty string.
     """
 
     def __init__(
@@ -80,40 +70,27 @@ class Canvas:
 
     def setup(self, plot_n: Optional[int | tuple[int, int] | str] = 0, **kwargs) -> None:
         """
-        This functions sets up the properties of the
-        subplots created.
+        Sets up the properties of the subplots.
 
-        Optional Parameters
-        ---
-        plot_n: int, tuple, str
-            The indexes of the subplots (0,1,...,n-1)
-            to target for the setup. It defaults to `0`.
+        Args:
+            plot_n (int, tuple[int, int], str, optional): The index or indices
+                of the subplots to configure. Defaults to 0. Options:
+                - int: The index of a single plot (e.g., 0, 1).
+                - str: 'all' to target all plots.
+                - tuple[int, int]: A range of plots to target, from
+                    `inf` to `sup` (inclusive).
+            **kwargs: Additional keyword arguments to configure the plots.
+                - xlim (tuple[float, float]): The limits for the x-axis.
+                - ylim (tuple[float, float]): The limits for the y-axis.
+                - xscale (str): The scale for the x-axis ('linear', 'log', 'symlog').
+                - yscale (str): The scale for the y-axis ('linear', 'log', 'symlog').
+                - nogrid (bool): If True, removes the grid from the plot.
+                - inverted (tuple[bool, bool]): A tuple to invert the x and y axes
+                    respectively (e.g., `(True, False)`).
+                - legend (int): Force the position of the legend to a specified one.
 
-            Options:
-                - int: the number of the plot
-                - str: 'all' to target all plots
-                - tuple[inf,sup]: to target all plots in [inf,sup]
-
-        Extra Parameters
-        ---
-        xlim: tuple
-            The tuple containing the limits of the abscissa axis.
-        ylim: tuple
-            The tuple containing the limits of the ordinate axis.
-        xscale: str
-            The abscissa axis scale. It can be: 'linear' (default),
-            'log' o 'symlog'.
-        yscale: str
-            The ordinate axis scale. It can be: 'linear' (default),
-            'log' o 'symlog'.
-        nogrid: bool
-            `True` if the grid is to be removed, `False` otherwise.
-        inverted: tuple
-            The tuple with the info on whether to invert the axis.
-            The first element corresponds to the x-axis, the second
-            to the y-axis.
-        legend: int
-            Force the position of the legend to a specified one.
+        Raises:
+            ValueError: If 'plot_n' is not a valid value.
         """
         # which plots to target
         if plot_n and not isinstance(plot_n, int):
@@ -176,31 +153,22 @@ class Canvas:
         label: Optional[str] = None,
     ) -> None:
         """
-        This function draws horizontal and vertical lines
-        on the canvas.
+        Draws horizontal and vertical lines on the canvas.
 
-        Parameters
-        ---
-        orientation: str
-            `"v"` for vertical lines, `"h"` for horizontal lines
+        Args:
+            orientation (str): The orientation of the line. Use 'v' for vertical
+                or 'h' for horizontal.
+            point (float, optional): The coordinate of the line. Defaults to 0.
+            plot_n (int, optional): The index of the subplot to draw on.
+                Defaults to 0.
+            color (str, optional): The color of the line. Defaults to 'black'.
+            style (str, optional): The style of the line (e.g., '-', '--', '-.', ':').
+                Defaults to '-'.
+            width (float, optional): The width of the line. Defaults to 0.5.
+            label (str, optional): The label for the line in the legend. Defaults to None.
 
-        Optional Parameters
-        ---
-        point: float
-            The coordinate of the line. Set to 0 by default.
-        plot_n: int
-            The number of the canvas to consider. Set to 0
-            by default.
-        color: str
-            The color of the line. Set to 'black' by default.
-        style: str
-            The style of the line. See info directory. Set to
-            '-' (solid) by default.
-        width: float
-            The width of the line. Set to 0.5 by default.
-        label: str
-            The name to give to the line in the legend. Set to
-            `None` by default.
+        Raises:
+            ValueError: If the orientation is not 'v' or 'h'.
         """
 
         if orientation not in ("v", "h"):
@@ -216,23 +184,22 @@ class Canvas:
         self, axis: str, plot_n: Optional[int] = 0, limits: Optional[tuple[int, int] | int] = (0, 0)
     ) -> None:
         """
-        Function for setting the ticks of the axis to
-        scientific notation.
+        Sets the ticks of an axis to scientific notation.
 
-        Parameters
-        ---
-        axis: str
-            The axis to consider: 'x', 'y', or 'both'.
+        Args:
+            axis (str): The axis to modify: 'x', 'y', or 'both'.
+            plot_n (int, optional): The index of the subplot to consider.
+                Defaults to 0.
+            limits (tuple[int, int] or int, optional): Controls the scientific
+                notation.
+                - `(m, n)`: Scientific notation is used for numbers outside
+                  10^m to 10^n.
+                - `0`: Scientific notation is used for all numbers.
+                - `m`: Fixes the order of magnitude to 10^m.
+                Defaults to (0, 0).
 
-        Optional parameters
-        ---
-        plot_n: int
-            The number of the canvas to consider. Set to 0
-            by default.
-        limits: tuple or int
-            Use `(m,n)` for scientific notation outside
-            10^m-10^n. Use `0` to include all numbers.
-            Use `m` to fix the order of magnitude to 10^m.
+        Raises:
+            ValueError: If the axis is not 'x', 'y', or 'both'.
         """
 
         if axis not in ("x", "y", "both"):
@@ -251,23 +218,19 @@ class Canvas:
         plot_n: int = 0,
     ) -> None:
         """
-        This function modifies the ticks of the axis.
+        Modifies the ticks of an axis.
 
-        Parameters
-        ---
-        axis: str
-            `"x"` for x axis, `"y"` for y axis.
-        positions: tuple
-            A tuple with the positions of the ticks.
+        Args:
+            axis (str): The axis to modify: 'x' or 'y'.
+            positions (tuple[float, ...]): A tuple with the positions of the ticks.
+            labels (tuple[str, ...], optional): A tuple with the labels for the
+                ticks. If None, the labels will be the same as the positions.
+                Defaults to None.
+            plot_n (int, optional): The index of the subplot to consider.
+                Defaults to 0.
 
-        Optional Parameters
-        ---
-        labels: tuple
-            A tuple with the labels of the ticks. Set to 0
-            by default, which means labels=positions.
-        plot_n: int
-            The number of the canvas to consider. Set to 0
-            by default.
+        Raises:
+            ValueError: If the axis is not 'x' or 'y'.
         """
 
         if axis not in ("x", "y"):
@@ -280,9 +243,7 @@ class Canvas:
         self.ax[plot_n].set_yticks(positions, labels=labels)
 
     def __legend(self) -> None:
-        """
-        This function generates the plot legend.
-        """
+        """This function generates the plot legend."""
 
         logger.info("Called 'Canvas.__legend()'")
 
@@ -312,15 +273,13 @@ class Canvas:
 
     def end(self, show: Optional[bool] = True) -> None:
         """
-        This functions finished the plots and renders it.
+        Finalizes and renders the plot.
 
-        It is meant to be called at the end of everything, as
-        anything after it will not affect the plot.
+        This method should be called at the end of the plotting process, as any
+        commands after it will not affect the plot.
 
-        Parameters
-        ---
-        show: bool
-            Whether to actually show the plot. True by default.
+        Args:
+            show (bool, optional): Whether to display the plot. Defaults to True.
         """
 
         logger.info("Called 'Canvas.end()'")
