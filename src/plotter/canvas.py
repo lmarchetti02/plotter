@@ -85,9 +85,14 @@ class Canvas:
 
         Optional Parameters
         ---
-        plot_n: int
-            The index of the subplot (0,1,...,n-1).
-            It is set to `0` by default.
+        plot_n: int, tuple, str
+            The indexes of the subplots (0,1,...,n-1)
+            to target for the setup. It defaults to `0`.
+
+            Options:
+                - int: the number of the plot
+                - str: 'all' to target all plots
+                - tuple[inf,sup]: to target all plots in [inf,sup]
 
         Extra Parameters
         ---
