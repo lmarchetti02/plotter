@@ -10,32 +10,29 @@ logger = logging.getLogger(__name__)
 
 def _make_denser(data: np.ndarray, density: int) -> np.ndarray:
     """
-    This functions takes a numpy array and an integer `ratio` as input, and outputs
-    another numpy array with more elements, hence a "denser" one.
+    Creates a "denser" numpy array by adding elements between existing ones.
 
-    In particular:
-        - it finds the minimum distance 'd' between two consecutive elements;
-        - for every pair of consecutive elements:
-            - it divides the their distance by 'd', it multiplies the result
-              by `density` and rounds it to the nearest integer;
-            - the result is the number of elements it adds in between the
-              pair of elements.
+    This function finds the minimum distance 'd' between consecutive elements.
+    For each pair of consecutive elements, it inserts new points, with the number
+    of points determined by the ratio of the pair's distance to `d`, multiplied
+    by `density` and rounded to the nearest integer.
 
-    Parameters
-    ---
-    data: numpy.ndarray
-        The array that is to be made denser.
-    density: int
-        See above.
+    Args:
+        data (np.ndarray): The 1D numpy array to be made denser.
+        density (int): A scaling factor for the number of elements to add
+            between existing elements. A value of 1 returns the original array.
 
-    Example
-    ---
-    >>> data = np.array([1, 1.2, 3])
-    >>> print(_make_denser(data))
-    [1.         1.1        1.2        1.30588235 1.41176471 1.51764706
-    1.62352941 1.72941176 1.83529412 1.94117647 2.04705882 2.15294118
-    2.25882353 2.36470588 2.47058824 2.57647059 2.68235294 2.78823529
-    2.89411765 3.        ]
+    Returns:
+        np.ndarray: A new 1D numpy array with a higher density of elements.
+
+    Example:
+        >>> data = np.array([1, 1.2, 3])
+        >>> _make_denser(data, 1)
+        array([1. , 1.2, 3. ])
+        >>> # A higher density value inserts more points
+        >>> denser_data = _make_denser(data, 10)
+        >>> print(len(denser_data))
+        20
     """
     logger.info("Called 'denser()' function")
 
@@ -55,7 +52,7 @@ def _make_denser(data: np.ndarray, density: int) -> np.ndarray:
     increment = 0
     result = np.array(data, copy=True, dtype=np.float64)
     for i in range(len(data) - 1):
-        n_elements = np.uint16(np.round(np.abs(data[i + 1] - data[i]) / minimum_dist, 0)) * density
+        n_elements = np.uint(np.round(np.abs(data[i + 1] - data[i]) / minimum_dist, 0)) * density
 
         result = np.insert(
             result,
@@ -72,33 +69,29 @@ def _make_denser(data: np.ndarray, density: int) -> np.ndarray:
 
 def make_wider(data: np.ndarray, left: float, right: float, density: int) -> np.ndarray:
     """
-    This function takes a 1D array and makes it longer by an amount specified
-    by `left` and `right`.
+    Makes a 1D array wider by a specified percentage and increases its density.
 
-    It also makes the input array denser, by make use of the internal
-    function `_make_denser()`.
+    The function extends the array's range by a percentage of its total span,
+    as specified by `left` and `right`. It then calls `_make_denser()` to
+    interpolate new data points and increase the array's density.
 
-    Parameters
-    ---
-    data: numpy.ndarray
-        The input array.
-    left: float
-        The percentage to which the array is to be widened
-        to the left.
-    right: float
-        The percentage to which the array is to be widened
-        to the right.
-    density: int
-        The `_make_denser()` density.
+    Args:
+        data (np.ndarray): The 1D input array.
+        left (float): The percentage to widen the array to the left (e.g., 0.2 for 20%).
+        right (float): The percentage to widen the array to the right (e.g., 0.1 for 10%).
+        density (int): The density factor to pass to the `_make_denser()` function.
 
-    Example
-    ---
-    >>> data = np.array([1, 1.2, 3])
-    >>> print(make_wider(data, 0.2, 0.1))
-    [0.6        0.7        0.8        0.9        1.         1.1
-    1.2        1.30588235 1.41176471 1.51764706 1.62352941 1.72941176
-    1.83529412 1.94117647 2.04705882 2.15294118 2.25882353 2.36470588
-    2.47058824 2.57647059 2.68235294 2.78823529 2.89411765 3.        ]
+    Returns:
+        np.ndarray: The new, wider and denser array.
+
+    Raises:
+        ValueError: If `density` is less than 1.
+        ValueError: If `left` or `right` are less than 0.
+
+    Example:
+        >>> data = np.array([1, 1.2, 3])
+        >>> make_wider(data, 0.2, 0.1, 10)
+        array([0.6, 0.7, 0.8, 0.9, 1. , 1.1, 1.2, ..., 2.9, 3. ])
     """
 
     logger.info("Called 'widen_interval()'")
@@ -131,8 +124,10 @@ def make_wider(data: np.ndarray, left: float, right: float, density: int) -> np.
 
 def setup_logging() -> None:
     """
-    This functions sets up the loggers that will
-    be used throughout the library.
+    Sets up the logging configuration for the library.
+
+    This function reads a logging configuration from a JSON file and applies it
+    to set up the loggers used throughout the module.
     """
     config_file = pathlib.Path(os.getcwd() + "/plotter/utils/log_config.json")
 
