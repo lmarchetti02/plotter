@@ -9,16 +9,11 @@ BLUEPRINT = {"title": "", "abscissa": "", "ordinate": "", "datasets": [""], "fun
 
 class Text:
     """
-    Class used for storing and accessing the
-    text to be displayed in the canvas.
+    Class for storing and accessing the text to be displayed on the canvas.
 
-    Parameters
-    ---
-    text_file: str
-        The name of the json file where the text belonging
-        to the canvases is stored.
-    n_plots: int
-        The number of subplots in the canvas.
+    Args:
+        text_file (str): The name of the JSON file where the text for the canvases is stored.
+        n_plots (int): The number of subplots in the canvas.
     """
 
     def __init__(self, text_file: str, n_plots: int) -> None:
@@ -62,9 +57,7 @@ class Text:
 
     def __get_data(self) -> None:
         """
-        This function pulls the data out of the
-        json file and stores it into the data members
-        of the class.
+        Pulls data from the JSON file and stores it in the class data members.
         """
 
         logger.info("Called 'Text.__get_data()'")
