@@ -115,7 +115,7 @@ class Canvas:
             if plot_n == "all":
                 limits = (0, self.__n_plots)
             elif isinstance(plot_n, tuple) and len(plot_n) == 2:
-                limits = plot_n
+                limits = (plot_n[0], plot_n[1] + 1)
             else:
                 raise ValueError(f"'{plot_n}' is not a valid value for 'plot_n'")
         else:
