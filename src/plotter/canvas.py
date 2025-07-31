@@ -78,7 +78,7 @@ class Canvas:
         # legend
         self.__loc_legend = [0] * self.__n_plots
 
-    def setup(self, plot_n: Optional[int] = 0, **kwargs) -> None:
+    def setup(self, plot_n: Optional[int | tuple[int, int] | str] = 0, **kwargs) -> None:
         """
         This functions sets up the properties of the
         subplots created.
@@ -110,43 +110,55 @@ class Canvas:
         legend: int
             Force the position of the legend to a specified one.
         """
+        # which plots to target
+        if plot_n and not isinstance(plot_n, int):
+            if plot_n == "all":
+                limits = (0, self.__n_plots)
+            elif isinstance(plot_n, tuple) and len(plot_n) == 2:
+                limits = plot_n
+            else:
+                raise ValueError(f"'{plot_n}' is not a valid value for 'plot_n'")
+        else:
+            limits = (plot_n, plot_n + 1)
 
-        # grid
-        self.no_grid = kwargs.get("nogrid", False)
-        if not self.no_grid:
-            self.ax[plot_n].grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
+        # setup plots
+        for plot_i in range(*limits):
+            # grid
+            self.no_grid = kwargs.get("nogrid", False)
+            if not self.no_grid:
+                self.ax[plot_i].grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
 
-        # axis limits
-        if "xlim" in kwargs.keys():
-            self.ax[plot_n].set_xlim(kwargs["xlim"][0], kwargs["xlim"][1])
+            # axis limits
+            if "xlim" in kwargs.keys():
+                self.ax[plot_i].set_xlim(kwargs["xlim"][0], kwargs["xlim"][1])
 
-        if "ylim" in kwargs.keys():
-            self.ax[plot_n].set_ylim(kwargs["ylim"][0], kwargs["ylim"][1])
+            if "ylim" in kwargs.keys():
+                self.ax[plot_i].set_ylim(kwargs["ylim"][0], kwargs["ylim"][1])
 
-        # invert axis
-        if "inverted" in kwargs.keys():
-            if kwargs["inverted"][0]:
-                self.ax[plot_n].invert_xaxis()
-            if kwargs["inverted"][1]:
-                self.ax[plot_n].invert_yaxis()
+            # invert axis
+            if "inverted" in kwargs.keys():
+                if kwargs["inverted"][0]:
+                    self.ax[plot_i].invert_xaxis()
+                if kwargs["inverted"][1]:
+                    self.ax[plot_i].invert_yaxis()
 
-        # axis scales
-        if "yscale" in kwargs.keys():
-            self.ax[plot_n].set_yscale(kwargs["yscale"])
+            # axis scales
+            if "yscale" in kwargs.keys():
+                self.ax[plot_i].set_yscale(kwargs["yscale"])
 
-        if "xscale" in kwargs.keys():
-            self.ax[plot_n].set_xscale(kwargs["xscale"])
+            if "xscale" in kwargs.keys():
+                self.ax[plot_i].set_xscale(kwargs["xscale"])
 
-        # legend
-        if "legend" in kwargs.keys():
-            self.__loc_legend[plot_n] = kwargs["legend"]
+            # legend
+            if "legend" in kwargs.keys():
+                self.__loc_legend[plot_i] = kwargs["legend"]
 
-        # axis labels
-        self.ax[plot_n].set_xlabel(self.text.abscissa[plot_n])
-        self.ax[plot_n].set_ylabel(self.text.ordinate[plot_n])
+            # axis labels
+            self.ax[plot_i].set_xlabel(self.text.abscissa[plot_i])
+            self.ax[plot_i].set_ylabel(self.text.ordinate[plot_i])
 
-        # title
-        self.ax[plot_n].set_title(self.text.title[plot_n], y=1)
+            # title
+            self.ax[plot_i].set_title(self.text.title[plot_i], y=1)
 
     def draw_line(
         self,
