@@ -141,9 +141,9 @@ class Canvas:
         self.__n_plots = self.__rows * self.__cols
 
         self.__init_counters = [0 for _ in range(self.__n_plots)]
-        self.counter_scatter_plots = self.__init_counters
-        self.counter_plots = self.__init_counters
-        self.counter_histograms = self.__init_counters
+        self.counter_scatter_plots = self.__init_counters.copy()
+        self.counter_plots = self.__init_counters.copy()
+        self.counter_histograms = self.__init_counters.copy()
 
         # plot properties
         self.fig, self.ax = plt.subplots(nrows=rows_cols[0], ncols=rows_cols[1], figsize=(fs[0], fs[1]), dpi=dpi)
