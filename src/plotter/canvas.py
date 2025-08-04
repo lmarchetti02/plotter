@@ -341,11 +341,8 @@ class Canvas:
         logger.info("Called 'Canvas.__legend()'")
 
         for i in range(self.__n_plots):
-            legend = self.ax[i].legend(loc=self.__loc_legend[i], labelspacing=1)
-
-            if not legend.get_texts():
-                legend.remove()
-                logger.warning("Empty legend.")
+            if self.counter_histograms[i] or self.counter_plots[i] or self.counter_scatter_plots[i]:
+                self.ax[i].legend(loc=self.__loc_legend[i], labelspacing=1)
 
             logger.debug("Legend added.")
 
@@ -377,10 +374,7 @@ class Canvas:
 
         logger.info("Called 'Canvas.end()'")
 
-        # if only Hist2D, no legend
-        if self.__init_counters not in (self.counter_histograms, self.counter_plots, self.counter_scatter_plots):
-            self.__legend()
-
+        self.__legend()
         self.__save()
         logger.info("Plot finished")
 
