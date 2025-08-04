@@ -54,9 +54,8 @@ except OSError as _:
     print(f"{parent_dir} directory already exists.")
 
 
-from .canvas import Canvas
-from .plot import Plot
-from .scatter import ScatterPlot
-from .histograms import Hist
-from .histograms_2d import Hist2D
-from .images import Image
+from .canvas import *
+from .plot import *
+from .scatter import *
+from .histograms import *
+from .images import *

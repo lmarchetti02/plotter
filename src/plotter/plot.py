@@ -7,6 +7,8 @@ from .functions import make_wider
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["Plot"]
+
 
 class Plot:
     """

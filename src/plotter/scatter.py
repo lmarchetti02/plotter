@@ -6,6 +6,8 @@ from .canvas import Canvas
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["ScatterPlot"]
+
 
 class ScatterPlot:
     """
