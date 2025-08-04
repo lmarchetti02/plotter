@@ -116,7 +116,11 @@ class Hist:
 
         # label
         n = canvas.counter_histograms[plot_n]
-        self.__label = label if label else canvas.text.histograms[plot_n][n]
+        try:
+            self.__label = label if label else canvas.text.histograms[plot_n][n]
+        except IndexError as _:
+            self.__label = None
+            logger.warning(f"No label for the histogram in the json file.")
 
         self.bin_vals, self.bins, _ = canvas.ax[plot_n].hist(
             self.__data,

@@ -82,7 +82,11 @@ class ScatterPlot:
 
         # label
         n = canvas.counter_scatter_plots[plot_n]
-        self.__label = label if label else canvas.text.datasets[plot_n][n]
+        try:
+            self.__label = label if label else canvas.text.datasets[plot_n][n]
+        except IndexError as _:
+            self.__label = None
+            logger.warning(f"No label for the scatter plot in the json file.")
 
         canvas.ax[plot_n].errorbar(
             self.__x,

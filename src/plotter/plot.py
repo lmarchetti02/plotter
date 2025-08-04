@@ -79,7 +79,11 @@ class Plot:
 
         # label
         n = canvas.counter_plots[plot_n]
-        self.__label = label if label else canvas.text.functions[plot_n][n]
+        try:
+            self.__label = label if label else canvas.text.functions[plot_n][n]
+        except IndexError as _:
+            self.__label = None
+            logger.warning(f"No label for the plot in the json file.")
 
         canvas.ax[plot_n].plot(
             self.__x,
