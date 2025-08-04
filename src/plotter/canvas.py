@@ -48,9 +48,10 @@ class Canvas:
         self.__cols = rows_cols[1]
         self.__n_plots = self.__rows * self.__cols
 
-        self.counter_scatter_plots = [0 for _ in range(self.__rows + self.__cols)]
-        self.counter_plots = [0 for _ in range(self.__rows + self.__cols)]
-        self.counter_histograms = [0 for _ in range(self.__rows + self.__cols)]
+        self.__init_counters = [0 for _ in range(self.__n_plots)]
+        self.counter_scatter_plots = self.__init_counters
+        self.counter_plots = self.__init_counters
+        self.counter_histograms = self.__init_counters
 
         # plot properties
         self.fig, self.ax = plt.subplots(nrows=rows_cols[0], ncols=rows_cols[1], figsize=(fs[0], fs[1]), dpi=dpi)
@@ -285,7 +286,7 @@ class Canvas:
         logger.info("Called 'Canvas.end()'")
 
         # if only Hist2D, no legend
-        if self.counter_histograms != 0 or self.counter_plots != 0 or self.counter_scatter_plots != 0:
+        if self.__init_counters not in (self.counter_histograms, self.counter_plots, self.counter_scatter_plots):
             self.__legend()
 
         self.__save()
