@@ -59,7 +59,7 @@ def _make_denser(data: np.ndarray, density: int) -> np.ndarray:
     result = np.zeros(final_size, dtype=data.dtype)
 
     # add original data to final array
-    insert_indices = np.cumsum(n_elements_to_add) + np.arange(len(data) - 1) + 1
+    insert_indices = np.astype(np.cumsum(n_elements_to_add) + np.arange(len(data) - 1) + 1, np.uint)
     result[0] = data[0]
     result[insert_indices] = data[1:]
 
