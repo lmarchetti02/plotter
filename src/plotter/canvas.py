@@ -82,28 +82,19 @@ class _Text:
         logger.info("Called 'Text.__get_data()'")
 
         for i in range(self.__n_plots):
-            self.title[i] = str(self.__data_dict[i]["title"])
-            self.abscissa[i] = str(self.__data_dict[i]["abscissa"])
-            self.ordinate[i] = str(self.__data_dict[i]["ordinate"])
-
+            self.title[i] = self.__data_dict[i]["title"]
+            self.abscissa[i] = self.__data_dict[i]["abscissa"]
+            self.ordinate[i] = self.__data_dict[i]["ordinate"]
             self.datasets[i] = self.__data_dict[i]["datasets"]
-            for j in self.datasets:
-                j = str(j)
-
             self.functions[i] = self.__data_dict[i]["functions"]
-            for j in self.functions:
-                j = str(j)
-
             self.histograms[i] = self.__data_dict[i]["histograms"]
-            for j in self.histograms:
-                j = str(j)
 
-        logger.debug(f"Titles: {self.title}")
-        logger.debug(f"Abscissas: {self.abscissa}")
-        logger.debug(f"Ordinates: {self.ordinate}")
-        logger.debug(f"Datasets: {self.datasets}")
-        logger.debug(f"Functions: {self.functions}")
-        logger.debug(f"Histograms: {self.histograms}")
+        logger.debug(f"Titles:      {self.title}")
+        logger.debug(f"Abscissas:   {self.abscissa}")
+        logger.debug(f"Ordinates:   {self.ordinate}")
+        logger.debug(f"Datasets:    {self.datasets}")
+        logger.debug(f"Functions:   {self.functions}")
+        logger.debug(f"Histograms:  {self.histograms}")
 
 
 class Canvas:
