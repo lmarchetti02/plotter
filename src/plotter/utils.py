@@ -4,8 +4,12 @@ import pathlib
 import numpy as np
 import logging.config
 import logging.handlers
+from typing import Optional
+import matplotlib.colors as mcolors
 
 logger = logging.getLogger(__name__)
+
+__all__ = ["get_colors"]
 
 
 def _make_denser(data: np.ndarray, density: int) -> np.ndarray:
@@ -135,6 +139,31 @@ def setup_logging() -> None:
         config = json.load(f_in)
 
     logging.config.dictConfig(config)
+
+
+def get_colors(length: int, gradient: Optional[tuple[str, str]] = None) -> list[str]:
+    """
+    Generate a list of colors for the plots.
+
+    Args:
+        length (int): The length of the list.
+        gradient (tuple[str, str], optional): The initial and final colors of the
+            gradient (see plotter/utils/info for a list of available colors).
+            Defaults to None, which results in a list of random colors.
+
+    Returns:
+        list[str]: The list of colors.
+    """
+    COLORS = list(mcolors.TABLEAU_COLORS.keys())
+
+    if gradient:
+        cmap = mcolors.LinearSegmentedColormap.from_list("cmap", gradient, length)
+        return cmap(np.linspace(0, 1, length))
+
+    if length <= len(COLORS):
+        return np.random.choice(COLORS, length, replace=False)
+    else:
+        return np.random.choice(COLORS, length, replace=True)
 
 
 if __name__ == "__main__":

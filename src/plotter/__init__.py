@@ -59,3 +59,4 @@ from .plot import *
 from .scatter import *
 from .histograms import *
 from .images import *
+from .utils import *

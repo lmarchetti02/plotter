@@ -3,7 +3,7 @@ from numpy import ndarray
 from typing import Optional, Callable
 
 from .canvas import Canvas
-from .functions import make_wider
+from .utils import make_wider
 
 logger = logging.getLogger(__name__)
 

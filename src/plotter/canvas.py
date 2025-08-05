@@ -5,7 +5,7 @@ import numpy as np
 from typing import Optional
 import matplotlib.pyplot as plt
 
-from .functions import setup_logging
+from .utils import setup_logging
 
 plt.style.use(pathlib.Path("./plotter/utils/style.mplstyle"))
 logging.getLogger("matplotlib").setLevel(logging.CRITICAL)  # remove matplotlib logger

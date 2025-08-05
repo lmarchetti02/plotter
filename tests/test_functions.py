@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 import pathlib
 
-from src.plotter.functions import make_wider
-from src.plotter.functions import _make_denser
-from src.plotter.functions import setup_logging
+from plotter.utils import make_wider
+from plotter.utils import _make_denser
+from plotter.utils import setup_logging
 
 data = np.array([0, 1, 2])
 repeating = np.array([0, 1, 1, 3])
