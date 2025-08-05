@@ -45,28 +45,39 @@ def _make_denser(data: np.ndarray, density: int) -> np.ndarray:
         return data
 
     # find minimum distance
-    minimum_dist = np.min(np.abs(data - np.append(data[1:], 0))[:-1])
+    distances = np.diff(data)
+    minimum_dist = np.min(np.abs(distances))
     logger.debug(f"Minimum distance: {minimum_dist}")
 
     if minimum_dist == 0:
         logger.warning("There are at least two repeated consecutive elements")
         return data
 
-    # make denser
-    increment = 0
-    result = np.array(data, copy=True, dtype=np.float64)
+    # create final array
+    n_elements_to_add = np.round(np.abs(distances) / minimum_dist).astype(np.uint) * density - 1
+    final_size = data.size + np.sum(n_elements_to_add)
+    result = np.zeros(final_size, dtype=data.dtype)
+
+    # add original data to final array
+    insert_indices = np.cumsum(n_elements_to_add) + np.arange(len(data) - 1) + 1
+    result[0] = data[0]
+    result[insert_indices] = data[1:]
+
+    # add interpolated data to final array
+    current_index = 0
     for i in range(len(data) - 1):
-        n_elements = np.uint(np.round(np.abs(data[i + 1] - data[i]) / minimum_dist, 0)) * density
+        num_new_points = n_elements_to_add[i]
+        start = data[i]
+        stop = data[i + 1]
 
-        result = np.insert(
-            result,
-            i + increment + 1,
-            np.linspace(data[i], data[i + 1], num=n_elements, endpoint=False)[1:],
-        )
+        start_index = current_index + 1
+        stop_index = start_index + num_new_points
 
-        increment += n_elements - 1
+        result[start_index:stop_index] = np.linspace(start, stop, num=num_new_points + 2)[1:-1]
 
-    logger.debug(f"Final array:\n{result}")
+        current_index = stop_index
+
+    logger.debug(f"Final array of size {len(result)}:\n{result}")
 
     return result
 
@@ -108,17 +119,17 @@ def make_wider(data: np.ndarray, left: float, right: float, density: int) -> np.
 
     logger.debug(f"Initial dataset:\n {data}")
 
-    m = np.min(data)
-    M = np.max(data)
-    delta = M - m
+    data_min = np.min(data)
+    data_max = np.max(data)
+    delta = data_max - data_min
 
     wider_data = np.array(data, copy=True, dtype=np.float64)
     if left != 0:
-        wider_data = np.insert(wider_data, 0, m - left * delta)
+        wider_data = np.insert(wider_data, 0, data_min - left * delta)
 
     if right != 0:
         wider_data = wider_data[::-1]
-        wider_data = np.insert(wider_data, 0, M + right * delta)
+        wider_data = np.insert(wider_data, 0, data_max + right * delta)
         wider_data = wider_data[::-1]
 
     logger.debug(f"Dataset to be made denser:\n {wider_data}")
