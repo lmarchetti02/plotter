@@ -4,8 +4,9 @@ import pathlib
 import numpy as np
 from typing import Optional
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 
-from .utils import setup_logging
+from .utils import setup_logging, get_axis_size
 
 plt.style.use(pathlib.Path("./plotter/utils/style.mplstyle"))
 logging.getLogger("matplotlib").setLevel(logging.CRITICAL)  # remove matplotlib logger
@@ -330,6 +331,49 @@ class Canvas:
             return
 
         self.ax[plot_n].set_yticks(positions, labels=labels)
+
+    def add_scalebar(
+        self,
+        size: int,
+        label: str,
+        plot_n: Optional[int] = 0,
+        location: Optional[str] = "upper right",
+        color: Optional[str] = "black",
+        v_size: Optional[int] = None,
+    ) -> None:
+        """
+        Adds a scalebar (and, thus, removes the axis labels).
+
+        Args:
+            size (int): The horizontal size (in coordinates of axis).
+            label (str): The label.
+            plot_n (int, optional): The index of the subplot. Defaults to 0.
+            location (str, optional): Where to put the scalebar. Defaults to "upper right".
+            color (str, optional): The color. Defaults to "black".
+            v_size (int, optional): The vertical size. Defaults to None,
+                which results in 1% of the height of the axis.
+        """
+        logger.info("Called 'Canvas.add_scalebar()")
+
+        self.__v_size = v_size
+        if not v_size:
+            _, height = get_axis_size(self.fig, self.ax[plot_n])
+            self.__v_size = int(0.01 * height)
+
+        scalebar = AnchoredSizeBar(
+            self.ax[plot_n].transData,
+            size=size,
+            label=label,
+            loc=location,
+            color=color,
+            pad=0.5,
+            size_vertical=self.__v_size,
+            frameon=False,
+        )
+
+        self.ax[plot_n].add_artist(scalebar)
+        self.ax[plot_n].set_yticks([])
+        self.ax[plot_n].set_xticks([])
 
     def __legend(self) -> None:
         """This function generates the plot legend."""

@@ -3,9 +3,10 @@ import json
 import pathlib
 import numpy as np
 import logging.config
-import logging.handlers
 from typing import Optional
 import matplotlib.colors as mcolors
+from matplotlib.axis import Axis
+from matplotlib.figure import Figure
 
 logger = logging.getLogger(__name__)
 
@@ -175,6 +176,25 @@ def get_colors(length: int, gradient: Optional[tuple[str, str]] = None) -> list[
         return np.random.choice(COLORS, length, replace=False)
     else:
         return np.random.choice(COLORS, length, replace=True)
+
+
+def get_axis_size(fig: Figure, ax: Axis) -> tuple[int, int]:
+    """
+    Obtains the size (px) of the axis of a subplot.
+
+    Args:
+        fig (Figure): The Figure (see matplotlib doc).
+        ax (Axis): The axis in question.
+
+    Returns:
+        tuple[int, int]: A tuple with (width, height).
+    """
+    bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    width, height = bbox.width, bbox.height
+    width *= fig.dpi
+    height *= fig.dpi
+
+    return int(width), int(height)
 
 
 if __name__ == "__main__":
