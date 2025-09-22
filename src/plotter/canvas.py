@@ -33,6 +33,7 @@ class _Text:
         "datasets": [""],
         "functions": [""],
         "histograms": [""],
+        "images": [""],
     }
 
     def __init__(self, text_file: str, n_plots: int) -> None:
@@ -47,6 +48,7 @@ class _Text:
         self.datasets = [[] for _ in range(self.__n_plots)]
         self.functions = [[] for _ in range(self.__n_plots)]
         self.histograms = [[] for _ in range(self.__n_plots)]
+        self.images = [[] for _ in range(self.__n_plots)]
 
         # add json extension if necessary
         if text_file[-5:] != ".json":
@@ -88,6 +90,7 @@ class _Text:
             self.datasets[i] = self.__data_dict[i]["datasets"]
             self.functions[i] = self.__data_dict[i]["functions"]
             self.histograms[i] = self.__data_dict[i]["histograms"]
+            self.images[i] = self.__data_dict[i]["images"]
 
         logger.debug(f"Titles:      {self.title}")
         logger.debug(f"Abscissas:   {self.abscissa}")
@@ -95,6 +98,7 @@ class _Text:
         logger.debug(f"Datasets:    {self.datasets}")
         logger.debug(f"Functions:   {self.functions}")
         logger.debug(f"Histograms:  {self.histograms}")
+        logger.debug(f"Images:      {self.images}")
 
 
 class Canvas:
@@ -135,6 +139,7 @@ class Canvas:
         self.counter_scatter_plots = self.__init_counters.copy()
         self.counter_plots = self.__init_counters.copy()
         self.counter_histograms = self.__init_counters.copy()
+        self.counter_images = self.__init_counters.copy()
 
         # plot properties
         self.fig, self.ax = plt.subplots(nrows=rows_cols[0], ncols=rows_cols[1], figsize=(fs[0], fs[1]), dpi=dpi)

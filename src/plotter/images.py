@@ -49,7 +49,7 @@ class Image:
         aspect: Optional[str] = "equal",
         origin: Optional[str] = "upper",
         limits: Optional[list[float]] = None,
-        cb_label: Optional[str] = None,
+        label: Optional[str] = None,
     ) -> None:
         """
         Draws the image on the canvas.
@@ -99,10 +99,31 @@ class Image:
         )
         logger.debug(f"Image drawn")
 
-        # make colorbar that fits the image
+        self.add_colorbar(canvas, plot_n, label)
+        canvas.counter_images[plot_n] += 1
+
+    def add_colorbar(self, canvas: Canvas, plot_n: int, label: str) -> None:
+        """
+        Adds the colorbar to an image.
+
+        Args:
+            See `self.draw`.
+        """
+        logger.info("Called 'Image.add.colorbar()'")
+
+        n = canvas.counter_images[plot_n]
+        try:
+            self.__label = label if label else canvas.text.images[plot_n][n]
+        except IndexError as _:
+            self.__label = None
+            logger.warning(f"No label for the plot in the json file.")
+
+        if not self.__label:
+            return
+
         divider = make_axes_locatable(canvas.ax[plot_n])
         cax = divider.append_axes("right", size="5%", pad=0.1)
-        canvas.fig.colorbar(self.__img, cax=cax, label=cb_label)
+        canvas.fig.colorbar(self.__img, cax=cax, label=self.__label)
 
 
 if __name__ == "__main__":
