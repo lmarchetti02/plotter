@@ -50,6 +50,7 @@ class Image:
         origin: Optional[str] = "upper",
         limits: Optional[list[float]] = None,
         label: Optional[str] = None,
+        cb_pos: Optional[str] = "right",
     ) -> None:
         """
         Draws the image on the canvas.
@@ -71,7 +72,8 @@ class Image:
                 `upper` for the top-left, `lower` for the bottom-left. Defaults to "upper".
             limits (list[float], optional): The limits of the x and y axes in the format
                 `[left, right, bottom, top]`. Defaults to `None`.
-            cb_label (str, optional): The label for the colorbar. Defaults to `None`.
+            label (str, optional): The label for the colorbar. Defaults to `None`.
+            cb_pos (str, optional): Where to put the colorbar. Defaults to "right".
         """
 
         logger.info("Called 'Image.draw()'")
@@ -99,10 +101,10 @@ class Image:
         )
         logger.debug(f"Image drawn")
 
-        self.add_colorbar(canvas, plot_n, label)
+        self.add_colorbar(canvas, plot_n, label, cb_pos)
         canvas.counter_images[plot_n] += 1
 
-    def add_colorbar(self, canvas: Canvas, plot_n: int, label: str) -> None:
+    def add_colorbar(self, canvas: Canvas, plot_n: int, label: str, pos: str = "right") -> None:
         """
         Adds the colorbar to an image.
 
@@ -122,8 +124,15 @@ class Image:
             return
 
         divider = make_axes_locatable(canvas.ax[plot_n])
-        cax = divider.append_axes("right", size="5%", pad=0.1)
-        canvas.fig.colorbar(self.__img, cax=cax, label=self.__label)
+
+        orientation = "vertical"
+        if pos in ("top", "bottom"):
+            orientation = "horizontal"
+        else:
+            logger.warning("The position of the colorbar is incorrect.")
+
+        cax = divider.append_axes(pos, size="5%", pad=0.1)
+        canvas.fig.colorbar(self.__img, cax=cax, label=self.__label, orientation=orientation)
 
 
 if __name__ == "__main__":
