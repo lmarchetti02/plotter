@@ -73,7 +73,10 @@ class Image:
             limits (list[float], optional): The limits of the x and y axes in the format
                 `[left, right, bottom, top]`. Defaults to `None`.
             label (str, optional): The label for the colorbar. Defaults to `None`.
-            colorbar (dict, optional): Where to put the colorbar. Defaults to "right".
+            colorbar (dict, optional): To style the colorbar. Defaults to `None`.
+                - `"pos"` (str): where to put the colorbar (right, left, top, bottom)
+                - `"size"` (str): % of size of axes
+                - `"pad"` (float): padding between colorbar and image
         """
 
         logger.info("Called 'Image.draw()'")
