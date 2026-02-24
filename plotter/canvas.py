@@ -1,12 +1,13 @@
 import json
 import logging
 import pathlib
-import numpy as np
 from typing import Optional
+
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 
-from .utils import setup_logging, get_axis_size
+from .utils import get_axis_size, setup_logging
 
 plt.style.use(pathlib.Path("./plotter/utils/style.mplstyle"))
 logging.getLogger("matplotlib").setLevel(logging.CRITICAL)  # remove matplotlib logger
@@ -38,7 +39,6 @@ class _Text:
     }
 
     def __init__(self, text_file: str, n_plots: int) -> None:
-
         logger.info("'Text' object created")
 
         self.__n_plots = n_plots

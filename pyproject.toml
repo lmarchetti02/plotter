@@ -1,19 +1,19 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["setuptools", "setuptools-scm", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 authors = [{ name = "Luca Marchetti" }]
 name = "plotter"
-description = "A small Python program for plotting beautiful graphs."
-version = "0.1.0"
-requires-python = ">=3.8"
-readme = "README.MD"
+description = "A small Python library for plotting beautiful graphs."
+version = "0.2.0"
+requires-python = ">=3.12"
+readme = "README.md"
 license = "MIT"
 dependencies = ["matplotlib", "numpy", "pathlib"]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["plotter"]
 
 [tool.setuptools.package-data]
 plotter = ["data/*", "data/info/*"]
@@ -23,8 +23,10 @@ minversion = "6.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
 
-[tool.black]
-line-length = 119
+[tool.uv.workspace]
+members = [
+    "trash",
+]
 
 [project.urls]
 Repository = "https://github.com/lmarchetti02/plotter"
