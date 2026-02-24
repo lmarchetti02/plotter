@@ -10,7 +10,10 @@ version = "0.2.0"
 requires-python = ">=3.12"
 readme = "README.md"
 license = "MIT"
-dependencies = ["matplotlib", "numpy", "pathlib"]
+dependencies = [
+    "matplotlib",
+    "numpy",
+]
 
 [tool.setuptools.packages.find]
 where = ["plotter"]
@@ -23,9 +26,9 @@ minversion = "6.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
 
-[tool.uv.workspace]
-members = [
-    "trash",
+[dependency-groups]
+dev = [
+    "ruff>=0.15.2",
 ]
 
 [project.urls]
