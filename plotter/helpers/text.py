@@ -20,6 +20,7 @@ class PlotText:
         scatter_plots (list[str]): The labels of the scatter plots.
         line_plots (list[str]): The labels of the line plots.
         histograms (list[str]): The labels of the histograms.
+        histograms_2d (list[str]): The labels of the 2D histograms.
         images (list[str]): The label of the images.
     """
 
@@ -29,6 +30,7 @@ class PlotText:
     scatter_plots: list[str]
     line_plots: list[str]
     histograms: list[str]
+    histograms_2d: list[str]
     images: list[str]
 
     @classmethod
@@ -48,6 +50,7 @@ class PlotText:
             scatter_plots=[""],
             line_plots=[""],
             histograms=[""],
+            histograms_2d=[""],
             images=[""],
         )
 

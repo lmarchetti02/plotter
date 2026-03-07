@@ -6,6 +6,7 @@
     "scatter_plots": [""],
     "line_plots": [""],
     "histograms": [""],
+    "histograms_2d": [""],
     "images": [""]
   }
 ]

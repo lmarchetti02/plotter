@@ -1,6 +1,6 @@
 from json import dumps
 
-from plotter.text import PlotText, Text
+from plotter.helpers.text import PlotText, Text
 
 TEST_DATA = [
     {
@@ -10,6 +10,7 @@ TEST_DATA = [
         "scatter_plots": ["data"],
         "line_plots": ["line"],
         "histograms": ["hist"],
+        "histograms_2d": ["hist"],
         "images": ["img1", "img2"],
     },
     {
@@ -19,6 +20,7 @@ TEST_DATA = [
         "scatter_plots": ["data1", "data2"],
         "line_plots": ["line"],
         "histograms": ["hist1", "hist2", "hist3"],
+        "histograms_2d": [""],
         "images": [""],
     },
 ]
