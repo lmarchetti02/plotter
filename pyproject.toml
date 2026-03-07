@@ -10,10 +10,7 @@ version = "0.2.0"
 requires-python = ">=3.12"
 readme = "README.md"
 license = "MIT"
-dependencies = [
-    "matplotlib",
-    "numpy",
-]
+dependencies = ["matplotlib", "numpy", "pydantic>=2.12.5", "pytest>=9.0.2"]
 
 [tool.setuptools.packages.find]
 where = ["plotter"]
@@ -22,14 +19,13 @@ where = ["plotter"]
 plotter = ["data/*", "data/info/*"]
 
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q"
+minversion = "9.0"
+addopts = "-s -vv -x"
 testpaths = ["tests"]
+pythonpath = "."
 
 [dependency-groups]
-dev = [
-    "ruff>=0.15.2",
-]
+dev = ["ruff>=0.15.2"]
 
 [project.urls]
 Repository = "https://github.com/lmarchetti02/plotter"

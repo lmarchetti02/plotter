@@ -1,10 +1,11 @@
 [
   {
     "title": "",
-    "abscissa": "",
-    "ordinate": "",
-    "datasets": [""],
-    "functions": [""],
-    "histograms": [""]
+    "x_label": "",
+    "y_label": "",
+    "scatter_plots": [""],
+    "line_plots": [""],
+    "histograms": [""],
+    "images": [""]
   }
 ]
