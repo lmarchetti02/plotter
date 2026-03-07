@@ -1,38 +1,39 @@
 {
-    "version": 1,
-    "disable_existing_loggers": false,
-    "formatters": {
-        "simple": {
-            "format": "%(levelname)s: %(message)s"
-        },
-        "detailed": {
-            "format": "[%(levelname)s|%(module)s|L%(lineno)d] %(asctime)s - %(name)s: %(message)s",
-            "datefmt": "%Y-%m-%dT%H:%M:%S%z"
-        }
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "simple": {
+      "format": "%(levelname)s: %(message)s"
     },
-    "handlers": {
-        "stderr": {
-            "class": "logging.StreamHandler",
-            "level": "ERROR",
-            "formatter": "simple",
-            "stream": "ext://sys.stderr"
-        },
-        "file": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
-            "formatter": "detailed",
-            "filename": "plotter/log/plotter.log",
-            "maxBytes": 5000000,
-            "backupCount": 3
-        }
-    },
-    "loggers": {
-        "root": {
-            "level": "DEBUG",
-            "handlers": [
-                "stderr",
-                "file"
-            ]
-        }
+    "detailed": {
+      "format": "[%(levelname)s|%(module)s|L%(lineno)d] %(asctime)s - %(name)s: %(message)s",
+      "datefmt": "%Y-%m-%dT%H:%M:%S%z"
     }
+  },
+  "handlers": {
+    "stderr": {
+      "class": "logging.StreamHandler",
+      "level": "ERROR",
+      "formatter": "simple",
+      "stream": "ext://sys.stderr"
+    },
+    "file": {
+      "class": "logging.FileHandler",
+      "level": "DEBUG",
+      "formatter": "detailed",
+      "filename": "log/plotter.log",
+      "mode": "w"
+    }
+  },
+  "loggers": {
+    "": {
+      "level": "CRITICAL",
+      "handlers": ["stderr", "file"]
+    },
+    "plotter": {
+      "level": "DEBUG",
+      "handlers": ["stderr", "file"],
+      "propagate": false
+    }
+  }
 }
