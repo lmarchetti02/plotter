@@ -1,66 +1,53 @@
-import logging
+from logging import getLogger
+from typing import Any
+
 import numpy as np
-from typing import Optional
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas
+from .helpers import NArray1D
 
-logger = logging.getLogger(__name__)
-
-__all__ = ["ScatterPlot"]
+logger = getLogger(__name__)
 
 
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class ScatterPlot:
     """
     Class for creating a scatter plot with error bars.
 
     Args:
-        x (np.ndarray): The array containing the x values.
-        y (np.ndarray): The array containing the y values.
-        xerr (np.ndarray, optional): The array containing the errors in the x values.
-        yerr (np.ndarray, optional): The array containing the errors in the y values.
+        x (NArray1D[Any]): The array containing the x values.
+        y (NArray1D[Any]): The array containing the y values.
+        xerr (NArray1D[Any] or float, optional): The array containing the errors of the x values.
+            If a float is passed, all the errors are assumed identical.
+        yerr (NArray1D[Any] or float, optional): The array containing the errors of the y values.
+            If a float is passed, all the errors are assumed identical.
 
     Raises:
         ValueError: If x and y values do not have the same dimensions.
         ValueError: If x or y error values do not have the same dimensions as their corresponding data arrays.
     """
 
-    def __init__(
-        self,
-        x: np.ndarray,
-        y: np.ndarray,
-        yerr: Optional[np.ndarray] = None,
-        xerr: Optional[np.ndarray] = None,
-    ) -> None:
-        logger.info("Created 'ScatterPlot' object")
+    x: NArray1D[Any]
+    y: NArray1D[Any]
+    yerr: NArray1D[Any] | float | None = None
+    xerr: NArray1D[Any] | float | None = None
 
+    def __post_init__(self) -> None:
         # xy values
-        if len(x) != len(y):
+        if len(self.x) != len(self.y):
             raise ValueError("x-values and y-values don't have the same dimensions")
-        self.__x = x
-        self.__y = y
 
         # y errors
-        if yerr is not None and len(y) != len(yerr):
+        if isinstance(self.yerr, np.ndarray) and len(self.y) != len(self.yerr):
             raise ValueError("xy-values and yerr-values don't have the same dimensions")
-        self.__yerr = yerr
 
         # x errors
-        if xerr is not None and len(x) != len(xerr):
+        if isinstance(self.xerr, np.ndarray) and len(self.x) != len(self.xerr):
             raise ValueError("xy-values and xerr-values don't have the same dimensions")
-        self.__xerr = xerr
 
-    def draw(
-        self,
-        canvas: Canvas,
-        plot_n: Optional[int] = 0,
-        color: Optional[str] = "firebrick",
-        err_color: Optional[str] = "black",
-        marker: Optional[str] = "o",
-        ms: Optional[float] = 4,
-        err_width: Optional[float] = 1,
-        ticks_size: Optional[float] = 2,
-        label: Optional[str] = None,
-    ) -> None:
+    def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
         Draws the scatter plot on the canvas.
 
@@ -68,44 +55,46 @@ class ScatterPlot:
             canvas (Canvas): The canvas object to which the scatter plot
                 is to be attached.
             plot_n (int, optional): The index of the subplot. Defaults to 0.
+            label (str, optional): The label for the scatter plot in the legend.
+                Defaults to `None`.
+
+        Keyword Arguments:
             color (str, optional): The Matplotlib color of the points. Defaults to "firebrick".
             err_color (str, optional): The Matplotlib color of the error bars. Defaults to "firebrick".
             marker (str, optional): The kind of Matplotlib marker to use. Defaults to `"o"`.
             ms (float, optional): The dimensions of the markers. Defaults to 4.
             err_width (float, optional): The width of the error bars. Defaults to 1.
             ticks_size (float, optional): The size of the ticks on the error bars. Defaults to 2.
-            label (str, optional): The label for the scatter plot in the legend.
-                Defaults to `None`.
         """
 
         logger.info("Called 'ScatterPlot.draw()'")
 
         # label
-        n = canvas.counter_scatter_plots[plot_n]
+        n = canvas.counters.scatter_plots[plot_n]
         try:
-            self.__label = label if label else canvas.text.datasets[plot_n][n]
+            label = label if label else canvas.text[plot_n].scatter_plots[n]
         except IndexError as _:
-            self.__label = None
-            logger.warning(f"No label for the scatter plot in the json file.")
+            label = None
+            logger.warning("No label for the scatter plot in the json file.")
 
-        canvas.ax[plot_n].errorbar(
-            self.__x,
-            self.__y,
-            yerr=self.__yerr,
-            xerr=self.__xerr,
-            marker=marker,
-            color=color,
-            ecolor=err_color,
-            ms=ms,
-            elinewidth=err_width,
+        canvas.axes[plot_n].errorbar(
+            x=self.x,
+            y=self.y,
+            yerr=self.yerr,
+            xerr=self.xerr,
+            marker=kwargs.get("marker", "o"),
+            color=kwargs.get("color", "firebrick"),
+            ecolor=kwargs.get("err_color", "black"),
+            ms=kwargs.get("ms", 4.0),
+            elinewidth=kwargs.get("err_width", 1.0),
             zorder=2,  # layer
             ls="none",  # line size (none for disconnected dots)
-            capsize=ticks_size,  # error bars ticks
-            label=self.__label,
+            capsize=kwargs.get("ticks_size", 2.0),  # error bars ticks
+            label=label,
         )
         logger.debug(f"ScatterPlot {n} drawn")
 
-        canvas.counter_scatter_plots[plot_n] += 1
+        canvas.counters.scatter_plots[plot_n] += 1
 
 
 if __name__ == "__main__":
