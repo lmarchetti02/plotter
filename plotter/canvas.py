@@ -2,6 +2,7 @@ import logging
 from dataclasses import fields
 from pathlib import Path
 from typing import Self
+from warnings import simplefilter
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -85,10 +86,10 @@ class Canvas:
     # public attributes
     figure: Figure = Field(init=False)
     axes: list[Axes] = Field(init=False)
+    text: Text = Field(init=False)
+    counters: _Counters = Field(init=False)
 
     # private attributes
-    _text: Text = Field(init=False)
-    _counters: _Counters = Field(init=False)
     _n_plots: int = Field(init=False)
     _loc_legend: list[int] = Field(init=False)
 
@@ -98,7 +99,7 @@ class Canvas:
         self._n_plots = n_rows * n_cols
 
         # initialize counters
-        self._counters = _Counters.initialize_counters(self._n_plots)
+        self.counters = _Counters.initialize_counters(self._n_plots)
 
         # plot properties
         self.figure, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=self.figsize, dpi=self.dpi)
@@ -108,19 +109,19 @@ class Canvas:
             self.axes = list(axes.flatten())
 
         # plot text
-        self._text = Text(self._n_plots)
-        self._text.read_json(self.text_file)
+        self.text = Text(self._n_plots)
+        self.text.read_json(self.text_file)
 
         # legend
         self._loc_legend = [0 for _ in range(self._n_plots)]
 
-    def setup(self, plot_n: int | tuple[int, int] | str = 0, **kwargs) -> None:
+    def setup(self, plot_n: int | tuple[int, int] | str = "all", **kwargs) -> None:
         """
         Sets up the properties of the subplots.
 
         Args:
             plot_n (int, tuple[int, int], str, optional): The index or indices
-                of the subplots to configure. Defaults to 0. Options:
+                of the subplots to configure. Defaults to 'all'. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
@@ -161,10 +162,12 @@ class Canvas:
 
             # axis limits
             x_min, x_max = kwargs.get("xlim", (None, None))
-            self.axes[plot_i].set_xlim(left=x_min, right=x_max)
+            if x_min and x_max:
+                self.axes[plot_i].set_xlim(left=x_min, right=x_max)
 
             y_min, y_max = kwargs.get("xlim", (None, None))
-            self.axes[plot_i].set_ylim(bottom=y_min, top=y_max)
+            if y_min and y_max:
+                self.axes[plot_i].set_ylim(bottom=y_min, top=y_max)
 
             # invert axis
             invert_x, invert_y = kwargs.get("inverted", (False, False))
@@ -181,11 +184,11 @@ class Canvas:
             self._loc_legend[plot_i] = kwargs.get("legend", 0)
 
             # axis labels
-            self.axes[plot_i].set_xlabel(self._text[plot_i].x_label)
-            self.axes[plot_i].set_ylabel(self._text[plot_i].y_label)
+            self.axes[plot_i].set_xlabel(self.text[plot_i].x_label)
+            self.axes[plot_i].set_ylabel(self.text[plot_i].y_label)
 
             # title
-            self.axes[plot_i].set_title(self._text[plot_i].title, y=1)
+            self.axes[plot_i].set_title(self.text[plot_i].title, y=1)
 
     def draw_line(self, orientation: str, point: float = 0.0, plot_n: int = 0, **kwargs) -> None:
         """
@@ -348,11 +351,17 @@ class Canvas:
         """This function generates the plot legend."""
         logger.info("Called 'Canvas._legend()'")
 
-        for i in range(self._n_plots):
-            if not self._counters.is_empty():
-                self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1)
+        # promote UserWarning to error
+        simplefilter("error", UserWarning)
 
-            logger.debug(f"Legend added to plot {i}.")
+        for i in range(self._n_plots):
+            try:
+                if not self.counters.is_empty():
+                    self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1)
+
+                logger.debug(f"Legend added to subplot {i}.")
+            except Exception as _:
+                logger.warning(f"Subplot {i} has an empty legend.")
 
     def _save(self) -> None:
         """
