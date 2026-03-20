@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger
 from typing import Any, Callable
 
 import numpy as np
@@ -8,7 +8,7 @@ from pydantic.dataclasses import dataclass
 from .canvas import Canvas
 from .helpers import NArray1D
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -55,10 +55,10 @@ class LinePlot:
                 Defaults to `None`.
 
         Keyword Arguments:
-            color (str, optional): The Matplotlib color of the plot. Defaults to "darkgreen".
-            lw (float, optional): The line width. Defaults to 1.5.
-            style (str, optional): The line style. Defaults to `"-"`.
-            inverted (bool, optional): If `True`, plots the inverse function.
+            color (str): The Matplotlib color of the plot. Defaults to "darkgreen".
+            lw (float): The line width. Defaults to 1.5.
+            style (str): The line style. Defaults to `"-"`.
+            inverted (bool): If `True`, plots the inverse function.
                 Defaults to `False`.
         """
 

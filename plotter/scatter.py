@@ -59,12 +59,12 @@ class ScatterPlot:
                 Defaults to `None`.
 
         Keyword Arguments:
-            color (str, optional): The Matplotlib color of the points. Defaults to "firebrick".
-            err_color (str, optional): The Matplotlib color of the error bars. Defaults to "firebrick".
-            marker (str, optional): The kind of Matplotlib marker to use. Defaults to `"o"`.
-            ms (float, optional): The dimensions of the markers. Defaults to 4.
-            err_width (float, optional): The width of the error bars. Defaults to 1.
-            ticks_size (float, optional): The size of the ticks on the error bars. Defaults to 2.
+            color (str): The Matplotlib color of the points. Defaults to "firebrick".
+            err_color (str): The Matplotlib color of the error bars. Defaults to "firebrick".
+            marker (str): The kind of Matplotlib marker to use. Defaults to `"o"`.
+            ms (float): The dimensions of the markers. Defaults to 4.
+            err_width (float): The width of the error bars. Defaults to 1.
+            ticks_size (float): The size of the ticks on the error bars. Defaults to 2.
         """
 
         logger.info("Called 'ScatterPlot.draw()'")

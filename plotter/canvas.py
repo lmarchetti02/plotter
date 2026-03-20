@@ -202,11 +202,11 @@ class Canvas:
                 Defaults to 0.
 
         Keyword Arguments:
-            color (str, optional): The color of the line. Defaults to 'black'.
-            style (str, optional): The style of the line (e.g., '-', '--', '-.', ':').
+            color (str): The color of the line. Defaults to 'black'.
+            style (str): The style of the line (e.g., '-', '--', '-.', ':').
                 Defaults to '-'.
-            width (float, optional): The width of the line. Defaults to 0.5.
-            label (str, optional): The label for the line in the legend. Defaults to None.
+            width (float): The width of the line. Defaults to 0.5.
+            label (str): The label for the line in the legend. Defaults to None.
 
         Raises:
             ValueError: If the orientation is not 'v' or 'h'.
@@ -296,9 +296,9 @@ class Canvas:
             plot_n (int, optional): The index of the subplot. Defaults to 0.
 
         Keyword Arguments:
-            location (str, optional): Where to put the scalebar. Defaults to "upper right".
-            color (str, optional): The color. Defaults to "black".
-            v_size (int, optional): The vertical size. Defaults to None,
+            location (str): Where to put the scalebar. Defaults to "upper right".
+            color (str): The color. Defaults to "black".
+            v_size (int): The vertical size. Defaults to None,
                 which results in 1% of the height of the axis.
         """
         logger.info("Called 'Canvas.add_scalebar()")
