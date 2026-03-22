@@ -1,21 +1,30 @@
-import logging
-import numpy as np
-from typing import Optional
+from logging import getLogger
+from typing import Any, TypedDict
+
 import matplotlib.colors as colors
+import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas
+from .helpers import NArray2D
 
-logger = logging.getLogger(__name__)
-
-__all__ = ["Image"]
+logger = getLogger(__name__)
 
 
+class ColorbarAttributes(TypedDict):
+    position: str
+    size: str
+    padding: float
+
+
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class Image:
     """
     Class for creating an image to be drawn on a canvas.
 
-    Args:
+    Attributes:
         data (np.ndarray): The 2D or 3D numpy array containing the image data.
             If 3D, the third dimension must contain 3 (RGB) or 4 (RGBA) values.
 
@@ -25,33 +34,21 @@ class Image:
         ValueError: If the data is not real.
     """
 
-    def __init__(self, data: np.ndarray) -> None:
+    data: NArray2D[Any]
+
+    def __post_init__(self) -> None:
         logger.info("Created 'Image' object")
 
-        if data.ndim not in [2, 3]:
+        if self.data.ndim not in [2, 3]:
             raise ValueError("The image data has to be a 2D or 3D array.")
 
-        if data.ndim == 3 and data.shape[2] not in [3, 4]:
+        if self.data.ndim == 3 and self.data.shape[2] not in [3, 4]:
             raise ValueError("The third axes must contain 3 (RGB) or 4 (RGBA) values.")
 
-        if not np.all(np.isreal(data)):
+        if not np.all(np.isreal(self.data)):
             raise ValueError("The image data has to be real.")
 
-        self.__data = data
-
-    def draw(
-        self,
-        canvas: Canvas,
-        plot_n: Optional[int] = 0,
-        colormap: Optional[str] = "plasma",
-        log: Optional[bool | tuple[bool, float]] = False,
-        v_range: Optional[tuple[float, float]] = (None, None),
-        aspect: Optional[str] = "equal",
-        origin: Optional[str] = "upper",
-        limits: Optional[list[float]] = None,
-        label: Optional[str] = None,
-        colorbar: Optional[dict] = None,
-    ) -> None:
+    def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
         Draws the image on the canvas.
 
@@ -59,21 +56,23 @@ class Image:
             canvas (Canvas): The canvas object to draw the image on.
             plot_n (int, optional): The index of the subplot to draw on.
                 Defaults to 0.
-            colormap (str, optional): The Matplotlib colormap to use. Defaults to "plasma".
-            log (bool or tuple[bool, float], optional): Controls the scale of the colormap.
+            label (str, optional): The label for the colorbar. Defaults to `None`.
+
+        Keyword Arguments:
+            colormap (str): The Matplotlib colormap to use. Defaults to "plasma".
+            log (bool or tuple[bool, float]): Controls the scale of the colormap.
                 - `bool`: `True` for logarithmic scale.
                 - `tuple`: `(True, float)` for a 'symlog' scale with a linear range of `float`.
                 This parameter is ignored if the data is RGB(A). Defaults to `False`.
-            v_range (tuple[float, float], optional): The minimum and maximum intensity
+            v_range (tuple[float, float]): The minimum and maximum intensity
                 values. Ignored if the data is RGB(A). Defaults to `(None, None)`.
-            aspect (str, optional): The aspect ratio of the axes. `equal` for squared
+            aspect (str): The aspect ratio of the axes. `equal` for squared
                 pixels, `auto` for a squared image. Defaults to "equal".
-            origin (str, optional): The placement of the [0,0] element of the data.
+            origin (str): The placement of the [0,0] element of the data.
                 `upper` for the top-left, `lower` for the bottom-left. Defaults to "upper".
-            limits (list[float], optional): The limits of the x and y axes in the format
+            limits (list[float]): The limits of the x and y axes in the format
                 `[left, right, bottom, top]`. Defaults to `None`.
-            label (str, optional): The label for the colorbar. Defaults to `None`.
-            colorbar (dict, optional): To style the colorbar. Defaults to `None`.
+            colorbar (dict): To style the colorbar. Defaults to `None`.
                 - `"pos"` (str): where to put the colorbar (right, left, top, bottom)
                 - `"size"` (str): % of size of axes
                 - `"pad"` (float): padding between colorbar and image
@@ -81,71 +80,69 @@ class Image:
 
         logger.info("Called 'Image.draw()'")
 
+        log = kwargs.get("log", False)
+        v_range = kwargs.get("v_range", (None, None))
         # get normalization
         if log:
             v_range = (None, None)
 
             if isinstance(log, tuple):
-                self.__normalization = colors.SymLogNorm(log[1])
+                normalization = colors.SymLogNorm(log[1])
             else:
-                self.__normalization = colors.LogNorm()
+                normalization = colors.LogNorm()
         else:
-            self.__normalization = colors.Normalize()
+            normalization = colors.Normalize()
 
-        self.__img = canvas.ax[plot_n].imshow(
-            self.__data,
-            cmap=colormap,
-            norm=self.__normalization,
+        self._img = canvas.axes[plot_n].imshow(
+            self.data,
+            cmap=kwargs.get("colormap", "gray"),
+            norm=normalization,
             vmin=v_range[0],
             vmax=v_range[1],
-            aspect=aspect,
-            origin=origin,
-            extent=limits,
+            aspect=kwargs.get("aspect", "equal"),
+            origin=kwargs.get("origin", "upper"),
+            extent=kwargs.get("limits", None),
         )
-        logger.debug(f"Image drawn")
+        logger.debug("Image drawn")
 
-        if not colorbar:
-            self.__colorbar = {
-                "pos": "right",
-                "size": "5%",
-                "pad": 0.1,
-            }
-        else:
-            self.__colorbar = colorbar
+        self._cb_attributes = kwargs.get("colorbar", None)
+        if self._cb_attributes is None:
+            self._cb_attributes = ColorbarAttributes(position="right", size="5%", padding=0.1)
 
-        self.add_colorbar(canvas, plot_n, label, self.__colorbar)
-        canvas.counter_images[plot_n] += 1
+        n = canvas.counters.images[plot_n]
+        try:
+            self._label = label if label else canvas.text[plot_n].images[n]
+        except IndexError as _:
+            self._label = None
+            logger.warning("No label for the plot in the json file.")
 
-    def add_colorbar(self, canvas: Canvas, plot_n: int, label: str, attributes: dict) -> None:
+        if self._label:
+            self._add_colorbar(canvas, plot_n)
+        canvas.counters.images[plot_n] += 1
+
+    def _add_colorbar(self, canvas: Canvas, plot_n: int) -> None:
         """
         Adds the colorbar to an image.
 
         Args:
-            See `self.draw`.
+            See `draw`.
         """
         logger.info("Called 'Image.add.colorbar()'")
 
-        n = canvas.counter_images[plot_n]
-        try:
-            self.__label = label if label else canvas.text.images[plot_n][n]
-        except IndexError as _:
-            self.__label = None
-            logger.warning(f"No label for the plot in the json file.")
+        divider = make_axes_locatable(canvas.axes[plot_n])
 
-        if not self.__label:
+        if self._cb_attributes is None:
             return
 
-        divider = make_axes_locatable(canvas.ax[plot_n])
-
         orientation = "vertical"
-        if attributes["pos"] in ("top", "bottom"):
+        if self._cb_attributes["position"] in ("top", "bottom"):
             orientation = "horizontal"
         else:
             logger.warning("The position of the colorbar is incorrect.")
 
-        cax = divider.append_axes(attributes["pos"], size=attributes["size"], pad=attributes["pad"])
-        canvas.fig.colorbar(self.__img, cax=cax, label=self.__label, orientation=orientation)
-
-
-if __name__ == "__main__":
-    pass
+        cax = divider.append_axes(
+            position=self._cb_attributes["position"],
+            size=self._cb_attributes["size"],
+            pad=self._cb_attributes["padding"],
+        )
+        canvas.figure.colorbar(self._img, cax=cax, label=self._label, orientation=orientation)
