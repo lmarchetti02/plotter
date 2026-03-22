@@ -16,7 +16,7 @@ class ScatterPlot:
     """
     Class for creating a scatter plot with error bars.
 
-    Args:
+    Attributes:
         x (NArray1D[Any]): The array containing the x values.
         y (NArray1D[Any]): The array containing the y values.
         xerr (NArray1D[Any] or float, optional): The array containing the errors of the x values.
@@ -95,7 +95,3 @@ class ScatterPlot:
         logger.debug(f"ScatterPlot {n} drawn")
 
         canvas.counters.scatter_plots[plot_n] += 1
-
-
-if __name__ == "__main__":
-    pass

@@ -17,7 +17,7 @@ class Hist:
     """
     Class for creating a 1D histogram.
 
-    Args:
+    Attributes:
         data (NArray1D[Any]): The array containing the data to plot.
         nbins (int or NArray1D[Any] or "auto", optional): The number of bins of the histogram
             or the array containing the edges of the bins. Defaults to "auto".
@@ -99,7 +99,7 @@ class Hist2D:
     """
     Class for creating a 2D histogram.
 
-    Args:
+    Attributes:
         x (NArray1D[Any]): The array containing the x values to plot.
         y (NArray1D[Any]): The array containing the y values to plot.
         nbins (int | tuple | list | NArray2D): The number of bins for the
