@@ -74,6 +74,9 @@ class Canvas:
         figure (Figure): The matplotlib Figure object.
         axes (list[Axes]): A list with the matplotlib Axes object corresponding
             to each subplot.
+
+    Raises:
+        ValueError: If the number of columns and/or the number of rows is negative.
     """
 
     # args
@@ -95,7 +98,10 @@ class Canvas:
 
     def __post_init__(self) -> None:
         """Initializes the necessary attributes."""
-        n_rows, n_cols = self.rows_cols or (1, 1)
+
+        n_rows, n_cols = self.rows_cols
+        if n_rows < 0 or n_cols < 0:
+            raise ValueError("The number of rows and/or columns cannt be negative.")
         self._n_plots = n_rows * n_cols
 
         # initialize counters
@@ -162,11 +168,11 @@ class Canvas:
 
             # axis limits
             x_min, x_max = kwargs.get("xlim", (None, None))
-            if x_min and x_max:
+            if x_min is not None and x_max is not None:
                 self.axes[plot_i].set_xlim(left=x_min, right=x_max)
 
-            y_min, y_max = kwargs.get("xlim", (None, None))
-            if y_min and y_max:
+            y_min, y_max = kwargs.get("ylim", (None, None))
+            if y_min is not None and y_max is not None:
                 self.axes[plot_i].set_ylim(bottom=y_min, top=y_max)
 
             # invert axis
@@ -249,7 +255,7 @@ class Canvas:
         Raises:
             ValueError: If the axis is not 'x', 'y', or 'both'.
         """
-        logger.debug("Called 'Canvas.draw_line()'")
+        logger.debug("Called 'Canvas.turn_scientific()'")
 
         if axis not in ("x", "y", "both"):
             raise ValueError(f"{axis} is not a valid axis.")

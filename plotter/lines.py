@@ -2,7 +2,7 @@ from logging import getLogger
 from typing import Any, Callable
 
 import numpy as np
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas
@@ -34,6 +34,8 @@ class LinePlot:
     wider: tuple[float, float] = (0, 0)
     dens: int = 1
 
+    y: NArray1D[Any] | None = Field(init=True, default=None)
+
     def __post_init__(self) -> None:
         """Makes x-grid denser if necessary."""
 
@@ -41,7 +43,7 @@ class LinePlot:
             if len(self.x) != len(self.f):
                 raise ValueError("x-values and y-values must have the same dimension")
         else:
-            self.x = self.make_wider(self.x, *self.wider, self.dens)
+            self.x = self._make_wider(self.x, *self.wider, self.dens)
             self.y = self.f(self.x)
 
     def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
@@ -88,7 +90,7 @@ class LinePlot:
         canvas.counters.line_plots[plot_n] += 1
 
     @staticmethod
-    def make_wider(data: NArray1D[Any], left: float, right: float, density: int) -> NArray1D[Any]:
+    def _make_wider(data: NArray1D[Any], left: float, right: float, density: int) -> NArray1D[Any]:
         """
         Makes a 1D array wider by a specified percentage and increases its density.
 
@@ -155,6 +157,10 @@ class LinePlot:
         # trivial case
         if density == 1:
             return data
+
+        if not np.allclose(np.sort(data), data):
+            logger.warning("The data to be made denser is not sorted; sorting...")
+            data = np.sort(data)
 
         # find minimum distance
         distances = np.diff(data)

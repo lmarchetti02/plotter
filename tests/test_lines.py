@@ -17,21 +17,21 @@ def test_make_wider_exceptions(left, right, density):
     data = np.array([1.0, 2.0, 3.0])
 
     with pytest.raises(ValueError):
-        plt.LinePlot.make_wider(data, left, right, density)
+        plt.LinePlot._make_wider(data, left, right, density)
 
 
 def test_make_wider_bounds():
     data = np.array([10.0, 20.0])
 
-    result = plt.LinePlot.make_wider(data, 0.1, 0.2, 1)
+    result = plt.LinePlot._make_wider(data, 0.1, 0.2, 1)
     expected = np.array([9.0, 10.0, 20.0, 22.0])
     assert_allclose(result, expected)
 
-    result = plt.LinePlot.make_wider(data, 0, 0.2, 1)
+    result = plt.LinePlot._make_wider(data, 0, 0.2, 1)
     expected = np.array([10.0, 20.0, 22.0])
     assert_allclose(result, expected)
 
-    result = plt.LinePlot.make_wider(data, 0.1, 0, 1)
+    result = plt.LinePlot._make_wider(data, 0.1, 0, 1)
     expected = np.array([9.0, 10.0, 20.0])
     assert_allclose(result, expected)
 

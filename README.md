@@ -8,8 +8,8 @@ This library makes heavy use of the `matplotlib` library, therefore it is necess
 understanding of that library.
 
 Shortly, _Plotter_ makes it easy to create beautiful `matplotlib` plots by generating instances of
-matplotlib object with preset values. In other words, it gives the user a faster and easier way of
-rendering plots of analyzed data.
+matplotlib object with preset values. In other words, it gives the user a faster and easier way to 
+obtain good-looking plots.
 
 ## Installation
 
@@ -20,24 +20,16 @@ Follow the steps below to install _Plotter_ (Unix-like systems):
 3. Run the command
 
    ```bash
-   python3 -m install
+   pip install .
    ```
 
-4. A _dist_ directory will be created, containing a .whl file.
-5. To install the package run
-
-   ```bash
-   pip3 install /path/to/whl/file
-   ```
-
-6. If the installation was successful, _Plotter_ can be
+4. If the installation was successful, _Plotter_ can be
    imported simply by
 
    ```python
-   import plotter as p
+   import plotter
    ```
 
-__Note__: It is possible that the commands to use are `python` and `pip`, instead of, respectively, `python3` and `pip3`.
 
 ## Usage
 
@@ -49,6 +41,7 @@ plotter
 ├── log
 ├── text
 └── utils
+    ├── info
     ├── blueprint.txt
     ├── log_config.json
     ├── style.mplstyle
@@ -65,6 +58,7 @@ These directories/files, which are not to be deleted, have the following purpose
    * _log_config.json_, which contains the logging configurations;
    * _style.mplstyle_, which contains the matplotlib configurations;
    * _text_example.json_, which is the blueprint for the json files to put in the _/text_ directory.
+   * _info_, which is a directory with useful information on various matplotlib settings.
 
 ### Example
 
