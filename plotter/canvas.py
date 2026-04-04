@@ -85,6 +85,7 @@ class Canvas:
     figsize: tuple[int, int] = (12, 8)
     dpi: int = 150
     save: str = ""
+    show: bool = True
 
     # public attributes
     figure: Figure = Field(init=False)
@@ -120,6 +121,32 @@ class Canvas:
 
         # legend
         self._loc_legend = [0 for _ in range(self._n_plots)]
+
+    def __enter__(self):
+        """Defines what happens when the user enters a 'Canvas' context."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Defines what happens when the user exits a 'Canvas' context."""
+        logger.info("Exiting canvas context")
+
+        if exc_type or exc_val or exc_tb:
+            print("\nException type:", exc_type)
+            print("\nException value:", exc_val)
+            print("\nTraceback:", exc_tb)
+
+            return
+
+        self._legend()  # draw legend if it exists
+        self._save()  # save plot to disk
+        logger.info("Plot(s) finished")
+
+        # show plot
+        if not self.show:
+            plt.close()
+            return
+
+        plt.show()
 
     def setup(self, plot_n: int | tuple[int, int] | str = "all", **kwargs) -> None:
         """
@@ -328,30 +355,6 @@ class Canvas:
         self.axes[plot_n].add_artist(scalebar)
         self.axes[plot_n].set_yticks([])
         self.axes[plot_n].set_xticks([])
-
-    def end(self, show: bool = True) -> None:
-        """
-        Finalizes and renders the plot.
-
-        This method should be called at the end of the plotting process, as any
-        commands after it will not affect the plot(s).
-
-        Args:
-            show (bool, optional): Whether to display the plot or not.
-                Defaults to True.
-        """
-        logger.info("Called 'Canvas.end()'")
-
-        self._legend()
-        self._save()
-        logger.info("Plot(s) finished")
-
-        # show plot
-        if not show:
-            plt.close()
-            return
-
-        plt.show()
 
     def _legend(self) -> None:
         """This function generates the plot legend."""

@@ -58,14 +58,12 @@ def test_make_wider():
 
 def test_lines(tmp_path):
     text_file = str(tmp_path / "scatter")
-    canvas = plt.Canvas(text_file)
-    canvas.setup()
+    with plt.Canvas(text_file) as canvas:
+        canvas.setup()
 
-    x = np.linspace(0.0, 1.0, 5)
+        x = np.linspace(0.0, 1.0, 5)
 
-    colors = plt.get_colors(3)
-    plt.LinePlot(x, lambda x: x).draw(canvas, label="$ f(x) = x $", color=colors[0])
-    plt.LinePlot(x, lambda x: x**2, dens=4).draw(canvas, label="$ f(x) = x^2 $", color=colors[1])
-    plt.LinePlot(x, lambda x: x**3, dens=6).draw(canvas, label="$ f(x) = x^3 $", color=colors[2])
-
-    canvas.end()
+        colors = plt.get_colors(3)
+        plt.LinePlot(x, lambda x: x).draw(canvas, label="$ f(x) = x $", color=colors[0])
+        plt.LinePlot(x, lambda x: x**2, dens=4).draw(canvas, label="$ f(x) = x^2 $", color=colors[1])
+        plt.LinePlot(x, lambda x: x**3, dens=6).draw(canvas, label="$ f(x) = x^3 $", color=colors[2])

@@ -42,7 +42,5 @@ def test_basic(tmp_path):
     text_file: Path = tmp_path / "plotter/labels.json"
     text_file.write_text(dumps(TEST_DATA))
 
-    canvas = plt.Canvas(str(text_file), (1, 2))
-    canvas.setup("all")
-
-    canvas.end(False)
+    with plt.Canvas(str(text_file), (1, 2)) as canvas:
+        canvas.setup("all")
