@@ -19,6 +19,7 @@ def test_all_supported_plot_types_are_drawables() -> None:
     drawables = (
         plt.ScatterPlot(x, y),
         plt.LinePlot(x, y),
+        plt.BarChart(x, y),
         plt.Hist(x),
         plt.Hist2D(x, y, 2),
         plt.Image(image),

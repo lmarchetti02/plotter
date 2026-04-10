@@ -19,6 +19,7 @@ class PlotText:
         y_label (str): The label of the y-axis.
         scatter_plots (list[str]): The labels of the scatter plots.
         line_plots (list[str]): The labels of the line plots.
+        bar_charts (list[str]): The labels of the bar charts.
         histograms (list[str]): The labels of the histograms.
         histograms_2d (list[str]): The labels of the 2D histograms.
         images (list[str]): The label of the images.
@@ -29,6 +30,7 @@ class PlotText:
     y_label: str
     scatter_plots: list[str]
     line_plots: list[str]
+    bar_charts: list[str]
     histograms: list[str]
     histograms_2d: list[str]
     images: list[str]
@@ -49,6 +51,7 @@ class PlotText:
             y_label="",
             scatter_plots=[""],
             line_plots=[""],
+            bar_charts=[""],
             histograms=[""],
             histograms_2d=[""],
             images=[""],

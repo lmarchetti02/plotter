@@ -16,6 +16,7 @@ def test_plot_text_empty_factory_returns_a_complete_placeholder() -> None:
         y_label="",
         scatter_plots=[""],
         line_plots=[""],
+        bar_charts=[""],
         histograms=[""],
         histograms_2d=[""],
         images=[""],

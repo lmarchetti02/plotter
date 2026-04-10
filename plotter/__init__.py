@@ -5,6 +5,7 @@ by Luca Marchetti
 A small Python library for plotting beautiful graphs.
 """
 
+from .bars import BarChart  # noqa: F401
 from .canvas import Canvas  # noqa: F401
 from .drawable import Drawable  # noqa: F401
 from .helpers import get_colors, setup_workspace  # noqa: F401

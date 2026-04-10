@@ -13,6 +13,7 @@ def test_counters_initialize_with_one_slot_per_subplot() -> None:
 
     assert counters.scatter_plots == [0, 0]
     assert counters.line_plots == [0, 0]
+    assert counters.bar_charts == [0, 0]
     assert counters.histograms == [0, 0]
     assert counters.histograms_2d == [0, 0]
     assert counters.images == [0, 0]

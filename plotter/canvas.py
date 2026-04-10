@@ -29,6 +29,7 @@ class _Counters:
     Attributes:
         scatter_plots (list[int]): The number of scatter plots per subplot.
         line_plots (list[int]): The number of line plots per subplot.
+        bar_charts (list[int]): The number of bar charts per subplot.
         histograms (list[int]): The number of histograms per subplot.
         histograms_2d (list[int]): The number of 2D histograms per subplot.
         images (list[int]): The number of images per subplot.
@@ -36,6 +37,7 @@ class _Counters:
 
     scatter_plots: list[int]
     line_plots: list[int]
+    bar_charts: list[int]
     histograms: list[int]
     histograms_2d: list[int]
     images: list[int]

@@ -11,7 +11,7 @@ familiar with the underlying plotting model.
 The current design revolves around:
 
 - a `Canvas` object, which owns the figure and axes and acts as a context manager;
-- drawable objects such as `ScatterPlot`, `LinePlot`, `Hist`, `Hist2D`, and `Image`;
+- drawable objects such as `ScatterPlot`, `LinePlot`, `BarChart`, `Hist`, `Hist2D`, and `Image`;
 - optional JSON text files used to populate titles, axis labels, and legend labels.
 
 ## Installation
@@ -56,6 +56,8 @@ These files have the following purposes:
 1. `plotter/img/` stores saved figures.
 2. `plotter/log/` stores log output.
 3. `plotter/text/` stores JSON files with plot titles, axis labels, and legend labels.
+   A subplot entry can include `scatter_plots`, `line_plots`, `bar_charts`,
+   `histograms`, `histograms_2d`, and `images`.
 4. `plotter/utils/` stores bundled helper assets and configuration files.
 
 ## Usage
@@ -80,19 +82,23 @@ x = np.linspace(-5, 5, num=50)
 y = x**2
 y_err = np.full(50, 0.5)
 x_err = np.full(50, 0.2)
+categories = np.array([0.0, 1.0, 2.0])
+heights = np.array([2.0, 4.0, 3.0])
 
-
-with p.Canvas("example.json", show=False) as canvas:
-    canvas.setup()
+with p.Canvas("example.json", rows_cols=(1, 2), show=False) as canvas:
+    canvas.setup(0)
+    canvas.setup(1)
 
     p.ScatterPlot(x, y, y_err, x_err).draw(canvas, label="data")
     p.LinePlot(x, f, wider=(0.01, 0.01)).draw(canvas, label=r"$f(x)=x^2$")
+    p.BarChart(categories, heights).draw(canvas, plot_n=1, label="counts")
 ```
 
 ### Available Drawables
 
 - `ScatterPlot`: scatter plots with optional x/y error bars.
 - `LinePlot`: function plots or explicit x/y line plots.
+- `BarChart`: bar charts with optional y-error bars.
 - `Hist`: one-dimensional histograms.
 - `Hist2D`: two-dimensional histograms with colorbars.
 - `Image`: grayscale or RGB(A) image rendering.
