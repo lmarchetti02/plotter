@@ -101,8 +101,8 @@ All drawable classes inherit from `Drawable` and implement a `draw(canvas, ...)`
 
 ## Images
 
-![example1](/Users/lucamarchetti/Python/uni/plotter/plotter/data/info/example_1.png "Example 1")
-![example2](/Users/lucamarchetti/Python/uni/plotter/plotter/data/info/example_2.png "Example 2")
+![example1](./plotter/data/info/example_1.png "Example 1")
+![example2](./plotter/data/info/example_2.png "Example 2")
 
 ## License
 
