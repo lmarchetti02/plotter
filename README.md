@@ -1,72 +1,79 @@
 # Plotter
 
-A data-analysis-oriented library for drawing beautiful plots.
+A small Python library for drawing beautiful plots on top of `matplotlib`.
 
 ## Description
 
-This library makes heavy use of the `matplotlib` library, therefore it is necessary to have some
-understanding of that library.
+_Plotter_ wraps common plotting tasks in small drawable objects with sensible defaults.
+The library is still `matplotlib`-based, so it works best when the user is already somewhat
+familiar with the underlying plotting model.
 
-Shortly, _Plotter_ makes it easy to create beautiful `matplotlib` plots by generating instances of
-matplotlib object with preset values. In other words, it gives the user a faster and easier way to 
-obtain good-looking plots.
+The current design revolves around:
+
+- a `Canvas` object, which owns the figure and axes and acts as a context manager;
+- drawable objects such as `ScatterPlot`, `LinePlot`, `Hist`, `Hist2D`, and `Image`;
+- optional JSON text files used to populate titles, axis labels, and legend labels.
 
 ## Installation
 
-Follow the steps below to install _Plotter_ (Unix-like systems):
+On Unix-like systems:
 
-1. Clone the repository to a directory in your system.
-2. Open the terminal and navigate to said folder.
-3. Run the command
+1. Clone the repository.
+2. Move into the project directory.
+3. Install the package:
 
    ```bash
    pip install .
    ```
 
-4. If the installation was successful, _Plotter_ can be
-   imported simply by
+4. Import it in Python:
 
    ```python
    import plotter
    ```
 
+## Workspace Layout
 
-## Usage
+Call `plotter.setup_workspace()` once in the directory where you want to work.
+This creates the files and folders used by the library:
 
-Once imported, the library will create a tree of directories with the following structure:
-
-```markdown
+```text
 plotter
 ├── img
 ├── log
+│   └── plotter.log
 ├── text
+│   └── text_example.json
 └── utils
-    ├── info
     ├── blueprint.txt
+    ├── info
     ├── log_config.json
-    ├── style.mplstyle
-    └── text_example.json
+    └── style.mplstyle
 ```
 
-These directories/files, which are not to be deleted, have the following purposes:
+These files have the following purposes:
 
-1. The _/img_ directory is the one where the plots are saved to.
-2. The _/log_ directory is the one where the log files are stored.
-3. The _/text_ directory is the one where the json files containing the plot text are to be stored.
-4. The _/utils_ directory stores useful files, in particular:
-   * _blueprint.txt_, which contains boilerplate code needed for a basic example;
-   * _log_config.json_, which contains the logging configurations;
-   * _style.mplstyle_, which contains the matplotlib configurations;
-   * _text_example.json_, which is the blueprint for the json files to put in the _/text_ directory.
-   * _info_, which is a directory with useful information on various matplotlib settings.
+1. `plotter/img/` stores saved figures.
+2. `plotter/log/` stores log output.
+3. `plotter/text/` stores JSON files with plot titles, axis labels, and legend labels.
+4. `plotter/utils/` stores bundled helper assets and configuration files.
+
+## Usage
+
+`Canvas` is a context manager. That means the figure lifecycle is handled automatically:
+when the `with` block exits, Plotter finalizes the legend, saves the figure if requested, and
+shows or closes it depending on the canvas configuration.
 
 ### Example
-
-For a basic graph, try the following piece of code.
 
 ```python
 import numpy as np
 import plotter as p
+
+
+def f(x):
+    return x**2
+
 
 # datasets to plot
 x = np.linspace(-5, 5, num=50)
@@ -74,27 +81,29 @@ y = x**2
 y_err = np.full(50, 0.5)
 x_err = np.full(50, 0.2)
 
-# function to plot
-def f(x):
-    return x**2
 
-# create canvas
-canvas = p.Canvas("prova.json")
-canvas.setup()
+with p.Canvas("example.json", show=False) as canvas:
+    canvas.setup()
 
-# add scatter plot and 1D graph to canvas
-p.ScatterPlot(x, y, y_err, x_err).draw(canvas)
-p.Plot(x, f, (0.01, 0.01)).draw(canvas)
-
-# render plot
-canvas.end()
+    p.ScatterPlot(x, y, y_err, x_err).draw(canvas, label="data")
+    p.LinePlot(x, f, wider=(0.01, 0.01)).draw(canvas, label=r"$f(x)=x^2$")
 ```
+
+### Available Drawables
+
+- `ScatterPlot`: scatter plots with optional x/y error bars.
+- `LinePlot`: function plots or explicit x/y line plots.
+- `Hist`: one-dimensional histograms.
+- `Hist2D`: two-dimensional histograms with colorbars.
+- `Image`: grayscale or RGB(A) image rendering.
+
+All drawable classes inherit from `Drawable` and implement a `draw(canvas, ...)` method.
 
 ## Images
 
-![example1](/src/plotter/data/info/example_1.png "Example 1")
-![example2](/src/plotter/data/info/example_2.png "Example 2")
+![example1](/Users/lucamarchetti/Python/uni/plotter/plotter/data/info/example_1.png "Example 1")
+![example2](/Users/lucamarchetti/Python/uni/plotter/plotter/data/info/example_2.png "Example 2")
 
 ## License
 
-See the [LICENCE](LICENCE) file for licence rights and limitations.
+See the [LICENSE](LICENSE) file for license rights and limitations.
