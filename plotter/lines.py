@@ -6,13 +6,14 @@ from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas
+from .drawable import Drawable
 from .helpers import NArray1D
 
 logger = getLogger(__name__)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
-class LinePlot:
+class LinePlot(Drawable):
     """
     Class for creating a 1D function plot to be drawn on a canvas.
 

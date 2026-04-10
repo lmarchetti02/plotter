@@ -6,13 +6,14 @@ from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas
+from .drawable import Drawable
 from .helpers import NArray1D
 
 logger = getLogger(__name__)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
-class ScatterPlot:
+class ScatterPlot(Drawable):
     """
     Class for creating a scatter plot with error bars.
 

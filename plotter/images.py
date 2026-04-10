@@ -8,6 +8,7 @@ from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas
+from .drawable import Drawable
 from .helpers import NArray2D
 
 logger = getLogger(__name__)
@@ -20,7 +21,7 @@ class ColorbarAttributes(TypedDict):
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
-class Image:
+class Image(Drawable):
     """
     Class for creating an image to be drawn on a canvas.
 

@@ -7,13 +7,14 @@ from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas
+from .drawable import Drawable
 from .helpers import F64, NArray1D, NArray2D
 
 logger = getLogger(__name__)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
-class Hist:
+class Hist(Drawable):
     """
     Class for creating a 1D histogram.
 
@@ -95,7 +96,7 @@ class Hist:
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
-class Hist2D:
+class Hist2D(Drawable):
     """
     Class for creating a 2D histogram.
 
