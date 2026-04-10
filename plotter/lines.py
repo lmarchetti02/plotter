@@ -43,6 +43,7 @@ class LinePlot(Drawable):
         if isinstance(self.f, np.ndarray):
             if len(self.x) != len(self.f):
                 raise ValueError("x-values and y-values must have the same dimension")
+            self.y = self.f
         else:
             self.x = self._make_wider(self.x, *self.wider, self.dens)
             self.y = self.f(self.x)
