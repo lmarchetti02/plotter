@@ -1,84 +1,87 @@
+"""Tests for text loading and fallback behavior."""
+
 from json import dumps
+from pathlib import Path
+
+import pytest
 
 from plotter.helpers.text import PlotText, Text
 
-TEST_DATA = [
-    {
-        "title": "Test 1",
-        "x_label": "$ x $",
-        "y_label": "$ y $",
-        "scatter_plots": ["data"],
-        "line_plots": ["line"],
-        "histograms": ["hist"],
-        "histograms_2d": ["hist"],
-        "images": ["img1", "img2"],
-    },
-    {
-        "title": "Test 2",
-        "x_label": "$ x $",
-        "y_label": "$ y $",
-        "scatter_plots": ["data1", "data2"],
-        "line_plots": ["line"],
-        "histograms": ["hist1", "hist2", "hist3"],
-        "histograms_2d": [""],
-        "images": [""],
-    },
-]
+
+def test_plot_text_empty_factory_returns_a_complete_placeholder() -> None:
+    """The empty PlotText factory should populate every supported label collection."""
+    assert PlotText.get_empy_text() == PlotText(
+        title="",
+        x_label="",
+        y_label="",
+        scatter_plots=[""],
+        line_plots=[""],
+        histograms=[""],
+        histograms_2d=[""],
+        images=[""],
+    )
 
 
-def test_plot_text():
-    empty_obj = PlotText.get_empy_text()
-    assert empty_obj.title == ""
-    assert empty_obj.x_label == ""
-    assert empty_obj.y_label == ""
-    assert empty_obj.scatter_plots == [""]
-    assert empty_obj.line_plots == [""]
-    assert empty_obj.histograms == [""]
-    assert empty_obj.images == [""]
+def test_text_reads_json_with_or_without_extension(
+    workspace: Path,
+    text_file: Path,
+    sample_text_data: list[dict[str, object]],
+) -> None:
+    """Text.read_json should parse the same file whether or not `.json` is given."""
+    relative_path = Path("labels")
+
+    text_from_stem = Text(len(sample_text_data))
+    text_from_stem.read_json(str(relative_path))
+
+    text_from_full_name = Text(len(sample_text_data))
+    text_from_full_name.read_json(str(text_file))
+
+    assert text_from_stem == text_from_full_name
+    assert list(text_from_stem) == text_from_stem.subplots_text
+    assert text_from_stem[0] == PlotText(**sample_text_data[0])  # type: ignore
+    assert text_from_stem[1] == PlotText(**sample_text_data[1])  # type: ignore
 
 
-def test_text(tmp_path):
-    test_file = tmp_path / "test_text.json"
-    test_file.write_text(dumps(TEST_DATA))
+def test_text_creates_a_default_file_when_json_is_missing(workspace: Path) -> None:
+    """Missing text files should be created automatically with empty placeholder content."""
+    missing_file = workspace / "plotter" / "text" / "new_labels.json"
 
-    text1 = Text(len(TEST_DATA))
-    text1.read_json(str(test_file))
+    text = Text(2)
+    text.read_json(str(missing_file))
 
-    # check automatic .json extension
-    text2 = Text(len(TEST_DATA))
-    text2.read_json(str(test_file)[:-5])
-
-    assert text1 == text2
-    del text2
-    text = text1
-
-    # check __iter__
-    for subplot_text in text:
-        assert isinstance(subplot_text, PlotText)
-
-    # check __getattr__
-    for i in range(len(TEST_DATA)):
-        assert isinstance(text[i], PlotText)
+    expected = [PlotText.get_empy_text(), PlotText.get_empy_text()]
+    assert missing_file.exists()
+    assert text.subplots_text == expected
+    assert missing_file.read_text() == dumps([subplot.__dict__ for subplot in expected])
 
 
-def test_file_not_found(tmp_path):
-    # check FileNotFoundError
-    new_file = tmp_path / "new_file.json"
-    text_empty = Text(len(TEST_DATA))
-    text_empty.read_json(str(new_file))
+@pytest.mark.parametrize(
+    "payload",
+    [
+        '[{"title": "missing required fields"}]',
+        '{"not": "a list"}',
+    ],
+)
+def test_text_falls_back_to_empty_text_for_unparseable_json(workspace: Path, payload: str) -> None:
+    """Invalid JSON structures should not crash text loading and should clear labels."""
+    corrupted_file = workspace / "plotter" / "text" / "corrupted.json"
+    corrupted_file.write_text(payload)
 
-    assert new_file.exists()
-    assert text_empty.subplots_text == [PlotText.get_empy_text() for _ in range(len(TEST_DATA))]
+    text = Text(2)
+    text.read_json(str(corrupted_file))
+
+    assert text.subplots_text == [PlotText.get_empy_text(), PlotText.get_empy_text()]
 
 
-def test_corrupted_json(tmp_path):
-    corrupted_data = TEST_DATA.copy()
-    corrupted_data.append({})
+def test_text_raises_when_json_contains_the_wrong_number_of_subplots(
+    workspace: Path,
+    sample_text_data: list[dict[str, object]],
+) -> None:
+    """A mismatch between canvas size and JSON entries should raise a ValueError."""
+    mismatch_file = workspace / "plotter" / "text" / "mismatch.json"
+    mismatch_file.write_text(dumps(sample_text_data[:1]))
 
-    test_file = tmp_path / "test_text.json"
-    test_file.write_text(dumps(corrupted_data))
+    text = Text(2)
 
-    text = Text(len(corrupted_data))
-    text.read_json(str(test_file))
-
-    assert text.subplots_text == [PlotText.get_empy_text() for _ in range(len(corrupted_data))]
+    with pytest.raises(ValueError, match="Incorrect number of plots"):
+        text.read_json(str(mismatch_file))

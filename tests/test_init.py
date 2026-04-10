@@ -1,28 +1,39 @@
-import os
+"""Tests for package-level workspace initialization."""
+
+from pathlib import Path
+
+import pytest
 
 
-def test_tree(tmp_path):
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        Path("img"),
+        Path("log"),
+        Path("text"),
+        Path("utils"),
+        Path("utils/info"),
+        Path("log/plotter.log"),
+        Path("text/text_example.json"),
+        Path("utils/style.mplstyle"),
+        Path("utils/log_config.json"),
+    ],
+)
+def test_setup_workspace_creates_expected_directories_and_files(tmp_path: Path, relative_path: Path) -> None:
+    """setup_workspace should materialize the full on-disk structure used by the package."""
     import plotter
 
     plotter.setup_workspace(tmp_path)
-    plotter_dir = tmp_path / "plotter"
 
-    assert plotter_dir.exists()
+    assert (tmp_path / "plotter" / relative_path).exists()
 
-    dirs = ("img", "log", "text", "utils", "utils/info")
-    for dir in dirs:
-        assert plotter_dir.joinpath(dir).exists()
 
-    with os.scandir(plotter_dir / "utils/info") as entries:
-        assert any(entries)
-
-    assert (plotter_dir / "log/plotter.log").exists()
-    assert (plotter_dir / "text/text_example.json").exists()
-    assert (plotter_dir / "utils/style.mplstyle").exists()
-    assert (plotter_dir / "utils/log_config.json").exists()
-
-    # repeated imports
-    del plotter
+def test_setup_workspace_is_idempotent_and_keeps_packaged_assets(tmp_path: Path) -> None:
+    """Running setup_workspace repeatedly should succeed and preserve copied assets."""
     import plotter
 
     plotter.setup_workspace(tmp_path)
+    plotter.setup_workspace(tmp_path)
+
+    info_dir = tmp_path / "plotter" / "utils" / "info"
+    assert any(info_dir.iterdir())
