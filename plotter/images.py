@@ -110,12 +110,14 @@ class Image(Drawable):
         if self._cb_attributes is None:
             self._cb_attributes = ColorbarAttributes(position="right", size="5%", padding=0.1)
 
-        n = canvas.counters.images[plot_n]
-        try:
-            self._label = label if label else canvas.text[plot_n].images[n]
-        except IndexError as _:
-            self._label = None
-            logger.warning("No label for the plot in the json file.")
+        _, self._label = self._get_label(
+            canvas,
+            plot_n,
+            label,
+            "images",
+            logger,
+            "No label for the plot in the json file.",
+        )
 
         if self._label:
             self._add_colorbar(canvas, plot_n)

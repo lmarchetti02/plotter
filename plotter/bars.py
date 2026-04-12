@@ -62,12 +62,14 @@ class BarChart(Drawable):
 
         logger.info("Called 'BarChart.draw()'")
 
-        n = canvas.counters.bar_charts[plot_n]
-        try:
-            label = label if label else canvas.text[plot_n].bar_charts[n]
-        except IndexError as _:
-            label = None
-            logger.warning("No label for the bar chart in the json file.")
+        n, label = self._get_label(
+            canvas,
+            plot_n,
+            label,
+            "bar_charts",
+            logger,
+            "No label for the bar chart in the json file.",
+        )
 
         canvas.axes[plot_n].bar(
             self.x,

@@ -70,13 +70,14 @@ class ScatterPlot(Drawable):
 
         logger.info("Called 'ScatterPlot.draw()'")
 
-        # label
-        n = canvas.counters.scatter_plots[plot_n]
-        try:
-            label = label if label else canvas.text[plot_n].scatter_plots[n]
-        except IndexError as _:
-            label = None
-            logger.warning("No label for the scatter plot in the json file.")
+        n, label = self._get_label(
+            canvas,
+            plot_n,
+            label,
+            "scatter_plots",
+            logger,
+            "No label for the scatter plot in the json file.",
+        )
 
         canvas.axes[plot_n].errorbar(
             x=self.x,

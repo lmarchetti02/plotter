@@ -67,13 +67,14 @@ class Hist(Drawable):
 
         logger.info("Called 'Hist.draw()'")
 
-        # label
-        n = canvas.counters.histograms[plot_n]
-        try:
-            label = label if label else canvas.text[plot_n].histograms[n]
-        except IndexError as _:
-            label = None
-            logger.warning("No label for the histogram in the json file.")
+        n, label = self._get_label(
+            canvas,
+            plot_n,
+            label,
+            "histograms",
+            logger,
+            "No label for the histogram in the json file.",
+        )
 
         filled = kwargs.get("filled", True)
 

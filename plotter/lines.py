@@ -70,13 +70,14 @@ class LinePlot(Drawable):
         if kwargs.get("inverted", False):
             self.x, self.y = self.y, self.x
 
-        # label
-        n = canvas.counters.line_plots[plot_n]
-        try:
-            label = label if label else canvas.text[plot_n].line_plots[n]
-        except IndexError as _:
-            label = None
-            logger.warning("No label for the plot in the json file.")
+        n, label = self._get_label(
+            canvas,
+            plot_n,
+            label,
+            "line_plots",
+            logger,
+            "No label for the plot in the json file.",
+        )
 
         canvas.axes[plot_n].plot(
             self.x,

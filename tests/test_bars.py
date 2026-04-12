@@ -48,7 +48,7 @@ def test_bar_chart_draw_uses_canvas_labels_and_updates_counters(single_text_file
 
         assert canvas.counters.bar_charts[0] == 1
         assert len(canvas.axes[0].patches) == 3
-        assert canvas.axes[0].patches[0].get_height() == pytest.approx(1.0)
+        assert canvas.axes[0].patches[0].get_height() == pytest.approx(1.0)  # type: ignore
         _, labels = canvas.axes[0].get_legend_handles_labels()
         assert labels == ["bars"]
 
@@ -58,12 +58,12 @@ def test_bar_chart_draw_respects_styling_arguments(single_text_file) -> None:
     x = np.array([0.0, 1.0])
     heights = np.array([2.0, 4.0])
 
-    with plt.Canvas(str(single_text_file), show=True) as canvas:
+    with plt.Canvas(str(single_text_file), show=False) as canvas:
         canvas.setup()
         bars = plt.BarChart(x, heights)
 
         bars.draw(canvas, width=0.4, lw=1.5, edgecolor="black")
 
         patch = canvas.axes[0].patches[0]
-        assert patch.get_width() == pytest.approx(0.4)
+        assert patch.get_width() == pytest.approx(0.4)  # type: ignore
         assert patch.get_linewidth() == pytest.approx(1.5)
