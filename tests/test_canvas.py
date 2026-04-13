@@ -91,7 +91,7 @@ def test_canvas_can_customize_ticks_and_scalebar(single_text_file: Path, show_pl
         canvas.setup()
         canvas.set_ticks("x", (0.0, 1.0), labels=("left", "right"))
         canvas.set_ticks("y", (1.0, 2.0))
-        canvas.add_scalebar(size=0.5, label="5 um", v_size=0.1)
+        canvas.add_scalebar(size=0.5, label="5 um")
 
         axis = canvas.axes[0]
         assert list(axis.get_xticks()) == []

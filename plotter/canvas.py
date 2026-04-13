@@ -314,27 +314,30 @@ class Canvas:
 
         self.axes[plot_n].set_yticks(positions, labels=labels)
 
-    def add_scalebar(self, size: int, label: str, plot_n: int = 0, **kwargs) -> None:
+    def add_scalebar(self, size: float, label: str, plot_n: int = 0, **kwargs) -> None:
         """
         Adds a scalebar (and, thus, removes the axis labels).
 
         Args:
-            size (int): The horizontal size (in coordinates of axis).
-            label (str): The label.
+            size (float): The horizontal size (in coordinates of axis).
+            label (str): The label (e.g., "1 cm", "10 μm").
             plot_n (int, optional): The index of the subplot. Defaults to 0.
 
         Keyword Arguments:
             location (str): Where to put the scalebar. Defaults to "upper right".
             color (str): The color. Defaults to "black".
-            v_size (int): The vertical size. Defaults to None,
+            v_size (float): The vertical size. Defaults to None,
                 which results in 1% of the height of the axis.
         """
         logger.info("Called 'Canvas.add_scalebar()")
 
+        # Calculate vertical size if not provided
         v_size = kwargs.get("v_size", None)
         if not v_size:
-            _, height = self._get_axis_size(self.figure, self.axes[plot_n])
-            v_size = int(0.01 * height)
+            # Calculate v_size as 1% of the y-axis data range
+            y_min, y_max = self.axes[plot_n].get_ylim()
+            y_range = abs(y_max - y_min)
+            v_size = 0.01 * y_range
 
         scalebar = AnchoredSizeBar(
             self.axes[plot_n].transData,
@@ -380,24 +383,3 @@ class Canvas:
             logger.debug(f"Plot saved to {file_path}")
         else:
             logger.warning("Plot not saved to any file")
-
-    @staticmethod
-    def _get_axis_size(figure: Figure, axes: Axes) -> tuple[int, int]:
-        """
-        Obtains the size (px) of the axes of a subplot.
-
-        Args:
-            fig (Figure): The Figure (see matplotlib doc).
-            ax (Axes): The plot area in question.
-
-        Returns:
-            tuple[int, int]: A tuple with (width, height).
-        """
-        logger.info("Called 'Canvas._get_axis_size()'")
-
-        bbox = axes.get_window_extent().transformed(figure.dpi_scale_trans.inverted())
-        width, height = bbox.width, bbox.height
-        width *= figure.dpi
-        height *= figure.dpi
-
-        return int(width), int(height)
