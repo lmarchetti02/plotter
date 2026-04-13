@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any, Callable
+from typing import Any, Callable, ClassVar
 
 import numpy as np
 from pydantic import ConfigDict, Field
@@ -29,6 +29,8 @@ class LinePlot(Drawable):
     Raises:
         ValueError: If x and f as an array do not have the same dimensions.
     """
+
+    label_name: ClassVar[str] = "line_plots"
 
     x: NArray1D[Any]
     f: Callable[[NArray1D[Any]], NArray1D[Any]] | NArray1D[Any]
@@ -74,7 +76,7 @@ class LinePlot(Drawable):
             canvas,
             plot_n,
             label,
-            "line_plots",
+            self.label_name,
             logger,
             "No label for the plot in the json file.",
         )
@@ -90,7 +92,7 @@ class LinePlot(Drawable):
         )
         logger.debug(f"Plot {n} drawn")
 
-        canvas.counters.line_plots[plot_n] += 1
+        getattr(canvas.counters, self.label_name)[plot_n] += 1
 
     @staticmethod
     def _make_wider(data: NArray1D[Any], left: float, right: float, density: int) -> NArray1D[Any]:

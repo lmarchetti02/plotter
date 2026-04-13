@@ -1,10 +1,11 @@
-import os
 from importlib import resources
-from json import load
+from json import dumps, load
 from logging.config import dictConfig
 from pathlib import Path
 
 from matplotlib.style import use
+
+from .text import PlotText
 
 
 def setup_workspace(base_path: Path | str | None = None) -> None:
@@ -45,11 +46,7 @@ def setup_workspace(base_path: Path | str | None = None) -> None:
     info_files = (f for f in info_dir.iterdir() if f.name != ".DS_Store" and f.is_file())
 
     # copy files to plotter/utils/
-    text_example = None
     for f in data_files:
-        if f.name == "text_example.json":
-            text_example = f
-            continue
         f_destination = destination / f.name
         f_destination.write_bytes(f.read_bytes())
 
@@ -58,10 +55,8 @@ def setup_workspace(base_path: Path | str | None = None) -> None:
         f_destination = destination_info / f.name
         f_destination.write_bytes(f.read_bytes())
 
-    # copy text_example.json to plotter/text/
-    if text_example is None:
-        raise RuntimeError("File 'text_example.json' could not be found.")
-    text_destination.write_bytes(text_example.read_bytes())
+    # generate text_example.json from the drawable registry
+    text_destination.write_text(dumps(PlotText.get_empty_json(), indent=2))
 
     # create log file
     log_destination.touch(exist_ok=True)

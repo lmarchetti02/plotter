@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from pydantic import ConfigDict
@@ -27,6 +27,8 @@ class BarChart(Drawable):
         ValueError: If x and heights do not have the same dimensions.
         ValueError: If yerr as an array does not have the same dimensions as heights.
     """
+
+    label_name: ClassVar[str] = "bar_charts"
 
     x: NArray1D[Any]
     heights: NArray1D[Any]
@@ -66,7 +68,7 @@ class BarChart(Drawable):
             canvas,
             plot_n,
             label,
-            "bar_charts",
+            self.label_name,
             logger,
             "No label for the bar chart in the json file.",
         )
@@ -87,4 +89,4 @@ class BarChart(Drawable):
         )
         logger.debug(f"BarChart {n} drawn")
 
-        canvas.counters.bar_charts[plot_n] += 1
+        getattr(canvas.counters, self.label_name)[plot_n] += 1

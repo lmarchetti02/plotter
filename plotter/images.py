@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any, TypedDict
+from typing import Any, ClassVar, TypedDict
 
 import matplotlib.colors as colors
 import numpy as np
@@ -34,6 +34,8 @@ class Image(Drawable):
         ValueError: If the third dimension of a 3D array is not 3 or 4.
         ValueError: If the data is not real.
     """
+
+    label_name: ClassVar[str] = "images"
 
     data: NArray2D[Any]
 
@@ -114,14 +116,14 @@ class Image(Drawable):
             canvas,
             plot_n,
             label,
-            "images",
+            self.label_name,
             logger,
             "No label for the plot in the json file.",
         )
 
         if self._label:
             self._add_colorbar(canvas, plot_n)
-        canvas.counters.images[plot_n] += 1
+        getattr(canvas.counters, self.label_name)[plot_n] += 1
 
     def _add_colorbar(self, canvas: Canvas, plot_n: int) -> None:
         """

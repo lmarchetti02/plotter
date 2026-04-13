@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from pydantic import ConfigDict
@@ -29,6 +29,8 @@ class ScatterPlot(Drawable):
         ValueError: If x and y values do not have the same dimensions.
         ValueError: If x or y error values do not have the same dimensions as their corresponding data arrays.
     """
+
+    label_name: ClassVar[str] = "scatter_plots"
 
     x: NArray1D[Any]
     y: NArray1D[Any]
@@ -74,7 +76,7 @@ class ScatterPlot(Drawable):
             canvas,
             plot_n,
             label,
-            "scatter_plots",
+            self.label_name,
             logger,
             "No label for the scatter plot in the json file.",
         )
@@ -96,4 +98,4 @@ class ScatterPlot(Drawable):
         )
         logger.debug(f"ScatterPlot {n} drawn")
 
-        canvas.counters.scatter_plots[plot_n] += 1
+        getattr(canvas.counters, self.label_name)[plot_n] += 1

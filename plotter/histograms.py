@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -31,6 +31,8 @@ class Hist(Drawable):
         bins (NArray1D[F64] or None): The array with the edges of each bin (flattened).
             It has shape (N_bins+1,).
     """
+
+    label_name: ClassVar[str] = "histograms"
 
     data: NArray1D[Any]
     nbins: int | NArray1D[Any] | str = "auto"
@@ -71,7 +73,7 @@ class Hist(Drawable):
             canvas,
             plot_n,
             label,
-            "histograms",
+            self.label_name,
             logger,
             "No label for the histogram in the json file.",
         )
@@ -93,7 +95,7 @@ class Hist(Drawable):
         )
         logger.debug(f"Hist {n} drawn")
 
-        canvas.counters.histograms[plot_n] += 1
+        getattr(canvas.counters, self.label_name)[plot_n] += 1
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -119,6 +121,8 @@ class Hist2D(Drawable):
         ybins (NArray1D[F64] or None): The array with the edges of each y-bin (flattened).
             It has shape (N_bins_Y+1,).
     """
+
+    label_name: ClassVar[str] = "histograms_2d"
 
     x: NArray1D[Any]
     y: NArray1D[Any]

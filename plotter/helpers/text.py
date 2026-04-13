@@ -1,39 +1,56 @@
-from dataclasses import asdict, dataclass, field
 from json import JSONDecodeError, dumps, load
 from logging import getLogger
 from pathlib import Path
 from typing import Iterator, Self
 
+from ..drawable import Drawable
+
 logger = getLogger(__name__)
 
 
-@dataclass(frozen=True)
 class PlotText:
     """
-    Container class to store the al the information on the
+    Container class to store the information on the
     text that has to be displayed in a subplot of a `Canvas`.
 
     Attributes:
         title (str): The title of the plot.
         x_label (str): The label of the x-axis.
         y_label (str): The label of the y-axis.
-        scatter_plots (list[str]): The labels of the scatter plots.
-        line_plots (list[str]): The labels of the line plots.
-        bar_charts (list[str]): The labels of the bar charts.
-        histograms (list[str]): The labels of the histograms.
-        histograms_2d (list[str]): The labels of the 2D histograms.
-        images (list[str]): The label of the images.
     """
 
-    title: str
-    x_label: str
-    y_label: str
-    scatter_plots: list[str]
-    line_plots: list[str]
-    bar_charts: list[str]
-    histograms: list[str]
-    histograms_2d: list[str]
-    images: list[str]
+    def __init__(self, title: str, x_label: str, y_label: str, **kwargs) -> None:
+        unexpected_keys = set(kwargs) - set(Drawable.get_label_names())
+        if unexpected_keys:
+            unexpected_key = sorted(unexpected_keys)[0]
+            raise TypeError(f"Unexpected keyword argument: '{unexpected_key}'")
+
+        self.title = title
+        self.x_label = x_label
+        self.y_label = y_label
+        self._labels = {name: list(kwargs.get(name, [""])) for name in Drawable.get_label_names()}
+
+    def __getattr__(self, name: str) -> list[str]:
+        """Returns the labels associated with a drawable family."""
+        try:
+            return self._labels[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+    def __eq__(self, other: object) -> bool:
+        """Compares two `PlotText` objects."""
+        if not isinstance(other, PlotText):
+            return NotImplemented
+        return self.to_dict() == other.to_dict()
+
+    def to_dict(self) -> dict[str, str | list[str]]:
+        """Converts the object to a JSON-serializable dictionary."""
+        return {
+            "title": self.title,
+            "x_label": self.x_label,
+            "y_label": self.y_label,
+            **self._labels,
+        }
 
     @classmethod
     def get_empy_text(cls) -> Self:
@@ -45,22 +62,14 @@ class PlotText:
             PlotText: The empty object.
         """
 
-        empty_obj = cls(
-            title="",
-            x_label="",
-            y_label="",
-            scatter_plots=[""],
-            line_plots=[""],
-            bar_charts=[""],
-            histograms=[""],
-            histograms_2d=[""],
-            images=[""],
-        )
+        return cls(title="", x_label="", y_label="")
 
-        return empty_obj
+    @classmethod
+    def get_empty_json(cls, n_plots: int = 1) -> list[dict[str, str | list[str]]]:
+        """Builds the default JSON payload for one or more empty subplots."""
+        return [cls.get_empy_text().to_dict() for _ in range(n_plots)]
 
 
-@dataclass
 class Text:
     """
     Class for storing and accessing the text to be displayed on the canvas.
@@ -76,8 +85,15 @@ class Text:
             the number of subplot in the `Canvas` object.
     """
 
-    n_plots: int
-    subplots_text: list[PlotText] = field(init=False, default_factory=list)
+    def __init__(self, n_plots: int) -> None:
+        self.n_plots = n_plots
+        self.subplots_text: list[PlotText] = []
+
+    def __eq__(self, other: object) -> bool:
+        """Compares two `Text` objects."""
+        if not isinstance(other, Text):
+            return NotImplemented
+        return self.n_plots == other.n_plots and self.subplots_text == other.subplots_text
 
     def __getitem__(self, plot_n: int) -> PlotText:
         """Returns the text of the selected subplot."""
@@ -118,7 +134,7 @@ class Text:
             logger.warning(f"JSON file not found. Creating {file_path}.")
 
             self.subplots_text = [PlotText.get_empy_text() for _ in range(self.n_plots)]
-            file_path.write_text(dumps([asdict(text) for text in self.subplots_text]))
+            file_path.write_text(dumps([text.to_dict() for text in self.subplots_text]))
 
         except (JSONDecodeError, TypeError) as _:
             logger.warning(f"Could not parse JSON file {file_path}. Canvas will not display any text.")

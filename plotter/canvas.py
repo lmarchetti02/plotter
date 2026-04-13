@@ -1,7 +1,5 @@
 import logging
-from dataclasses import fields
 from pathlib import Path
-from typing import Self
 from warnings import simplefilter
 
 import matplotlib.pyplot as plt
@@ -11,12 +9,12 @@ from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
+from .drawable import Drawable
 from .helpers import Text
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
 class _Counters:
     """
     Container class to store the counters of the `Canvas`.
@@ -25,36 +23,31 @@ class _Counters:
     to be drawn on each subplot. This way, each time an object
     calls its `draw` function, the label corresponding to said
     object can be retrieved and drawn.
-
-    Attributes:
-        scatter_plots (list[int]): The number of scatter plots per subplot.
-        line_plots (list[int]): The number of line plots per subplot.
-        bar_charts (list[int]): The number of bar charts per subplot.
-        histograms (list[int]): The number of histograms per subplot.
-        histograms_2d (list[int]): The number of 2D histograms per subplot.
-        images (list[int]): The number of images per subplot.
     """
 
-    scatter_plots: list[int]
-    line_plots: list[int]
-    bar_charts: list[int]
-    histograms: list[int]
-    histograms_2d: list[int]
-    images: list[int]
+    def __init__(self, values: dict[str, list[int]]) -> None:
+        self._values = values
+
+    def __getattr__(self, name: str) -> list[int]:
+        """Returns the counters associated with a drawable family."""
+        try:
+            return self._values[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
 
     def is_empty(self) -> bool:
         """Checks if there is any label that should be displayed."""
-        for value in vars(self).values():
+        for value in self._values.values():
             if sum(value):  # at least a label
                 return False
 
         return True
 
     @classmethod
-    def initialize_counters(cls, n_plots: int) -> Self:
+    def initialize_counters(cls, n_plots: int) -> "_Counters":
         """Initializes an object filled with zeros."""
-        kwargs = {f.name: [0] * n_plots for f in fields(cls)}
-        return cls(**kwargs)
+        values = {name: [0] * n_plots for name in Drawable.get_label_names()}
+        return cls(values)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))

@@ -1,14 +1,31 @@
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 # avoid importing Canvas at runtime
 if TYPE_CHECKING:
     from .canvas import Canvas
 
 
+DRAWABLE_LABEL_NAMES = (
+    "scatter_plots",
+    "line_plots",
+    "bar_charts",
+    "histograms",
+    "histograms_2d",
+    "images",
+)
+
+
 class Drawable(ABC):
     """Abstract base class for objects that can be drawn on a canvas."""
+
+    label_name: ClassVar[str]
+
+    @staticmethod
+    def get_label_names() -> tuple[str, ...]:
+        """Returns the names of all supported drawable label groups."""
+        return DRAWABLE_LABEL_NAMES
 
     @staticmethod
     def _get_label(canvas: "Canvas", plot_n: int, label: str | None, name: str, logger: Logger, msg: str) -> tuple[int, str | None]:
