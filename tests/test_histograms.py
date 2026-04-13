@@ -6,12 +6,12 @@ import pytest
 import plotter as plt
 
 
-def test_hist_draw_populates_bin_information_and_uses_canvas_label(single_text_file) -> None:
+def test_hist_draw_populates_bin_information_and_uses_canvas_label(single_text_file, show_plots) -> None:
     """A histogram draw call should store computed bins and increment the subplot counter."""
     rng = np.random.default_rng(0)
     data = rng.normal(5.0, 1.5, 1_000)
 
-    with plt.Canvas(str(single_text_file), show=False) as canvas:
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
         canvas.setup()
         hist = plt.Hist(data, nbins=15, density=True)
 
@@ -26,13 +26,13 @@ def test_hist_draw_populates_bin_information_and_uses_canvas_label(single_text_f
 
 
 @pytest.mark.parametrize("log", [(False, 0.0), (True, 0.0), (True, 1.0)])
-def test_hist2d_draw_adds_a_colorbar_for_supported_normalizations(single_text_file, log: tuple[bool, float]) -> None:
+def test_hist2d_draw_adds_a_colorbar_for_supported_normalizations(single_text_file, log: tuple[bool, float], show_plots) -> None:
     """Hist2D should render successfully for linear, log, and symlog normalization modes."""
     rng = np.random.default_rng(0)
     x = rng.normal(5.0, 1.5, 1_000)
     y = rng.normal(5.0, 2.5, 1_000)
 
-    with plt.Canvas(str(single_text_file), show=False) as canvas:
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
         canvas.setup()
         hist = plt.Hist2D(x, y, 20)
 

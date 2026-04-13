@@ -20,12 +20,12 @@ def test_image_rejects_invalid_input(data: np.ndarray, message: str) -> None:
         plt.Image(data)
 
 
-def test_image_draw_can_add_a_labeled_colorbar(single_text_file) -> None:
+def test_image_draw_can_add_a_labeled_colorbar(single_text_file, show_plots) -> None:
     """A grayscale image with a label should create a matching colorbar."""
     img = np.zeros((50, 50))
     img[20:30, 20:30] = 1.0
 
-    with plt.Canvas(str(single_text_file), show=False) as canvas:
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
         canvas.setup(nogrid=True)
         image = plt.Image(img)
 

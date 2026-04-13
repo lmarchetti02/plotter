@@ -5,22 +5,19 @@ from pathlib import Path
 
 import pytest
 
+from plotter.drawable import Drawable
 from plotter.helpers.text import PlotText, Text
 
 
 def test_plot_text_empty_factory_returns_a_complete_placeholder() -> None:
     """The empty PlotText factory should populate every supported label collection."""
-    assert PlotText.get_empy_text() == PlotText(
-        title="",
-        x_label="",
-        y_label="",
-        scatter_plots=[""],
-        line_plots=[""],
-        bar_charts=[""],
-        histograms=[""],
-        histograms_2d=[""],
-        images=[""],
-    )
+    empty_text = PlotText.get_empy_text()
+
+    assert empty_text.title == ""
+    assert empty_text.x_label == ""
+    assert empty_text.y_label == ""
+    for name in Drawable.get_label_names():
+        assert getattr(empty_text, name) == [""]
 
 
 def test_text_reads_json_with_or_without_extension(
@@ -53,7 +50,7 @@ def test_text_creates_a_default_file_when_json_is_missing(workspace: Path) -> No
     expected = [PlotText.get_empy_text(), PlotText.get_empy_text()]
     assert missing_file.exists()
     assert text.subplots_text == expected
-    assert missing_file.read_text() == dumps([subplot.__dict__ for subplot in expected])
+    assert missing_file.read_text() == dumps([subplot.to_dict() for subplot in expected])
 
 
 @pytest.mark.parametrize(

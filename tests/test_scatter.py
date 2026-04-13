@@ -26,12 +26,12 @@ def test_scatter_plot_rejects_mismatched_input_shapes(
         plt.ScatterPlot(x, y, yerr=yerr, xerr=xerr)
 
 
-def test_scatter_plot_draw_uses_canvas_labels_and_updates_counters(single_text_file) -> None:
+def test_scatter_plot_draw_uses_canvas_labels_and_updates_counters(single_text_file, show_plots) -> None:
     """Drawing a scatter plot without an explicit label should consume the canvas metadata."""
     x = np.array([0.0, 1.0, 2.0])
     y = np.array([1.0, 1.5, 2.0])
 
-    with plt.Canvas(str(single_text_file), show=False) as canvas:
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
         canvas.setup()
         scatter = plt.ScatterPlot(x, y)
 

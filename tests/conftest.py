@@ -8,6 +8,27 @@ import pytest
 import plotter as plt
 
 
+def pytest_addoption(parser):
+    """Add custom pytest command-line options."""
+    parser.addoption(
+        "--show-plots",
+        action="store_true",
+        default=False,
+        help="Display canvases during test execution for aesthetic testing",
+    )
+
+
+@pytest.fixture
+def show_plots(request):
+    """Provide the --show-plots option value to tests.
+
+    Use this fixture in tests where you want to conditionally show plots:
+        with plt.Canvas(str(text_file), show=show_plots) as canvas:
+            ...
+    """
+    return request.config.getoption("--show-plots")
+
+
 @pytest.fixture
 def sample_text_data() -> list[dict[str, object]]:
     """Provide representative subplot metadata for canvas and text tests."""

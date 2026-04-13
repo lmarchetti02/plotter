@@ -34,13 +34,13 @@ def test_bar_chart_rejects_mismatched_input_shapes(
         plt.BarChart(x, heights, yerr=yerr)
 
 
-def test_bar_chart_draw_uses_canvas_labels_and_updates_counters(single_text_file) -> None:
+def test_bar_chart_draw_uses_canvas_labels_and_updates_counters(single_text_file, show_plots) -> None:
     """Drawing a bar chart should use JSON labels when no explicit label is passed."""
     x = np.array([0.0, 1.0, 2.0])
     heights = np.array([1.0, 3.0, 2.0])
     yerr = np.array([0.2, 0.1, 0.3])
 
-    with plt.Canvas(str(single_text_file), show=False) as canvas:
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
         canvas.setup()
         bars = plt.BarChart(x, heights, yerr=yerr)
 
@@ -53,12 +53,12 @@ def test_bar_chart_draw_uses_canvas_labels_and_updates_counters(single_text_file
         assert labels == ["bars"]
 
 
-def test_bar_chart_draw_respects_styling_arguments(single_text_file) -> None:
+def test_bar_chart_draw_respects_styling_arguments(single_text_file, show_plots) -> None:
     """BarChart should forward width and edge styling to matplotlib."""
     x = np.array([0.0, 1.0])
     heights = np.array([2.0, 4.0])
 
-    with plt.Canvas(str(single_text_file), show=False) as canvas:
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
         canvas.setup()
         bars = plt.BarChart(x, heights)
 

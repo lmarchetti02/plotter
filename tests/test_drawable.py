@@ -10,6 +10,18 @@ def test_drawable_is_exported_at_package_level() -> None:
     assert plt.Drawable is not None
 
 
+def test_drawable_registry_lists_all_supported_label_groups() -> None:
+    """The shared drawable registry should define every supported label collection once."""
+    assert plt.Drawable.get_label_names() == (
+        "scatter_plots",
+        "line_plots",
+        "bar_charts",
+        "histograms",
+        "histograms_2d",
+        "images",
+    )
+
+
 def test_all_supported_plot_types_are_drawables() -> None:
     """Every concrete drawable object should inherit from the shared base class."""
     x = np.array([0.0, 1.0])

@@ -68,12 +68,12 @@ def test_line_plot_computes_y_values_from_callable_and_wider_domain() -> None:
     assert_allclose(plot.y, plot.x**2)
 
 
-def test_line_plot_draw_supports_inverted_axes(single_text_file) -> None:
+def test_line_plot_draw_supports_inverted_axes(single_text_file, show_plots) -> None:
     """Drawing with `inverted=True` should swap the plotted x and y data."""
     x = np.array([0.0, 1.0, 2.0])
     y = np.array([0.0, 1.0, 4.0])
 
-    with plt.Canvas(str(single_text_file), show=False) as canvas:
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
         canvas.setup()
         plot = plt.LinePlot(x, y)
 

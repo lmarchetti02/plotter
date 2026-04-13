@@ -11,12 +11,9 @@ def test_counters_initialize_with_one_slot_per_subplot() -> None:
     """Counters should start empty and track each drawable family independently."""
     counters = plt.canvas._Counters.initialize_counters(2)
 
-    assert counters.scatter_plots == [0, 0]
-    assert counters.line_plots == [0, 0]
-    assert counters.bar_charts == [0, 0]
-    assert counters.histograms == [0, 0]
-    assert counters.histograms_2d == [0, 0]
-    assert counters.images == [0, 0]
+    for name in plt.Drawable.get_label_names():
+        assert getattr(counters, name) == [0, 0]
+
     assert counters.is_empty()
 
     counters.histograms_2d[0] += 1
@@ -50,9 +47,9 @@ def test_canvas_setup_applies_axes_configuration(text_file: Path) -> None:
 
 
 @pytest.mark.parametrize("orientation", ["v", "h"])
-def test_canvas_draw_line_adds_a_single_reference_line(single_text_file: Path, orientation: str) -> None:
+def test_canvas_draw_line_adds_a_single_reference_line(single_text_file: Path, orientation: str, show_plots) -> None:
     """Canvas.draw_line should add exactly one line for either supported orientation."""
-    with plt.Canvas(str(single_text_file), show=False) as canvas:
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
         canvas.setup()
         before = len(canvas.axes[0].lines)
 
@@ -88,13 +85,13 @@ def test_canvas_rejects_invalid_axis_arguments(
             method(**kwargs)
 
 
-def test_canvas_can_customize_ticks_and_scalebar(single_text_file: Path) -> None:
+def test_canvas_can_customize_ticks_and_scalebar(single_text_file: Path, show_plots) -> None:
     """Tick helpers and scalebars should update the selected subplot in place."""
-    with plt.Canvas(str(single_text_file), show=False) as canvas:
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
         canvas.setup()
         canvas.set_ticks("x", (0.0, 1.0), labels=("left", "right"))
         canvas.set_ticks("y", (1.0, 2.0))
-        canvas.add_scalebar(size=5, label="5 um")
+        canvas.add_scalebar(size=0.5, label="5 um", v_size=0.1)
 
         axis = canvas.axes[0]
         assert list(axis.get_xticks()) == []

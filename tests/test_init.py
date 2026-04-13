@@ -1,8 +1,11 @@
 """Tests for package-level workspace initialization."""
 
+from json import loads
 from pathlib import Path
 
 import pytest
+
+from plotter.helpers.text import PlotText
 
 
 @pytest.mark.parametrize(
@@ -37,3 +40,13 @@ def test_setup_workspace_is_idempotent_and_keeps_packaged_assets(tmp_path: Path)
 
     info_dir = tmp_path / "plotter" / "utils" / "info"
     assert any(info_dir.iterdir())
+
+
+def test_setup_workspace_generates_text_example_from_the_drawable_registry(tmp_path: Path) -> None:
+    """The generated example JSON should be derived from the registry-backed empty PlotText."""
+    import plotter
+
+    plotter.setup_workspace(tmp_path)
+
+    text_example = tmp_path / "plotter" / "text" / "text_example.json"
+    assert loads(text_example.read_text()) == PlotText.get_empty_json()
