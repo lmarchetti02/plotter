@@ -105,28 +105,6 @@ with p.Canvas("example.json", rows_cols=(1, 2), show=False) as canvas:
 
 All drawable classes inherit from `Drawable` and implement a `draw(canvas, ...)` method.
 
-## Documentation Website
-
-The documentation site is built with Zensical from the Markdown files in `docs/`.
-The API reference pages are generated from the docstrings in `plotter/`.
-
-To refresh the API pages and build the site locally:
-
-```bash
-uv run python tools/generate_api_docs.py
-uv run zensical build
-```
-
-To preview the site:
-
-```bash
-uv run zensical serve
-```
-
-The GitHub Actions workflow in `.github/workflows/deploy-docs.yml` rebuilds the
-documentation and deploys the generated `site/` directory to GitHub Pages on every
-push to `main`. The workflow can also be run manually from the Actions tab.
-
 ## Images
 
 ![example1](./plotter/data/info/example_1.png "Example 1")
