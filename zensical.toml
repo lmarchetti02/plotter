@@ -1,0 +1,34 @@
+[project]
+site_name = "Plotter"
+site_description = "Browsable documentation for the Plotter Python package."
+site_author = "Luca Marchetti"
+docs_dir = "docs"
+site_dir = "site"
+nav = [
+  {"Home" = "index.md"},
+  {"Quickstart" = "quickstart.md"},
+  {"API Reference" = [
+    "api/index.md",
+    {"Package" = "api/package.md"},
+    {"Canvas" = "api/canvas.md"},
+    {"Drawable" = "api/drawable.md"},
+    {"Scatter" = "api/scatter.md"},
+    {"Lines" = "api/lines.md"},
+    {"Bars" = "api/bars.md"},
+    {"Histograms" = "api/histograms.md"},
+    {"Images" = "api/images.md"},
+    {"Text Helpers" = "api/helpers-text.md"},
+    {"Workspace Helpers" = "api/helpers-initialization.md"},
+    {"Utility Functions" = "api/helpers-useful_functions.md"},
+    {"Constants" = "api/helpers-constants.md"},
+  ]},
+]
+
+[project.theme]
+features = [
+  "navigation.sections",
+  "navigation.expand",
+  "navigation.path",
+  "navigation.top",
+  "toc.follow",
+]
