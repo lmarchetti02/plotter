@@ -107,6 +107,9 @@ All drawable classes inherit from `Drawable` and implement a `draw(canvas, ...)`
 
 ## Documentation Website
 
+The published documentation is available at
+<https://lmarchetti02.github.io/plotter/>.
+
 The documentation site is built with Zensical from the Markdown files in `docs/`.
 The API reference pages are generated from the docstrings in `plotter/`.
 
