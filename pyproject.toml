@@ -13,7 +13,8 @@ license = "MIT"
 dependencies = ["matplotlib", "numpy", "pydantic>=2.12.5", "pytest>=9.0.2"]
 
 [tool.setuptools.packages.find]
-where = ["plotter"]
+where = ["."]
+include = ["plotter*"]
 
 [tool.setuptools.package-data]
 plotter = ["data/*", "data/info/*"]
