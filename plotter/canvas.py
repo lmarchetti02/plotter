@@ -425,7 +425,10 @@ class Canvas:
 
         if self.save:
             file_path = (Path.cwd() / "plotter/img").joinpath(self.save)
-            self.figure.savefig(file_path, bbox_inches="tight")
+            if not self.save[-4:] == ".pgf":
+                self.figure.savefig(file_path, bbox_inches="tight")
+            else:
+                self.figure.savefig(file_path)
             logger.debug(f"Plot saved to {file_path}")
         else:
             logger.warning("Plot not saved to any file")
