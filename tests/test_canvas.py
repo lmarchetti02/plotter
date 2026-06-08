@@ -101,7 +101,7 @@ def test_canvas_can_customize_ticks_and_scalebar(single_text_file: Path, show_pl
 
 def test_canvas_saves_requested_figure(workspace: Path, single_text_file: Path) -> None:
     """Exiting the canvas context should save the figure when a filename is provided."""
-    image_dir = workspace / "img"
+    image_dir = workspace / "plotter/img"
     image_dir.mkdir(exist_ok=True)
     output_file = image_dir / "figure.png"
 
