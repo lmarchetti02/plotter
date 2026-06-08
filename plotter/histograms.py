@@ -2,6 +2,7 @@ from logging import getLogger
 from typing import Any, ClassVar
 
 import matplotlib.colors as colors
+import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
@@ -22,6 +23,8 @@ class Hist(Drawable):
         data (NArray1D[Any]): The array containing the data to plot.
         nbins (int or NArray1D[Any] or "auto", optional): The number of bins of the histogram
             or the array containing the edges of the bins. Defaults to "auto".
+            When `nbins` is an array of bin edges, the histogram is drawn with
+            `matplotlib.axes.Axes.stairs` instead of `matplotlib.axes.Axes.hist`.
         density (bool, optional): If `True`, the histogram is normalized such that
             the integral over the range is 1. Defaults to `False`.
         cumulative (bool, optional): If `True`, the cumulative histogram is plotted.
@@ -80,19 +83,34 @@ class Hist(Drawable):
 
         filled = kwargs.get("filled", True)
 
-        self.bin_vals, self.bins, _ = canvas.axes[plot_n].hist(  # type: ignore
-            self.data,
-            bins=self.nbins,  # type: ignore
-            range=kwargs.get("bin_ranges", None),
-            density=self.density,
-            cumulative=self.cumulative,
-            histtype="stepfilled" if filled else "step",
-            color=kwargs.get("color", "royalblue"),
-            alpha=kwargs.get("alpha", 0.8),
-            label=label,
-            edgecolor=kwargs.get("ecolor", "cornflowerblue"),
-            lw=kwargs.get("lw", 0 if filled else 1.5),
-        )
+        if isinstance(self.nbins, str) or np.isscalar(self.nbins):
+            self.bin_vals, self.bins, _ = canvas.axes[plot_n].hist(  # type: ignore
+                self.data,
+                bins=self.nbins,  # type: ignore
+                range=kwargs.get("bin_ranges", None),
+                density=self.density,
+                cumulative=self.cumulative,
+                histtype="stepfilled" if filled else "step",
+                color=kwargs.get("color", "royalblue"),
+                alpha=kwargs.get("alpha", 0.8),
+                label=label,
+                edgecolor=kwargs.get("ecolor", "cornflowerblue"),
+                lw=kwargs.get("lw", 0 if filled else 1.5),
+            )
+        else:
+            self.bin_vals = self.data  # type: ignore
+            self.bins = self.nbins  # type: ignore
+            canvas.axes[plot_n].stairs(
+                self.data,
+                self.nbins,
+                baseline=0,
+                fill=filled,
+                color=kwargs.get("color", "royalblue"),
+                alpha=kwargs.get("alpha", 0.8),
+                label=label,
+                edgecolor=kwargs.get("ecolor", "cornflowerblue"),
+                linewidth=kwargs.get("lw", 0 if filled else 1.5),
+            )
         logger.debug(f"Hist {n} drawn")
 
         getattr(canvas.counters, self.label_name)[plot_n] += 1

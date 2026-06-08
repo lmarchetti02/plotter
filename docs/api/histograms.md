@@ -10,7 +10,7 @@ Class for creating a 1D histogram.
 | Name | Type | Description |
 | --- | --- | --- |
 | `data` | NArray1D\[Any\] | The array containing the data to plot. |
-| `nbins` | int or NArray1D\[Any\] or "auto", optional | The number of bins of the histogram or the array containing the edges of the bins. Defaults to "auto". |
+| `nbins` | int or NArray1D\[Any\] or "auto", optional | The number of bins of the histogram or the array containing the edges of the bins. Defaults to "auto". When `nbins` is an array of bin edges, `Hist.draw()` uses `matplotlib.axes.Axes.stairs` instead of `matplotlib.axes.Axes.hist`. |
 | `density` | bool, optional | If `True`, the histogram is normalized such that the integral over the range is 1. Defaults to `False`. |
 | `cumulative` | bool, optional | If `True`, the cumulative histogram is plotted. Defaults to `False`. |
 | `bin_vals` | NArray1D\[F64\] or None | The array with the values corresponding to each bin. It has shape (N_bins,). |

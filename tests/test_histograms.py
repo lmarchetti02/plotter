@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from unittest.mock import patch
 
 import plotter as plt
 
@@ -23,6 +24,34 @@ def test_hist_draw_populates_bin_information_and_uses_canvas_label(single_text_f
         assert len(hist.bin_vals) == 15
         assert canvas.counters.histograms[0] == 1
         assert canvas.axes[0].patches[0].get_label() == "hist"
+
+
+def test_hist_draw_uses_stairs_for_pre_binned_input(single_text_file, show_plots) -> None:
+    """A histogram with explicit bin edges should draw through stairs."""
+    bin_vals = np.array([2.0, 4.0, 3.0])
+    bins = np.array([0.0, 1.0, 2.0, 3.0])
+
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+        canvas.setup()
+        hist = plt.Hist(bin_vals, nbins=bins)
+
+        axes_type = type(canvas.axes[0])
+        with patch.object(axes_type, "hist", autospec=True) as hist_mock, patch.object(
+            axes_type, "stairs", autospec=True
+        ) as stairs_mock:
+            hist.draw(canvas)
+
+        hist_mock.assert_not_called()
+        stairs_mock.assert_called_once()
+
+        args, kwargs = stairs_mock.call_args
+        assert args[1] is bin_vals
+        assert np.array_equal(args[2], bins)
+        assert kwargs["fill"] is True
+        assert kwargs["label"] == "hist"
+        assert hist.bin_vals is bin_vals
+        assert hist.bins is bins
+        assert canvas.counters.histograms[0] == 1
 
 
 @pytest.mark.parametrize("log", [(False, 0.0), (True, 0.0), (True, 1.0)])
