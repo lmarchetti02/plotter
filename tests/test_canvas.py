@@ -62,6 +62,44 @@ def test_canvas_draw_line_adds_a_single_reference_line(single_text_file: Path, o
         assert line.get_linewidth() == pytest.approx(2.0)
 
 
+def test_canvas_add_text_places_a_label_without_an_arrow(single_text_file: Path, show_plots) -> None:
+    """Canvas.add_text should add a plain text artist at the requested position."""
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+        canvas.setup()
+        before = len(canvas.axes[0].texts)
+
+        canvas.add_text("Note", position=(0.25, 0.75), plot_n=0, color="green", fontsize=14)
+
+        annotation = canvas.axes[0].texts[-1]
+        assert len(canvas.axes[0].texts) == before + 1
+        assert annotation.get_text() == "Note"
+        assert annotation.get_position() == pytest.approx((0.25, 0.75))
+        assert annotation.get_color() == "green"
+        assert annotation.get_fontsize() == pytest.approx(14)
+        assert getattr(annotation, "arrow_patch", None) is None
+
+
+def test_canvas_add_text_can_annotate_a_point_with_an_arrow(single_text_file: Path, show_plots) -> None:
+    """Canvas.add_text should support arrowed annotations to a user-specified point."""
+    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+        canvas.setup()
+
+        canvas.add_text(
+            "Target",
+            position=(0.2, 0.8),
+            point=(0.75, 0.25),
+            plot_n=0,
+            arrowprops={"arrowstyle": "->", "color": "red"},
+        )
+
+        annotation = canvas.axes[0].texts[-1]
+        assert annotation.get_text() == "Target"
+        assert annotation.get_position() == pytest.approx((0.2, 0.8))
+        assert annotation.xy == pytest.approx((0.75, 0.25))
+        assert annotation.arrow_patch is not None
+        assert annotation.arrow_patch.get_edgecolor()[:3] == pytest.approx((1.0, 0.0, 0.0))
+
+
 @pytest.mark.parametrize(
     ("method_name", "kwargs", "expected_message"),
     [

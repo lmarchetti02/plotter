@@ -257,6 +257,52 @@ class Canvas:
         else:
             self.axes[plot_n].axhline(**args)
 
+    def add_text(
+        self,
+        text: str,
+        position: tuple[float, float],
+        plot_n: int = 0,
+        point: tuple[float, float] | None = None,
+        **kwargs,
+    ) -> None:
+        """
+        Adds a text label to the canvas.
+
+        Args:
+            text (str): The text to display.
+            position (tuple[float, float]): The position of the text in data
+                coordinates.
+            plot_n (int, optional): The index of the subplot to draw on.
+                Defaults to 0.
+            point (tuple[float, float] | None, optional): A point to annotate.
+                When provided, an arrow is drawn from the text to this point.
+
+        Keyword Arguments:
+            color (str): The text color. Defaults to 'black'.
+            fontsize (float): The font size. Defaults to Matplotlib's default.
+            ha (str): Horizontal alignment. Defaults to 'center'.
+            va (str): Vertical alignment. Defaults to 'center'.
+            rotation (float): The text rotation in degrees. Defaults to 0.
+            arrowprops (dict): Arrow styling passed to `Axes.annotate`.
+        """
+        logger.debug("Called 'Canvas.add_text()'")
+
+        text_kwargs = {
+            "color": kwargs.get("color", "black"),
+            "fontsize": kwargs.get("fontsize", None),
+            "ha": kwargs.get("ha", "center"),
+            "va": kwargs.get("va", "center"),
+            "rotation": kwargs.get("rotation", 0),
+        }
+        text_kwargs = {key: value for key, value in text_kwargs.items() if value is not None}
+
+        if point is None:
+            self.axes[plot_n].text(position[0], position[1], text, **text_kwargs)
+            return
+
+        arrowprops = kwargs.get("arrowprops", {"arrowstyle": "->"})
+        self.axes[plot_n].annotate(text, xy=point, xytext=position, arrowprops=arrowprops, **text_kwargs)
+
     def turn_scientific(self, axis: str, plot_n: int = 0, limits: tuple[int, int] | int = (0, 0)) -> None:
         """
         Sets the ticks of an axis to scientific notation.
