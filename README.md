@@ -72,6 +72,8 @@ shows or closes it depending on the canvas configuration.
 import numpy as np
 import plotter as p
 
+p.setup_workspace()
+
 
 def f(x):
     return x**2
