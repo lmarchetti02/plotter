@@ -36,10 +36,21 @@ def test_setup_workspace_is_idempotent_and_keeps_packaged_assets(tmp_path: Path)
     import plotter
 
     plotter.setup_workspace(tmp_path)
+
+    # modify file
+    style_path = tmp_path / "plotter/utils/style.mplstyle"
+    with open(style_path, "a") as f:
+        f.write("\ntest")
+
     plotter.setup_workspace(tmp_path)
 
     info_dir = tmp_path / "plotter" / "utils" / "info"
     assert any(info_dir.iterdir())
+
+    # assert modification is kept
+    with open(style_path, "r") as f:
+        lines = f.readlines()
+        assert lines[-1] == "test"
 
 
 def test_setup_workspace_generates_text_example_from_the_drawable_registry(tmp_path: Path) -> None:
