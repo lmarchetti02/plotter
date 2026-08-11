@@ -50,7 +50,7 @@ Class for creating an empty canvas (xy-plane).
 | --- | --- | --- |
 | `text_file` | str | The name of the JSON file containing the text to be added to the plot. |
 | `rows_cols` | tuple\[int, int\], optional | A tuple with the number of rows and columns of subplots. Defaults to (1, 1). |
-| `figsize` | tuple\[int, int\], optional | A tuple containing the dimensions of the canvas (width, height). Defaults to (12, 8). |
+| `figsize` | tuple\[float, float\], optional | A tuple containing the dimensions of the canvas (width, height). Defaults to (12, 8). |
 | `dpi` | int, optional | The number of dots per inch (DPI) of the image. Defaults to 150. |
 | `save` | str, optional | The name of the file to save the plot to. The plots are stored in 'plotter/img/'. Defaults to an empty string. |
 | `figure` | Figure | The matplotlib Figure object. |
@@ -67,7 +67,7 @@ Class for creating an empty canvas (xy-plane).
 
 - `text_file: str`
 - `rows_cols: tuple[int, int]`
-- `figsize: tuple[int, int]`
+- `figsize: tuple[float, float]`
 - `dpi: int`
 - `save: str`
 - `show: bool`

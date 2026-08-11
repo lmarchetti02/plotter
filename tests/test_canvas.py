@@ -46,6 +46,12 @@ def test_canvas_setup_applies_axes_configuration(text_file: Path) -> None:
         assert canvas._loc_legend[1] == 3
 
 
+def test_canvas_accepts_fractional_figsize(single_text_file: Path) -> None:
+    """Canvas should accept non-integer figure dimensions."""
+    with plt.Canvas(str(single_text_file), figsize=(12.5, 8.25), show=False) as canvas:
+        assert tuple(canvas.figure.get_size_inches()) == pytest.approx((12.5, 8.25), abs=0.01)
+
+
 @pytest.mark.parametrize("orientation", ["v", "h"])
 def test_canvas_draw_line_adds_a_single_reference_line(single_text_file: Path, orientation: str, show_plots) -> None:
     """Canvas.draw_line should add exactly one line for either supported orientation."""

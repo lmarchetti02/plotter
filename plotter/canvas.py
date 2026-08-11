@@ -60,7 +60,7 @@ class Canvas:
             added to the plot.
         rows_cols (tuple[int, int], optional): A tuple with the number of rows
             and columns of subplots. Defaults to (1, 1).
-        figsize (tuple[int, int], optional): A tuple containing the dimensions of
+        figsize (tuple[float, float], optional): A tuple containing the dimensions of
             the canvas (width, height). Defaults to (12, 8).
         dpi (int, optional): The number of dots per inch (DPI) of the image.
             Defaults to 150.
@@ -77,7 +77,7 @@ class Canvas:
     # args
     text_file: str
     rows_cols: tuple[int, int] = (1, 1)
-    figsize: tuple[int, int] = (12, 8)
+    figsize: tuple[float, float] = (12.0, 8.0)
     dpi: int = 150
     save: str = ""
     show: bool = True
