@@ -44,7 +44,7 @@ Makes x-grid denser if necessary.
 #### `draw`
 
 ```python
-draw(self, canvas: Canvas, plot_n: int=0, label: str | None=None, **kwargs) -> None
+draw(self, canvas: Canvas | ZoomInset, plot_n: int=0, label: str | None=None, **kwargs) -> None
 ```
 
 Draws the plot on the canvas.
@@ -54,7 +54,7 @@ Draws the plot on the canvas.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `canvas` | Canvas | The canvas object to draw the plot on. |
+| `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) to draw the plot on. |
 | `plot_n` | int, optional | The index of the subplot. Defaults to 0. |
 | `label` | str, optional | The label for the plot in the legend. Defaults to `None`. |
 

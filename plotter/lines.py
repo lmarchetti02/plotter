@@ -5,7 +5,7 @@ import numpy as np
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
-from .canvas import Canvas
+from .canvas import Canvas, ZoomInset
 from .drawable import Drawable
 from .helpers import NArray1D
 
@@ -50,12 +50,12 @@ class LinePlot(Drawable):
             self.x = self._make_wider(self.x, *self.wider, self.dens)
             self.y = self.f(self.x)
 
-    def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
         Draws the plot on the canvas.
 
         Args:
-            canvas (Canvas): The canvas object to draw the plot on.
+            canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw the plot on.
             plot_n (int, optional): The index of the subplot. Defaults to 0.
             label (str, optional): The label for the plot in the legend.
                 Defaults to `None`.

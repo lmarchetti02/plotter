@@ -5,7 +5,7 @@ import numpy as np
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
-from .canvas import Canvas
+from .canvas import Canvas, ZoomInset
 from .drawable import Drawable
 from .helpers import NArray1D
 
@@ -51,13 +51,13 @@ class ScatterPlot(Drawable):
         if isinstance(self.xerr, np.ndarray) and len(self.x) != len(self.xerr):
             raise ValueError("xy-values and xerr-values don't have the same dimensions")
 
-    def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
         Draws the scatter plot on the canvas.
 
         Args:
-            canvas (Canvas): The canvas object to which the scatter plot
-                is to be attached.
+            canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to which
+                the scatter plot is to be attached.
             plot_n (int, optional): The index of the subplot. Defaults to 0.
             label (str, optional): The label for the scatter plot in the legend.
                 Defaults to `None`.

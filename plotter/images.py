@@ -7,7 +7,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
-from .canvas import Canvas
+from .canvas import Canvas, ZoomInset
 from .drawable import Drawable
 from .helpers import NArray2D
 
@@ -51,12 +51,12 @@ class Image(Drawable):
         if not np.all(np.isreal(self.data)):
             raise ValueError("The image data has to be real.")
 
-    def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
         Draws the image on the canvas.
 
         Args:
-            canvas (Canvas): The canvas object to draw the image on.
+            canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw the image on.
             plot_n (int, optional): The index of the subplot to draw on.
                 Defaults to 0.
             label (str, optional): The label for the colorbar. Defaults to `None`.
@@ -125,7 +125,7 @@ class Image(Drawable):
             self._add_colorbar(canvas, plot_n)
         getattr(canvas.counters, self.label_name)[plot_n] += 1
 
-    def _add_colorbar(self, canvas: Canvas, plot_n: int) -> None:
+    def _add_colorbar(self, canvas: Canvas | ZoomInset, plot_n: int) -> None:
         """
         Adds the colorbar to an image.
 

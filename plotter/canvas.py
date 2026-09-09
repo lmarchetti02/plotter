@@ -6,11 +6,12 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .drawable import Drawable
-from .helpers import Text
+from .helpers import PlotText, Text
 
 logger = getLogger(__name__)
 
@@ -48,6 +49,38 @@ class _Counters:
         """Initializes an object filled with zeros."""
         values = {name: [0] * n_plots for name in Drawable.get_label_names()}
         return cls(values)
+
+
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
+class ZoomInset:
+    """
+    A single zoomed-in inset panel returned by `Canvas.add_zoom_inset`.
+
+    Exposes the same `axes`/`counters`/`text`/`figure` surface as `Canvas`, so any
+    `Drawable` can be drawn into it exactly like a real `Canvas` subplot (e.g.
+    `some_drawable.draw(inset)`). Cosmetic `Canvas` helpers (`setup`, `draw_line`, ...)
+    are not available on it — use `inset.axes[0]` directly for those.
+
+    Attributes:
+        axes (list[Axes]): A single-element list containing the inset `Axes`.
+        figure (Figure): The parent `Canvas`'s Figure (the inset lives on it).
+        text (Text): Blank title/axis-labels/label-lists for the panel — there is no
+            JSON slot for an ad hoc inset.
+        counters (_Counters): Fresh, zeroed counters scoped to this one panel.
+    """
+
+    axes: list[Axes]
+
+    figure: Figure = Field(init=False)
+    text: Text = Field(init=False)
+    counters: _Counters = Field(init=False)
+
+    def __post_init__(self) -> None:
+        """Initializes the blank text and zeroed counters for the panel."""
+        self.figure = self.axes[0].figure  # type: ignore
+        self.text = Text(1)
+        self.text.subplots_text = [PlotText.get_empy_text()]
+        self.counters = _Counters.initialize_counters(1)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -399,6 +432,56 @@ class Canvas:
         self.axes[plot_n].add_artist(scalebar)
         self.axes[plot_n].set_yticks([])
         self.axes[plot_n].set_xticks([])
+
+    def add_zoom_inset(self, xlim: tuple[float, float], ylim: tuple[float, float], plot_n: int = 0, **kwargs) -> ZoomInset:
+        """
+        Adds a zoomed-in inset panel showing a region of a subplot.
+
+        The source subplot gets a rectangle around the requested region, connected
+        to the inset panel by two lines. The panel itself starts empty: draw into
+        it via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
+
+        Args:
+            xlim (tuple[float, float]): The x-axis limits of the region to zoom into.
+            ylim (tuple[float, float]): The y-axis limits of the region to zoom into.
+            plot_n (int, optional): The index of the subplot to zoom into. Defaults to 0.
+
+        Keyword Arguments:
+            location (str): Where to place the inset panel. Defaults to "upper right".
+            width (str or float): The width of the inset panel, as a percentage of the
+                subplot (e.g. "30%") or an absolute size in inches. Defaults to "30%".
+            height (str or float): The height of the inset panel, same format as `width`.
+                Defaults to "30%".
+            loc1 (int): The corner of the region rectangle connected to the inset panel
+                by the first line (Matplotlib corner codes, 1-4). Defaults to 2.
+            loc2 (int): The corner connected by the second line. Defaults to 4.
+            edgecolor (str): The color of the region rectangle and connector lines.
+                Defaults to "0.5".
+
+        Returns:
+            ZoomInset: The panel to draw the zoomed-in content into.
+        """
+        logger.info("Called 'Canvas.add_zoom_inset()'")
+
+        axins = inset_axes(
+            self.axes[plot_n],
+            width=kwargs.get("width", "30%"),
+            height=kwargs.get("height", "30%"),
+            loc=kwargs.get("location", "upper right"),
+        )
+        axins.set_xlim(*xlim)
+        axins.set_ylim(*ylim)
+
+        mark_inset(
+            self.axes[plot_n],
+            axins,
+            loc1=kwargs.get("loc1", 2),
+            loc2=kwargs.get("loc2", 4),
+            fc="none",
+            ec=kwargs.get("edgecolor", "0.5"),
+        )
+
+        return ZoomInset(axes=[axins])
 
     def _legend(self) -> None:
         """This function generates the plot legend."""

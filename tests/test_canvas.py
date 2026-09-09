@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 import plotter as plt
@@ -190,3 +191,41 @@ class TestAddScalebar:
             assert list(axis.get_xticks()) == []
             assert list(axis.get_yticks()) == []
             assert len(axis.artists) == 1
+
+
+class TestAddZoomInset:
+    """Tests for `Canvas.add_zoom_inset`."""
+
+    def test_returns_a_zoom_inset_with_the_requested_view(self, single_text_file: Path, show_plots) -> None:
+        """add_zoom_inset should return a panel showing the requested region on its own Axes."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
+
+            assert isinstance(inset, plt.ZoomInset)
+            assert inset.axes[0] is not canvas.axes[0]
+            assert inset.figure is canvas.figure
+            assert inset.axes[0].get_xlim() == pytest.approx((1.0, 2.0))
+            assert inset.axes[0].get_ylim() == pytest.approx((0.0, 1.0))
+
+    def test_draws_an_indicator_on_the_source_axes(self, single_text_file: Path, show_plots) -> None:
+        """add_zoom_inset should mark the zoomed region on the source subplot."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            axis = canvas.axes[0]
+            before = len(axis.patches)
+
+            canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
+
+            assert len(axis.patches) > before
+
+    def test_a_drawable_can_be_drawn_into_the_returned_panel(self, single_text_file: Path, show_plots) -> None:
+        """The panel should accept Drawable objects exactly like a real Canvas subplot."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
+            plt.LinePlot(x=np.array([1.0, 1.5, 2.0]), f=np.array([0.1, 0.5, 0.9])).draw(inset)
+
+            assert len(inset.axes[0].lines) == 1

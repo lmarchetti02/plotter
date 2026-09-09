@@ -5,7 +5,7 @@ import numpy as np
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
-from .canvas import Canvas
+from .canvas import Canvas, ZoomInset
 from .drawable import Drawable
 from .helpers import NArray1D
 
@@ -41,12 +41,12 @@ class BarChart(Drawable):
         if isinstance(self.yerr, np.ndarray) and len(self.heights) != len(self.yerr):
             raise ValueError("heights and yerr-values don't have the same dimensions")
 
-    def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
         Draws the bar chart on the canvas.
 
         Args:
-            canvas (Canvas): The canvas object to draw the bar chart on.
+            canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw the bar chart on.
             plot_n (int, optional): The index of the subplot to draw on.
                 Defaults to 0.
             label (str, optional): The label for the bar chart in the legend.

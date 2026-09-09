@@ -33,7 +33,7 @@ Class for creating a bar chart.
 #### `draw`
 
 ```python
-draw(self, canvas: Canvas, plot_n: int=0, label: str | None=None, **kwargs) -> None
+draw(self, canvas: Canvas | ZoomInset, plot_n: int=0, label: str | None=None, **kwargs) -> None
 ```
 
 Draws the bar chart on the canvas.
@@ -43,7 +43,7 @@ Draws the bar chart on the canvas.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `canvas` | Canvas | The canvas object to draw the bar chart on. |
+| `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) to draw the bar chart on. |
 | `plot_n` | int, optional | The index of the subplot to draw on. Defaults to 0. |
 | `label` | str, optional | The label for the bar chart in the legend. Defaults to `None`. |
 

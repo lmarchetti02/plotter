@@ -10,7 +10,7 @@ Class for creating a 1D histogram.
 | Name | Type | Description |
 | --- | --- | --- |
 | `data` | NArray1D\[Any\] | The array containing the data to plot. |
-| `nbins` | int or NArray1D\[Any\] or "auto", optional | The number of bins of the histogram or the array containing the edges of the bins. Defaults to "auto". When `nbins` is an array of bin edges, `Hist.draw()` uses `matplotlib.axes.Axes.stairs` instead of `matplotlib.axes.Axes.hist`. |
+| `nbins` | int or NArray1D\[Any\] or "auto", optional | The number of bins of the histogram or the array containing the edges of the bins. Defaults to "auto". When `nbins` is an array of bin edges, the histogram is drawn with `matplotlib.axes.Axes.stairs` instead of `matplotlib.axes.Axes.hist`. |
 | `density` | bool, optional | If `True`, the histogram is normalized such that the integral over the range is 1. Defaults to `False`. |
 | `cumulative` | bool, optional | If `True`, the cumulative histogram is plotted. Defaults to `False`. |
 | `bin_vals` | NArray1D\[F64\] or None | The array with the values corresponding to each bin. It has shape (N_bins,). |
@@ -32,7 +32,7 @@ Class for creating a 1D histogram.
 #### `draw`
 
 ```python
-draw(self, canvas: Canvas, plot_n: int=0, label: str | None=None, **kwargs) -> None
+draw(self, canvas: Canvas | ZoomInset, plot_n: int=0, label: str | None=None, **kwargs) -> None
 ```
 
 Draws the histogram on the canvas.
@@ -42,7 +42,7 @@ Draws the histogram on the canvas.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `canvas` | Canvas | The canvas object to draw the histogram on. |
+| `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) to draw the histogram on. |
 | `plot_n` | int, optional | The index of the subplot to draw on. Defaults to 0. |
 | `label` | str, optional | The label for the histogram in the legend. Defaults to `None`. |
 
@@ -92,7 +92,7 @@ Class for creating a 2D histogram.
 #### `draw`
 
 ```python
-draw(self, canvas: Canvas, plot_n: int=0, label: str | None=None, **kwargs) -> None
+draw(self, canvas: Canvas | ZoomInset, plot_n: int=0, label: str | None=None, **kwargs) -> None
 ```
 
 Draws the 2D histogram on the canvas.
@@ -102,7 +102,7 @@ Draws the 2D histogram on the canvas.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `canvas` | Canvas | The canvas object to draw the histogram on. |
+| `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) to draw the histogram on. |
 | `plot_n` | int, optional | The index of the subplot to draw on. Defaults to 0. |
 | `label` | str, optional | The label for the colorbar. Defaults to `None`. |
 

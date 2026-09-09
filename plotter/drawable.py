@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 # avoid importing Canvas at runtime
 if TYPE_CHECKING:
-    from .canvas import Canvas
+    from .canvas import Canvas, ZoomInset
 
 
 DRAWABLE_LABEL_NAMES = (
@@ -28,12 +28,12 @@ class Drawable(ABC):
         return DRAWABLE_LABEL_NAMES
 
     @staticmethod
-    def _get_label(canvas: "Canvas", plot_n: int, label: str | None, name: str, logger: Logger, msg: str) -> tuple[int, str | None]:
+    def _get_label(canvas: "Canvas | ZoomInset", plot_n: int, label: str | None, name: str, logger: Logger, msg: str) -> tuple[int, str | None]:
         """
         Retrieves the label associated with the drawable.
 
         Args:
-            canvas (Canvas): The canvas object the drawable is attached to.
+            canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) the drawable is attached to.
             plot_n (int): The index of the subplot.
             label (str | None): An explicit user-provided label.
             name (str): The name of the drawable.
@@ -54,12 +54,12 @@ class Drawable(ABC):
         return n, resolved_label
 
     @abstractmethod
-    def draw(self, canvas: "Canvas", plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+    def draw(self, canvas: "Canvas | ZoomInset", plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
         Draws the object on the canvas.
 
         Args:
-            canvas (Canvas): The canvas object to draw on.
+            canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw on.
             plot_n (int, optional): The index of the subplot to draw on.
                 Defaults to 0.
             label (str, optional): The label associated with the drawn object.

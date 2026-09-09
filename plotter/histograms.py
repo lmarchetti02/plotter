@@ -7,7 +7,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
-from .canvas import Canvas
+from .canvas import Canvas, ZoomInset
 from .drawable import Drawable
 from .helpers import F64, NArray1D, NArray2D
 
@@ -45,12 +45,12 @@ class Hist(Drawable):
     bin_vals: NArray1D[F64] | None = Field(init=False, default=None)
     bins: NArray1D[F64] | None = Field(init=False, default=None)
 
-    def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
         Draws the histogram on the canvas.
 
         Args:
-            canvas (Canvas): The canvas object to draw the histogram on.
+            canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw the histogram on.
             plot_n (int, optional): The index of the subplot to draw on.
                 Defaults to 0.
             label (str, optional): The label for the histogram in the legend.
@@ -151,12 +151,12 @@ class Hist2D(Drawable):
     xbins: NArray1D[F64] | None = Field(init=False, default=None)
     ybins: NArray1D[F64] | None = Field(init=False, default=None)
 
-    def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
         Draws the 2D histogram on the canvas.
 
         Args:
-            canvas (Canvas): The canvas object to draw the histogram on.
+            canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw the histogram on.
             plot_n (int, optional): The index of the subplot to draw on.
                 Defaults to 0.
             label (str, optional): The label for the colorbar. Defaults to `None`.

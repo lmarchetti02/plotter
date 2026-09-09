@@ -19,7 +19,8 @@ Class for creating a scatter plot with error bars.
 | Type | Description |
 | --- | --- |
 | ValueError | If x and y values do not have the same dimensions. |
-| ValueError | If x or y error values do not have the same dimensions as their corresponding data arrays. |
+| ValueError | If y error values do not have the same dimensions as the y values. |
+| ValueError | If x error values do not have the same dimensions as the x values. |
 
 
 **Defined attributes:**
@@ -35,7 +36,7 @@ Class for creating a scatter plot with error bars.
 #### `draw`
 
 ```python
-draw(self, canvas: Canvas, plot_n: int=0, label: str | None=None, **kwargs) -> None
+draw(self, canvas: Canvas | ZoomInset, plot_n: int=0, label: str | None=None, **kwargs) -> None
 ```
 
 Draws the scatter plot on the canvas.
@@ -45,7 +46,7 @@ Draws the scatter plot on the canvas.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `canvas` | Canvas | The canvas object to which the scatter plot is to be attached. |
+| `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) to which the scatter plot is to be attached. |
 | `plot_n` | int, optional | The index of the subplot. Defaults to 0. |
 | `label` | str, optional | The label for the scatter plot in the legend. Defaults to `None`. |
 

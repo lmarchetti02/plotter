@@ -39,6 +39,44 @@ initialize_counters(cls, n_plots: int) -> '_Counters'
 Initializes an object filled with zeros.
 
 
+## class `ZoomInset`
+
+A single zoomed-in inset panel returned by `Canvas.add_zoom_inset`.
+
+Exposes the same `axes`/`counters`/`text`/`figure` surface as `Canvas`, so any
+`Drawable` can be drawn into it exactly like a real `Canvas` subplot (e.g.
+`some_drawable.draw(inset)`). Cosmetic `Canvas` helpers (`setup`, `draw_line`, ...)
+are not available on it — use `inset.axes\[0\]` directly for those.
+
+
+**Attributes:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `axes` | list\[Axes\] | A single-element list containing the inset `Axes`. |
+| `figure` | Figure | The parent `Canvas`'s Figure (the inset lives on it). |
+| `text` | Text | Blank title/axis-labels/label-lists for the panel — there is no JSON slot for an ad hoc inset. |
+| `counters` | _Counters | Fresh, zeroed counters scoped to this one panel. |
+
+
+**Defined attributes:**
+
+- `axes: list[Axes]`
+- `figure: Figure`
+- `text: Text`
+- `counters: _Counters`
+
+### Methods
+
+#### `post_init`
+
+```python
+__post_init__(self) -> None
+```
+
+Initializes the blank text and zeroed counters for the panel.
+
+
 ## class `Canvas`
 
 Class for creating an empty canvas (xy-plane).
@@ -174,6 +212,36 @@ Draws horizontal and vertical lines on the canvas.
 | ValueError | If the orientation is not 'v' or 'h'. |
 
 
+#### `add_text`
+
+```python
+add_text(self, text: str, position: tuple[float, float], plot_n: int=0, point: tuple[float, float] | None=None, **kwargs) -> None
+```
+
+Adds a text label to the canvas.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `text` | str | The text to display. |
+| `position` | tuple\[float, float\] | The position of the text in data coordinates. |
+| `plot_n` | int, optional | The index of the subplot to draw on. Defaults to 0. |
+| `point` | tuple\[float, float\] \| None, optional | A point to annotate. When provided, an arrow is drawn from the text to this point. |
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `color` | str | The text color. Defaults to 'black'. |
+| `fontsize` | float | The font size. Defaults to Matplotlib's default. |
+| `ha` | str | Horizontal alignment. Defaults to 'center'. |
+| `va` | str | Vertical alignment. Defaults to 'center'. |
+| `rotation` | float | The text rotation in degrees. Defaults to 0. |
+| `arrowprops` | dict | Arrow styling passed to `Axes.annotate`. |
+
+
 #### `turn_scientific`
 
 ```python
@@ -247,6 +315,45 @@ Adds a scalebar (and, thus, removes the axis labels).
 | `location` | str | Where to put the scalebar. Defaults to "upper right". |
 | `color` | str | The color. Defaults to "black". |
 | `v_size` | float | The vertical size. Defaults to None, which results in 1% of the height of the axis. |
+
+
+#### `add_zoom_inset`
+
+```python
+add_zoom_inset(self, xlim: tuple[float, float], ylim: tuple[float, float], plot_n: int=0, **kwargs) -> ZoomInset
+```
+
+Adds a zoomed-in inset panel showing a region of a subplot.
+
+The source subplot gets a rectangle around the requested region, connected
+to the inset panel by two lines. The panel itself starts empty: draw into
+it via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `xlim` | tuple\[float, float\] | The x-axis limits of the region to zoom into. |
+| `ylim` | tuple\[float, float\] | The y-axis limits of the region to zoom into. |
+| `plot_n` | int, optional | The index of the subplot to zoom into. Defaults to 0. |
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `location` | str | Where to place the inset panel. Defaults to "upper right". |
+| `width` | str or float | The width of the inset panel, as a percentage of the subplot (e.g. "30%") or an absolute size in inches. Defaults to "30%". |
+| `height` | str or float | The height of the inset panel, same format as `width`. Defaults to "30%". |
+| `loc1` | int | The corner of the region rectangle connected to the inset panel by the first line (Matplotlib corner codes, 1-4). Defaults to 2. |
+| `loc2` | int | The corner connected by the second line. Defaults to 4. |
+| `edgecolor` | str | The color of the region rectangle and connector lines. Defaults to "0.5". |
+
+**Returns:**
+
+| Type | Description |
+| --- | --- |
+| - | The panel to draw the zoomed-in content into. |
 
 
 #### `legend`
