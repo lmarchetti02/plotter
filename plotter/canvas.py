@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger
 from pathlib import Path
 from warnings import simplefilter
 
@@ -12,7 +12,7 @@ from pydantic.dataclasses import dataclass
 from .drawable import Drawable
 from .helpers import Text
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 class _Counters:
@@ -169,7 +169,7 @@ class Canvas:
         Raises:
             ValueError: If 'plot_n' is not a valid value.
         """
-        logger.debug("Called 'Canvas.setup()'")
+        logger.info("Called 'Canvas.setup()'")
 
         # which plots to target
         if isinstance(plot_n, int):
@@ -239,7 +239,7 @@ class Canvas:
         Raises:
             ValueError: If the orientation is not 'v' or 'h'.
         """
-        logger.debug("Called 'Canvas.draw_line()'")
+        logger.info("Called 'Canvas.draw_line()'")
 
         if orientation not in ("v", "h"):
             raise ValueError("Invalid line type")
@@ -285,7 +285,7 @@ class Canvas:
             rotation (float): The text rotation in degrees. Defaults to 0.
             arrowprops (dict): Arrow styling passed to `Axes.annotate`.
         """
-        logger.debug("Called 'Canvas.add_text()'")
+        logger.info("Called 'Canvas.add_text()'")
 
         text_kwargs = {
             "color": kwargs.get("color", "black"),
@@ -323,7 +323,7 @@ class Canvas:
         Raises:
             ValueError: If the axis is not 'x', 'y', or 'both'.
         """
-        logger.debug("Called 'Canvas.turn_scientific()'")
+        logger.info("Called 'Canvas.turn_scientific()'")
 
         if axis not in ("x", "y", "both"):
             raise ValueError(f"{axis} is not a valid axis.")
@@ -349,7 +349,7 @@ class Canvas:
         Raises:
             ValueError: If the axis is not 'x' or 'y'.
         """
-        logger.debug("Called 'Canvas.set_ticks()'")
+        logger.info("Called 'Canvas.set_ticks()'")
 
         if axis not in ("x", "y"):
             raise ValueError("Invalid axis type")
@@ -375,7 +375,7 @@ class Canvas:
             v_size (float): The vertical size. Defaults to None,
                 which results in 1% of the height of the axis.
         """
-        logger.info("Called 'Canvas.add_scalebar()")
+        logger.info("Called 'Canvas.add_scalebar()'")
 
         # Calculate vertical size if not provided
         v_size = kwargs.get("v_size", None)

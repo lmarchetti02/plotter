@@ -3,6 +3,8 @@ from logging import getLogger
 import numpy as np
 from matplotlib.colors import TABLEAU_COLORS, LinearSegmentedColormap
 
+logger = getLogger(__name__)
+
 
 def get_colors(length: int, gradient: tuple[str, str] | None = None) -> list[str]:
     """
@@ -17,7 +19,6 @@ def get_colors(length: int, gradient: tuple[str, str] | None = None) -> list[str
     Returns:
         list[str]: The list of colors.
     """
-    logger = getLogger(__name__)
     logger.info("Called 'get_colors' function.")
 
     colors = list(TABLEAU_COLORS.keys())

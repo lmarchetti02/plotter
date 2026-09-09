@@ -42,8 +42,8 @@ class Hist(Drawable):
     density: bool = False
     cumulative: bool = False
 
-    bin_vals: NArray1D[F64] | None = Field(init=None, default=None)
-    bins: NArray1D[F64] | None = Field(init=None, default=None)
+    bin_vals: NArray1D[F64] | None = Field(init=False, default=None)
+    bins: NArray1D[F64] | None = Field(init=False, default=None)
 
     def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
@@ -147,9 +147,9 @@ class Hist2D(Drawable):
     nbins: int | tuple[int, int] | list[int] | NArray2D[Any]
     density: bool = False
 
-    bin_vals: NArray2D[F64] | None = Field(init=None, default=None)
-    xbins: NArray1D[F64] | None = Field(init=None, default=None)
-    ybins: NArray1D[F64] | None = Field(init=None, default=None)
+    bin_vals: NArray2D[F64] | None = Field(init=False, default=None)
+    xbins: NArray1D[F64] | None = Field(init=False, default=None)
+    ybins: NArray1D[F64] | None = Field(init=False, default=None)
 
     def draw(self, canvas: Canvas, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """

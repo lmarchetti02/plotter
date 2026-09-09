@@ -37,7 +37,7 @@ class LinePlot(Drawable):
     wider: tuple[float, float] = (0, 0)
     dens: int = 1
 
-    y: NArray1D[Any] | None = Field(init=True, default=None)
+    y: NArray1D[Any] | None = Field(init=False, default=None)
 
     def __post_init__(self) -> None:
         """Makes x-grid denser if necessary."""
@@ -67,6 +67,8 @@ class LinePlot(Drawable):
             inverted (bool): If `True`, plots the inverse function.
                 Defaults to `False`.
         """
+
+        logger.info("Called 'LinePlot.draw()'")
 
         # exchange x and y
         if kwargs.get("inverted", False):

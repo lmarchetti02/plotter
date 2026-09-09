@@ -2,7 +2,7 @@ from logging import getLogger
 from typing import Any, ClassVar
 
 import numpy as np
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas
@@ -27,15 +27,16 @@ class ScatterPlot(Drawable):
 
     Raises:
         ValueError: If x and y values do not have the same dimensions.
-        ValueError: If x or y error values do not have the same dimensions as their corresponding data arrays.
+        ValueError: If y error values do not have the same dimensions as the y values.
+        ValueError: If x error values do not have the same dimensions as the x values.
     """
 
     label_name: ClassVar[str] = "scatter_plots"
 
     x: NArray1D[Any]
     y: NArray1D[Any]
-    yerr: NArray1D[Any] | float | None = None
-    xerr: NArray1D[Any] | float | None = None
+    yerr: NArray1D[Any] | float | None = Field(default=None, kw_only=True)
+    xerr: NArray1D[Any] | float | None = Field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         # xy values
