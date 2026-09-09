@@ -168,3 +168,4 @@ cython_debug/
 /plotter/data/info/.DS_Store
 ._*
 ruff.toml
+/.claude
