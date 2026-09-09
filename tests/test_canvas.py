@@ -1,6 +1,7 @@
 """Tests for canvas setup and drawing helpers."""
 
 from pathlib import Path
+from warnings import warn
 
 import numpy as np
 import pytest
@@ -44,6 +45,15 @@ class TestCanvas:
             canvas.setup()
 
         assert output_file.exists()
+
+    def test_exiting_does_not_leak_the_promoted_warnings_filter(self, single_text_file: Path) -> None:
+        """`_legend` promotes UserWarning to an error to detect empty legends; that must not
+        outlive the `with` block, or an unrelated later UserWarning (e.g. from `savefig`)
+        would incorrectly raise instead of just being emitted."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup()
+
+        warn("unrelated warning raised after the canvas context has exited", UserWarning)
 
 
 class TestSetup:

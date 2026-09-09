@@ -1,6 +1,6 @@
 from logging import getLogger
 from pathlib import Path
-from warnings import simplefilter
+from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -487,17 +487,19 @@ class Canvas:
         """This function generates the plot legend."""
         logger.info("Called 'Canvas._legend()'")
 
-        # promote UserWarning to error
-        simplefilter("error", UserWarning)
+        with catch_warnings():
+            # promote UserWarning to error, scoped to this block only, so an
+            # unrelated UserWarning raised later (e.g. by savefig()) isn't affected
+            simplefilter("error", UserWarning)
 
-        for i in range(self._n_plots):
-            try:
-                if not self.counters.is_empty():
-                    self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1)
+            for i in range(self._n_plots):
+                try:
+                    if not self.counters.is_empty():
+                        self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1)
 
-                logger.debug(f"Legend added to subplot {i}.")
-            except Exception as _:
-                logger.warning(f"Subplot {i} has an empty legend.")
+                    logger.debug(f"Legend added to subplot {i}.")
+                except Exception as _:
+                    logger.warning(f"Subplot {i} has an empty legend.")
 
     def _save(self) -> None:
         """
