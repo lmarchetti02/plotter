@@ -16,6 +16,50 @@ from .helpers import PlotText, Text
 logger = getLogger(__name__)
 
 
+def _configure_axes(axes: Axes, text: PlotText, **kwargs) -> None:
+    """
+    Applies grid, limits, scale, inversion, labels, and title to a single `Axes`.
+
+    Args:
+        axes (Axes): The Axes object to configure.
+        text (PlotText): The title and axis labels to apply.
+
+    Keyword Arguments:
+        See `Canvas.setup`.
+    """
+    # grid
+    no_grid = kwargs.get("nogrid", False)
+    if not no_grid:
+        axes.grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
+
+    # axis limits
+    x_min, x_max = kwargs.get("xlim", (None, None))
+    if x_min is not None and x_max is not None:
+        axes.set_xlim(left=x_min, right=x_max)
+
+    y_min, y_max = kwargs.get("ylim", (None, None))
+    if y_min is not None and y_max is not None:
+        axes.set_ylim(bottom=y_min, top=y_max)
+
+    # invert axis
+    invert_x, invert_y = kwargs.get("inverted", (False, False))
+    if invert_x:
+        axes.invert_xaxis()
+    if invert_y:
+        axes.invert_yaxis()
+
+    # axis scales
+    axes.set_yscale(kwargs.get("yscale", "linear"))
+    axes.set_xscale(kwargs.get("xscale", "linear"))
+
+    # axis labels
+    axes.set_xlabel(text.x_label)
+    axes.set_ylabel(text.y_label)
+
+    # title
+    axes.set_title(text.title, y=1)
+
+
 class _Counters:
     """
     Container class to store the counters of the `Canvas`.
@@ -58,8 +102,9 @@ class ZoomInset:
 
     Exposes the same `axes`/`counters`/`text`/`figure` surface as `Canvas`, so any
     `Drawable` can be drawn into it exactly like a real `Canvas` subplot (e.g.
-    `some_drawable.draw(inset)`). Cosmetic `Canvas` helpers (`setup`, `draw_line`, ...)
-    are not available on it — use `inset.axes[0]` directly for those.
+    `some_drawable.draw(inset)`). Also exposes `setup` to configure its `Axes`.
+    Other cosmetic `Canvas` helpers (`draw_line`, `add_text`, ...) are not available
+    on it — use `inset.axes[0]` directly for those.
 
     Attributes:
         axes (list[Axes]): A single-element list containing the inset `Axes`.
@@ -81,6 +126,22 @@ class ZoomInset:
         self.text = Text(1)
         self.text.subplots_text = [PlotText.get_empy_text()]
         self.counters = _Counters.initialize_counters(1)
+
+    def setup(self, **kwargs) -> None:
+        """
+        Sets up the properties of the panel's `Axes`.
+
+        Keyword Arguments:
+            xlim (tuple[float, float]): The limits for the x-axis.
+            ylim (tuple[float, float]): The limits for the y-axis.
+            xscale (str): The scale for the x-axis ('linear', 'log', 'symlog').
+            yscale (str): The scale for the y-axis ('linear', 'log', 'symlog').
+            nogrid (bool): If True, removes the grid from the plot.
+            inverted (tuple[bool, bool]): A tuple to invert the x and y axes
+              respectively (e.g., `(True, False)`).
+        """
+        logger.info("Called 'ZoomInset.setup()'")
+        _configure_axes(self.axes[0], self.text[0], **kwargs)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -216,40 +277,10 @@ class Canvas:
 
         # setup plots
         for plot_i in range(*limits):
-            # grid
-            no_grid = kwargs.get("nogrid", False)
-            if not no_grid:
-                self.axes[plot_i].grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
-
-            # axis limits
-            x_min, x_max = kwargs.get("xlim", (None, None))
-            if x_min is not None and x_max is not None:
-                self.axes[plot_i].set_xlim(left=x_min, right=x_max)
-
-            y_min, y_max = kwargs.get("ylim", (None, None))
-            if y_min is not None and y_max is not None:
-                self.axes[plot_i].set_ylim(bottom=y_min, top=y_max)
-
-            # invert axis
-            invert_x, invert_y = kwargs.get("inverted", (False, False))
-            if invert_x:
-                self.axes[plot_i].invert_xaxis()
-            if invert_y:
-                self.axes[plot_i].invert_yaxis()
-
-            # axis scales
-            self.axes[plot_i].set_yscale(kwargs.get("yscale", "linear"))
-            self.axes[plot_i].set_xscale(kwargs.get("xscale", "linear"))
+            _configure_axes(self.axes[plot_i], self.text[plot_i], **kwargs)
 
             # legend
             self._loc_legend[plot_i] = kwargs.get("legend", 0)
-
-            # axis labels
-            self.axes[plot_i].set_xlabel(self.text[plot_i].x_label)
-            self.axes[plot_i].set_ylabel(self.text[plot_i].y_label)
-
-            # title
-            self.axes[plot_i].set_title(self.text[plot_i].title, y=1)
 
     def draw_line(self, orientation: str, point: float = 0.0, plot_n: int = 0, **kwargs) -> None:
         """

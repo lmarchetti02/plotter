@@ -239,3 +239,27 @@ class TestAddZoomInset:
             plt.LinePlot(x=np.array([1.0, 1.5, 2.0]), f=np.array([0.1, 0.5, 0.9])).draw(inset)
 
             assert len(inset.axes[0].lines) == 1
+
+
+class TestZoomInsetSetup:
+    """Tests for `ZoomInset.setup`."""
+
+    def test_applies_axes_configuration(self, single_text_file: Path, show_plots) -> None:
+        """ZoomInset.setup should apply limits and scales to the panel's own Axes."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
+
+            inset.setup(
+                xlim=(0.0, 5.0),
+                ylim=(-1.0, 3.0),
+                xscale="log",
+                yscale="symlog",
+                inverted=(True, False),
+            )
+
+            axis = inset.axes[0]
+            assert axis.get_xlim() == pytest.approx((5.0, 0.0))
+            assert axis.get_ylim() == pytest.approx((-1.0, 3.0))
+            assert axis.get_xscale() == "log"
+            assert axis.get_yscale() == "symlog"

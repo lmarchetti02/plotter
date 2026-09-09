@@ -1,5 +1,28 @@
 # `plotter.canvas`
 
+## function `_configure_axes`
+
+```python
+_configure_axes(axes: Axes, text: PlotText, **kwargs) -> None
+```
+
+Applies grid, limits, scale, inversion, labels, and title to a single `Axes`.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `axes` | Axes | The Axes object to configure. |
+| `text` | PlotText | The title and axis labels to apply. |
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `` | - | See `Canvas.setup`. |
+
+
 ## class `_Counters`
 
 Container class to store the counters of the `Canvas`.
@@ -45,8 +68,9 @@ A single zoomed-in inset panel returned by `Canvas.add_zoom_inset`.
 
 Exposes the same `axes`/`counters`/`text`/`figure` surface as `Canvas`, so any
 `Drawable` can be drawn into it exactly like a real `Canvas` subplot (e.g.
-`some_drawable.draw(inset)`). Cosmetic `Canvas` helpers (`setup`, `draw_line`, ...)
-are not available on it — use `inset.axes\[0\]` directly for those.
+`some_drawable.draw(inset)`). Also exposes `setup` to configure its `Axes`.
+Other cosmetic `Canvas` helpers (`draw_line`, `add_text`, ...) are not available
+on it — use `inset.axes\[0\]` directly for those.
 
 
 **Attributes:**
@@ -75,6 +99,27 @@ __post_init__(self) -> None
 ```
 
 Initializes the blank text and zeroed counters for the panel.
+
+
+#### `setup`
+
+```python
+setup(self, **kwargs) -> None
+```
+
+Sets up the properties of the panel's `Axes`.
+
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `xlim` | tuple\[float, float\] | The limits for the x-axis. |
+| `ylim` | tuple\[float, float\] | The limits for the y-axis. |
+| `xscale` | str | The scale for the x-axis ('linear', 'log', 'symlog'). |
+| `yscale` | str | The scale for the y-axis ('linear', 'log', 'symlog'). |
+| `nogrid` | bool | If True, removes the grid from the plot. |
+| `inverted` | tuple\[bool, bool\] | A tuple to invert the x and y axes respectively (e.g., `(True, False)`). |
 
 
 ## class `Canvas`
