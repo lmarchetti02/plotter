@@ -488,6 +488,8 @@ class Canvas:
             loc2 (int): The corner connected by the second line. Defaults to 4.
             edgecolor (str): The color of the region rectangle and connector lines.
                 Defaults to "0.5".
+            ticks (bool): If True, keeps the tick marks and labels on the inset panel.
+                Defaults to False, for a clean panel showing only the zoomed-in content.
 
         Returns:
             ZoomInset: The panel to draw the zoomed-in content into.
@@ -502,6 +504,10 @@ class Canvas:
         )
         axins.set_xlim(*xlim)
         axins.set_ylim(*ylim)
+
+        if not kwargs.get("ticks", False):
+            axins.set_xticks([])
+            axins.set_yticks([])
 
         mark_inset(
             self.axes[plot_n],

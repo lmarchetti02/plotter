@@ -219,6 +219,26 @@ class TestAddZoomInset:
             assert inset.axes[0].get_xlim() == pytest.approx((1.0, 2.0))
             assert inset.axes[0].get_ylim() == pytest.approx((0.0, 1.0))
 
+    def test_hides_ticks_by_default(self, single_text_file: Path, show_plots) -> None:
+        """The inset panel should show no tick marks or labels unless requested."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
+
+            assert list(inset.axes[0].get_xticks()) == []
+            assert list(inset.axes[0].get_yticks()) == []
+
+    def test_keeps_ticks_when_requested(self, single_text_file: Path, show_plots) -> None:
+        """Passing ticks=True should keep the inset panel's tick marks and labels."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0), ticks=True)
+
+            assert list(inset.axes[0].get_xticks()) != []
+            assert list(inset.axes[0].get_yticks()) != []
+
     def test_draws_an_indicator_on_the_source_axes(self, single_text_file: Path, show_plots) -> None:
         """add_zoom_inset should mark the zoomed region on the source subplot."""
         with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
