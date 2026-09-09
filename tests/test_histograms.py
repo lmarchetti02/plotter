@@ -7,69 +7,74 @@ from unittest.mock import patch
 import plotter as plt
 
 
-def test_hist_draw_populates_bin_information_and_uses_canvas_label(single_text_file, show_plots) -> None:
-    """A histogram draw call should store computed bins and increment the subplot counter."""
-    rng = np.random.default_rng(0)
-    data = rng.normal(5.0, 1.5, 1_000)
+class TestHistDraw:
+    """Tests for `Hist.draw`."""
 
-    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
-        canvas.setup()
-        hist = plt.Hist(data, nbins=15, density=True)
+    def test_populates_bin_information_and_uses_canvas_label(self, single_text_file, show_plots) -> None:
+        """A histogram draw call should store computed bins and increment the subplot counter."""
+        rng = np.random.default_rng(0)
+        data = rng.normal(5.0, 1.5, 1_000)
 
-        hist.draw(canvas)
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            hist = plt.Hist(data, nbins=15, density=True)
 
-        assert hist.bins is not None
-        assert hist.bin_vals is not None
-        assert len(hist.bins) == 16
-        assert len(hist.bin_vals) == 15
-        assert canvas.counters.histograms[0] == 1
-        assert canvas.axes[0].patches[0].get_label() == "hist"
-
-
-def test_hist_draw_uses_stairs_for_pre_binned_input(single_text_file, show_plots) -> None:
-    """A histogram with explicit bin edges should draw through stairs."""
-    bin_vals = np.array([2.0, 4.0, 3.0])
-    bins = np.array([0.0, 1.0, 2.0, 3.0])
-
-    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
-        canvas.setup()
-        hist = plt.Hist(bin_vals, nbins=bins)
-
-        axes_type = type(canvas.axes[0])
-        with patch.object(axes_type, "hist", autospec=True) as hist_mock, patch.object(
-            axes_type, "stairs", autospec=True
-        ) as stairs_mock:
             hist.draw(canvas)
 
-        hist_mock.assert_not_called()
-        stairs_mock.assert_called_once()
+            assert hist.bins is not None
+            assert hist.bin_vals is not None
+            assert len(hist.bins) == 16
+            assert len(hist.bin_vals) == 15
+            assert canvas.counters.histograms[0] == 1
+            assert canvas.axes[0].patches[0].get_label() == "hist"
 
-        args, kwargs = stairs_mock.call_args
-        assert args[1] is bin_vals
-        assert np.array_equal(args[2], bins)
-        assert kwargs["fill"] is True
-        assert kwargs["label"] == "hist"
-        assert hist.bin_vals is bin_vals
-        assert hist.bins is bins
-        assert canvas.counters.histograms[0] == 1
+    def test_uses_stairs_for_pre_binned_input(self, single_text_file, show_plots) -> None:
+        """A histogram with explicit bin edges should draw through stairs."""
+        bin_vals = np.array([2.0, 4.0, 3.0])
+        bins = np.array([0.0, 1.0, 2.0, 3.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            hist = plt.Hist(bin_vals, nbins=bins)
+
+            axes_type = type(canvas.axes[0])
+            with patch.object(axes_type, "hist", autospec=True) as hist_mock, patch.object(
+                axes_type, "stairs", autospec=True
+            ) as stairs_mock:
+                hist.draw(canvas)
+
+            hist_mock.assert_not_called()
+            stairs_mock.assert_called_once()
+
+            args, kwargs = stairs_mock.call_args
+            assert args[1] is bin_vals
+            assert np.array_equal(args[2], bins)
+            assert kwargs["fill"] is True
+            assert kwargs["label"] == "hist"
+            assert hist.bin_vals is bin_vals
+            assert hist.bins is bins
+            assert canvas.counters.histograms[0] == 1
 
 
-@pytest.mark.parametrize("log", [(False, 0.0), (True, 0.0), (True, 1.0)])
-def test_hist2d_draw_adds_a_colorbar_for_supported_normalizations(single_text_file, log: tuple[bool, float], show_plots) -> None:
-    """Hist2D should render successfully for linear, log, and symlog normalization modes."""
-    rng = np.random.default_rng(0)
-    x = rng.normal(5.0, 1.5, 1_000)
-    y = rng.normal(5.0, 2.5, 1_000)
+class TestHist2DDraw:
+    """Tests for `Hist2D.draw`."""
 
-    with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
-        canvas.setup()
-        hist = plt.Hist2D(x, y, 20)
+    @pytest.mark.parametrize("log", [(False, 0.0), (True, 0.0), (True, 1.0)])
+    def test_adds_a_colorbar_for_supported_normalizations(self, single_text_file, log: tuple[bool, float], show_plots) -> None:
+        """Hist2D should render successfully for linear, log, and symlog normalization modes."""
+        rng = np.random.default_rng(0)
+        x = rng.normal(5.0, 1.5, 1_000)
+        y = rng.normal(5.0, 2.5, 1_000)
 
-        hist.draw(canvas, label="Density", log=log)
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            hist = plt.Hist2D(x, y, 20)
 
-        assert hist.xbins is not None
-        assert hist.ybins is not None
-        assert hist.bin_vals is not None
-        assert hist.bin_vals.shape == (20, 20)
-        assert len(canvas.figure.axes) == 2
-        assert canvas.figure.axes[1].get_ylabel() == "Density"
+            hist.draw(canvas, label="Density", log=log)
+
+            assert hist.xbins is not None
+            assert hist.ybins is not None
+            assert hist.bin_vals is not None
+            assert hist.bin_vals.shape == (20, 20)
+            assert len(canvas.figure.axes) == 2
+            assert canvas.figure.axes[1].get_ylabel() == "Density"
