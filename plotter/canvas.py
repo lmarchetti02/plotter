@@ -16,6 +16,25 @@ from .helpers import PlotText, Text
 logger = getLogger(__name__)
 
 
+def _oriented_limits(limits: tuple[float, float], reference: tuple[float, float]) -> tuple[float, float]:
+    """
+    Orders `limits` to increase or decrease like `reference` does.
+
+    Matplotlib inverts an Axes' limits (e.g. `imshow`'s default `origin="upper"`
+    leaves the y-axis decreasing) to control which direction is "up" on screen;
+    this keeps a newly-set pair of limits visually consistent with that.
+
+    Args:
+        limits (tuple[float, float]): The limits to order, in either direction.
+        reference (tuple[float, float]): The existing limits whose direction to match.
+
+    Returns:
+        tuple[float, float]: `limits`, sorted to match `reference`'s direction.
+    """
+    low, high = min(limits), max(limits)
+    return (low, high) if reference[0] <= reference[1] else (high, low)
+
+
 def _configure_axes(axes: Axes, text: PlotText, **kwargs) -> None:
     """
     Applies grid, limits, scale, inversion, labels, and title to a single `Axes`.
@@ -473,8 +492,12 @@ class Canvas:
         it via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
 
         Args:
-            xlim (tuple[float, float]): The x-axis limits of the region to zoom into.
-            ylim (tuple[float, float]): The y-axis limits of the region to zoom into.
+            xlim (tuple[float, float]): The x-axis limits of the region to zoom into, in
+                either order — the panel matches whichever direction (increasing or
+                decreasing) the source subplot's own x-axis already has (e.g. an image
+                drawn with the default `origin="upper"` has a decreasing y-axis).
+            ylim (tuple[float, float]): The y-axis limits of the region to zoom into,
+                same ordering behavior as `xlim`.
             plot_n (int, optional): The index of the subplot to zoom into. Defaults to 0.
 
         Keyword Arguments:
@@ -502,8 +525,9 @@ class Canvas:
             height=kwargs.get("height", "30%"),
             loc=kwargs.get("location", "upper right"),
         )
-        axins.set_xlim(*xlim)
-        axins.set_ylim(*ylim)
+        source = self.axes[plot_n]
+        axins.set_xlim(*_oriented_limits(xlim, source.get_xlim()))
+        axins.set_ylim(*_oriented_limits(ylim, source.get_ylim()))
 
         if not kwargs.get("ticks", False):
             axins.set_xticks([])

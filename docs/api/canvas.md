@@ -1,5 +1,32 @@
 # `plotter.canvas`
 
+## function `_oriented_limits`
+
+```python
+_oriented_limits(limits: tuple[float, float], reference: tuple[float, float]) -> tuple[float, float]
+```
+
+Orders `limits` to increase or decrease like `reference` does.
+
+Matplotlib inverts an Axes' limits (e.g. `imshow`'s default `origin="upper"`
+leaves the y-axis decreasing) to control which direction is "up" on screen;
+this keeps a newly-set pair of limits visually consistent with that.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `limits` | tuple\[float, float\] | The limits to order, in either direction. |
+| `reference` | tuple\[float, float\] | The existing limits whose direction to match. |
+
+**Returns:**
+
+| Type | Description |
+| --- | --- |
+| tuple\[float, float\] | `limits`, sorted to match `reference`'s direction. |
+
+
 ## function `_configure_axes`
 
 ```python
@@ -379,8 +406,8 @@ it via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `xlim` | tuple\[float, float\] | The x-axis limits of the region to zoom into. |
-| `ylim` | tuple\[float, float\] | The y-axis limits of the region to zoom into. |
+| `xlim` | tuple\[float, float\] | The x-axis limits of the region to zoom into, in either order — the panel matches whichever direction (increasing or decreasing) the source subplot's own x-axis already has (e.g. an image drawn with the default `origin="upper"` has a decreasing y-axis). |
+| `ylim` | tuple\[float, float\] | The y-axis limits of the region to zoom into, same ordering behavior as `xlim`. |
 | `plot_n` | int, optional | The index of the subplot to zoom into. Defaults to 0. |
 
 **Keyword Arguments:**

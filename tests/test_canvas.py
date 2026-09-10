@@ -219,6 +219,18 @@ class TestAddZoomInset:
             assert inset.axes[0].get_xlim() == pytest.approx((1.0, 2.0))
             assert inset.axes[0].get_ylim() == pytest.approx((0.0, 1.0))
 
+    def test_matches_the_source_axes_inverted_direction(self, single_text_file: Path, show_plots) -> None:
+        """If the source subplot's axis is inverted (e.g. an image's y-axis), the inset's
+        requested limits should be applied in that same direction, not the literal order
+        passed in, so the zoomed content isn't mirrored."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup(inverted=(True, False))  # x inverted, y left as-is
+
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
+
+            assert inset.axes[0].get_xlim() == pytest.approx((2.0, 1.0))
+            assert inset.axes[0].get_ylim() == pytest.approx((0.0, 1.0))
+
     def test_hides_ticks_by_default(self, single_text_file: Path, show_plots) -> None:
         """The inset panel should show no tick marks or labels unless requested."""
         with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
