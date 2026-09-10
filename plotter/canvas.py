@@ -35,6 +35,37 @@ def _oriented_limits(limits: tuple[float, float], reference: tuple[float, float]
     return (low, high) if reference[0] <= reference[1] else (high, low)
 
 
+# matplotlib's mark_inset corner codes (1=upper right, 2=upper left, 3=lower left,
+# 4=lower right), as (is_right, is_upper) flags and back
+_LOC_CORNERS = {1: (True, True), 2: (False, True), 3: (False, False), 4: (True, False)}
+_CORNERS_LOC = {corner: loc for loc, corner in _LOC_CORNERS.items()}
+
+
+def _reoriented_loc(loc: int, x_inverted: bool, y_inverted: bool) -> int:
+    """
+    Remaps a `mark_inset` corner code so it keeps pointing at the same visual corner
+    when the Axes it refers to has an inverted x- and/or y-axis.
+
+    `mark_inset`'s corner codes are defined in terms of an Axes' raw (x0,y0)-(x1,y1)
+    limits, which only match their documented visual meaning (e.g. 1=upper right) when
+    both axes increase left-to-right/bottom-to-top; an inverted axis flips that.
+
+    Args:
+        loc (int): The requested corner (1-4, matplotlib's convention).
+        x_inverted (bool): Whether the Axes' x-axis decreases instead of increasing.
+        y_inverted (bool): Whether the Axes' y-axis decreases instead of increasing.
+
+    Returns:
+        int: The corner code to pass to `mark_inset` to get the same visual corner.
+    """
+    is_right, is_upper = _LOC_CORNERS[loc]
+    if x_inverted:
+        is_right = not is_right
+    if y_inverted:
+        is_upper = not is_upper
+    return _CORNERS_LOC[(is_right, is_upper)]
+
+
 def _configure_axes(axes: Axes, text: PlotText, **kwargs) -> None:
     """
     Applies grid, limits, scale, inversion, labels, and title to a single `Axes`.
@@ -507,7 +538,9 @@ class Canvas:
             height (str or float): The height of the inset panel, same format as `width`.
                 Defaults to "30%".
             loc1 (int): The corner of the region rectangle connected to the inset panel
-                by the first line (Matplotlib corner codes, 1-4). Defaults to 2.
+                by the first line (Matplotlib corner codes, 1-4: upper right, upper left,
+                lower left, lower right). Always refers to the visual corner, regardless
+                of whether the source subplot's axes are inverted. Defaults to 2.
             loc2 (int): The corner connected by the second line. Defaults to 4.
             edgecolor (str): The color of the region rectangle and connector lines.
                 Defaults to "0.5".
@@ -526,6 +559,9 @@ class Canvas:
             loc=kwargs.get("location", "upper right"),
         )
         source = self.axes[plot_n]
+        x_inverted = source.get_xlim()[0] > source.get_xlim()[1]
+        y_inverted = source.get_ylim()[0] > source.get_ylim()[1]
+
         axins.set_xlim(*_oriented_limits(xlim, source.get_xlim()))
         axins.set_ylim(*_oriented_limits(ylim, source.get_ylim()))
 
@@ -536,8 +572,8 @@ class Canvas:
         mark_inset(
             self.axes[plot_n],
             axins,
-            loc1=kwargs.get("loc1", 2),
-            loc2=kwargs.get("loc2", 4),
+            loc1=_reoriented_loc(kwargs.get("loc1", 2), x_inverted, y_inverted),
+            loc2=_reoriented_loc(kwargs.get("loc2", 4), x_inverted, y_inverted),
             fc="none",
             ec=kwargs.get("edgecolor", "0.5"),
         )

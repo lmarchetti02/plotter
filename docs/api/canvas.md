@@ -27,6 +27,35 @@ this keeps a newly-set pair of limits visually consistent with that.
 | tuple\[float, float\] | `limits`, sorted to match `reference`'s direction. |
 
 
+## function `_reoriented_loc`
+
+```python
+_reoriented_loc(loc: int, x_inverted: bool, y_inverted: bool) -> int
+```
+
+Remaps a `mark_inset` corner code so it keeps pointing at the same visual corner
+when the Axes it refers to has an inverted x- and/or y-axis.
+
+`mark_inset`'s corner codes are defined in terms of an Axes' raw (x0,y0)-(x1,y1)
+limits, which only match their documented visual meaning (e.g. 1=upper right) when
+both axes increase left-to-right/bottom-to-top; an inverted axis flips that.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `loc` | int | The requested corner (1-4, matplotlib's convention). |
+| `x_inverted` | bool | Whether the Axes' x-axis decreases instead of increasing. |
+| `y_inverted` | bool | Whether the Axes' y-axis decreases instead of increasing. |
+
+**Returns:**
+
+| Type | Description |
+| --- | --- |
+| - | The corner code to pass to `mark_inset` to get the same visual corner. |
+
+
 ## function `_configure_axes`
 
 ```python
@@ -417,7 +446,7 @@ it via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
 | `location` | str | Where to place the inset panel. Defaults to "upper right". |
 | `width` | str or float | The width of the inset panel, as a percentage of the subplot (e.g. "30%") or an absolute size in inches. Defaults to "30%". |
 | `height` | str or float | The height of the inset panel, same format as `width`. Defaults to "30%". |
-| `loc1` | int | The corner of the region rectangle connected to the inset panel by the first line (Matplotlib corner codes, 1-4). Defaults to 2. |
+| `loc1` | int | The corner of the region rectangle connected to the inset panel by the first line (Matplotlib corner codes, 1-4: upper right, upper left, lower left, lower right). Always refers to the visual corner, regardless of whether the source subplot's axes are inverted. Defaults to 2. |
 | `loc2` | int | The corner connected by the second line. Defaults to 4. |
 | `edgecolor` | str | The color of the region rectangle and connector lines. Defaults to "0.5". |
 | `ticks` | bool | If True, keeps the tick marks and labels on the inset panel. Defaults to False, for a clean panel showing only the zoomed-in content. |

@@ -1,12 +1,31 @@
 """Tests for canvas setup and drawing helpers."""
 
 from pathlib import Path
+from unittest.mock import patch
 from warnings import warn
 
 import numpy as np
 import pytest
 
 import plotter as plt
+
+
+class TestReorientedLoc:
+    """Tests for `_reoriented_loc`."""
+
+    @pytest.mark.parametrize(
+        "loc, x_inverted, y_inverted, expected",
+        [
+            (1, False, False, 1),  # no inversion: unchanged
+            (1, True, False, 2),  # upper right, x inverted -> upper left
+            (1, False, True, 4),  # upper right, y inverted -> lower right
+            (1, True, True, 3),  # upper right, both inverted -> lower left
+            (3, True, False, 4),  # lower left, x inverted -> lower right
+        ],
+    )
+    def test_remaps_to_keep_the_same_visual_corner(self, loc: int, x_inverted: bool, y_inverted: bool, expected: int) -> None:
+        """The remapped code should always point at the same visual corner."""
+        assert plt.canvas._reoriented_loc(loc, x_inverted, y_inverted) == expected
 
 
 class TestCounters:
@@ -230,6 +249,18 @@ class TestAddZoomInset:
 
             assert inset.axes[0].get_xlim() == pytest.approx((2.0, 1.0))
             assert inset.axes[0].get_ylim() == pytest.approx((0.0, 1.0))
+
+    def test_keeps_loc1_loc2_pointing_at_the_same_visual_corner_when_inverted(self, single_text_file: Path, show_plots) -> None:
+        """loc1/loc2 should still reference the same visual corner even on an inverted axis."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup(inverted=(True, False))  # x inverted, y left as-is
+
+            with patch("plotter.canvas.mark_inset") as mark_inset_mock:
+                canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0), loc1=1, loc2=3)
+
+            _, kwargs = mark_inset_mock.call_args
+            assert kwargs["loc1"] == 2  # upper right -> upper left (x inverted)
+            assert kwargs["loc2"] == 4  # lower left -> lower right (x inverted)
 
     def test_hides_ticks_by_default(self, single_text_file: Path, show_plots) -> None:
         """The inset panel should show no tick marks or labels unless requested."""
