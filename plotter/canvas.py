@@ -5,8 +5,9 @@ from warnings import catch_warnings, simplefilter
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.transforms import TransformedBbox
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset
+from mpl_toolkits.axes_grid1.inset_locator import BboxConnector, BboxPatch, inset_axes
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
@@ -64,6 +65,44 @@ def _reoriented_loc(loc: int, x_inverted: bool, y_inverted: bool) -> int:
     if y_inverted:
         is_upper = not is_upper
     return _CORNERS_LOC[(is_right, is_upper)]
+
+
+def _draw_zoom_indicator(
+    parent_axes: Axes, inset_axes: Axes, loc1: int, loc2: int, x_inverted: bool, y_inverted: bool, **kwargs
+) -> None:
+    """
+    Draws a rectangle around an inset's region on its source subplot, connected to the
+    inset panel by two lines.
+
+    Behaves like `mpl_toolkits.axes_grid1.inset_locator.mark_inset`, except the two ends
+    of each connector line can use different corner codes: `inset_axes`'s own on-screen
+    box is never inverted, but the rectangle (`inset_axes.viewLim` transformed into the
+    parent's data space) is, whenever `inset_axes`'s axes are — so only the rectangle's
+    corner codes are remapped (via `_reoriented_loc`) to keep pointing at the same visual
+    corner; `mark_inset` itself has no way to do this since it applies one corner code to
+    both ends.
+
+    Args:
+        parent_axes (Axes): The source subplot to draw the rectangle on.
+        inset_axes (Axes): The inset panel the rectangle is connected to.
+        loc1 (int): The corner connected by the first line (matplotlib corner codes,
+            1-4: upper right, upper left, lower left, lower right).
+        loc2 (int): The corner connected by the second line.
+        x_inverted (bool): Whether `inset_axes`'s x-axis decreases instead of increasing.
+        y_inverted (bool): Whether `inset_axes`'s y-axis decreases instead of increasing.
+
+    Keyword Arguments:
+        Patch properties (e.g. `ec`, `fc`) for the rectangle and connector lines.
+    """
+    rect = TransformedBbox(inset_axes.viewLim, parent_axes.transData)
+    kwargs.setdefault("fill", bool({"fc", "facecolor", "color"}.intersection(kwargs)))
+
+    parent_axes.add_patch(BboxPatch(rect, **kwargs))
+
+    for loc in (loc1, loc2):
+        connector = BboxConnector(inset_axes.bbox, rect, loc1=loc, loc2=_reoriented_loc(loc, x_inverted, y_inverted), **kwargs)
+        connector.set_clip_on(False)
+        inset_axes.add_patch(connector)
 
 
 def _configure_axes(axes: Axes, text: PlotText, **kwargs) -> None:
@@ -569,11 +608,13 @@ class Canvas:
             axins.set_xticks([])
             axins.set_yticks([])
 
-        mark_inset(
+        _draw_zoom_indicator(
             self.axes[plot_n],
             axins,
-            loc1=_reoriented_loc(kwargs.get("loc1", 2), x_inverted, y_inverted),
-            loc2=_reoriented_loc(kwargs.get("loc2", 4), x_inverted, y_inverted),
+            loc1=kwargs.get("loc1", 2),
+            loc2=kwargs.get("loc2", 4),
+            x_inverted=x_inverted,
+            y_inverted=y_inverted,
             fc="none",
             ec=kwargs.get("edgecolor", "0.5"),
         )

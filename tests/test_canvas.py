@@ -1,7 +1,6 @@
 """Tests for canvas setup and drawing helpers."""
 
 from pathlib import Path
-from unittest.mock import patch
 from warnings import warn
 
 import numpy as np
@@ -251,16 +250,19 @@ class TestAddZoomInset:
             assert inset.axes[0].get_ylim() == pytest.approx((0.0, 1.0))
 
     def test_keeps_loc1_loc2_pointing_at_the_same_visual_corner_when_inverted(self, single_text_file: Path, show_plots) -> None:
-        """loc1/loc2 should still reference the same visual corner even on an inverted axis."""
+        """loc1/loc2 should still reference the same visual corner even on an inverted axis,
+        on both ends of each connector line: the inset panel's own on-screen box is never
+        inverted (so its end keeps the original code), only the rectangle on the source
+        subplot is (so its end gets remapped)."""
         with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
             canvas.setup(inverted=(True, False))  # x inverted, y left as-is
 
-            with patch("plotter.canvas.mark_inset") as mark_inset_mock:
-                canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0), loc1=1, loc2=3)
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0), loc1=1, loc2=3)
 
-            _, kwargs = mark_inset_mock.call_args
-            assert kwargs["loc1"] == 2  # upper right -> upper left (x inverted)
-            assert kwargs["loc2"] == 4  # lower left -> lower right (x inverted)
+            connectors = [p for p in inset.axes[0].patches if isinstance(p, plt.canvas.BboxConnector)]
+            assert len(connectors) == 2
+            assert {c.loc1 for c in connectors} == {1, 3}  # inset panel side: unchanged
+            assert {c.loc2 for c in connectors} == {2, 4}  # rectangle side: remapped (x inverted)
 
     def test_hides_ticks_by_default(self, single_text_file: Path, show_plots) -> None:
         """The inset panel should show no tick marks or labels unless requested."""

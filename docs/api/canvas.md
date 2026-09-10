@@ -56,6 +56,42 @@ both axes increase left-to-right/bottom-to-top; an inverted axis flips that.
 | - | The corner code to pass to `mark_inset` to get the same visual corner. |
 
 
+## function `_draw_zoom_indicator`
+
+```python
+_draw_zoom_indicator(parent_axes: Axes, inset_axes: Axes, loc1: int, loc2: int, x_inverted: bool, y_inverted: bool, **kwargs) -> None
+```
+
+Draws a rectangle around an inset's region on its source subplot, connected to the
+inset panel by two lines.
+
+Behaves like `mpl_toolkits.axes_grid1.inset_locator.mark_inset`, except the two ends
+of each connector line can use different corner codes: `inset_axes`'s own on-screen
+box is never inverted, but the rectangle (`inset_axes.viewLim` transformed into the
+parent's data space) is, whenever `inset_axes`'s axes are — so only the rectangle's
+corner codes are remapped (via `_reoriented_loc`) to keep pointing at the same visual
+corner; `mark_inset` itself has no way to do this since it applies one corner code to
+both ends.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `parent_axes` | Axes | The source subplot to draw the rectangle on. |
+| `inset_axes` | Axes | The inset panel the rectangle is connected to. |
+| `loc1` | int | The corner connected by the first line (matplotlib corner codes, 1-4: upper right, upper left, lower left, lower right). |
+| `loc2` | int | The corner connected by the second line. |
+| `x_inverted` | bool | Whether `inset_axes`'s x-axis decreases instead of increasing. |
+| `y_inverted` | bool | Whether `inset_axes`'s y-axis decreases instead of increasing. |
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `` | - | Patch properties (e.g. `ec`, `fc`) for the rectangle and connector lines. |
+
+
 ## function `_configure_axes`
 
 ```python
