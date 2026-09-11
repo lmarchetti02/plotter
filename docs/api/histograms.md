@@ -74,11 +74,11 @@ Class for creating a 2D histogram.
 | `bin_vals` | NArray2D\[F64\] or None | The array with the values corresponding to each bin. It has shape (N_bins,). |
 | `xbins` | NArray1D\[F64\] or None | The array with the edges of each x-bin (flattened). It has shape (N_bins_X+1,). |
 | `ybins` | NArray1D\[F64\] or None | The array with the edges of each y-bin (flattened). It has shape (N_bins_Y+1,). |
+| `mappable` | QuadMesh or None | The mesh artist returned by `hist2d`, populated after `draw` runs. Pass it (via this `Hist2D`) as a `Colorbar`'s `source`. |
 
 
 **Defined attributes:**
 
-- `label_name: ClassVar[str]`
 - `x: NArray1D[Any]`
 - `y: NArray1D[Any]`
 - `nbins: int | tuple[int, int] | list[int] | NArray2D[Any]`
@@ -86,13 +86,14 @@ Class for creating a 2D histogram.
 - `bin_vals: NArray2D[F64] | None`
 - `xbins: NArray1D[F64] | None`
 - `ybins: NArray1D[F64] | None`
+- `mappable: QuadMesh | None`
 
 ### Methods
 
 #### `draw`
 
 ```python
-draw(self, canvas: Canvas | ZoomInset, plot_n: int=0, label: str | None=None, **kwargs) -> None
+draw(self, canvas: Canvas | ZoomInset, plot_n: int=0, **kwargs) -> None
 ```
 
 Draws the 2D histogram on the canvas.
@@ -104,7 +105,6 @@ Draws the 2D histogram on the canvas.
 | --- | --- | --- |
 | `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) to draw the histogram on. |
 | `plot_n` | int, optional | The index of the subplot to draw on. Defaults to 0. |
-| `label` | str, optional | The label for the colorbar. Defaults to `None`. |
 
 **Keyword Arguments:**
 

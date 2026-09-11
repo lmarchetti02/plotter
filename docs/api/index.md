@@ -22,6 +22,7 @@ uv run zensical build
 - [`plotter.bars`](bars.md)
 - [`plotter.histograms`](histograms.md)
 - [`plotter.images`](images.md)
+- [`plotter.colorbar`](colorbar.md)
 - [`plotter.helpers.text`](helpers-text.md)
 - [`plotter.helpers.initialization`](helpers-initialization.md)
 - [`plotter.helpers.useful_functions`](helpers-useful_functions.md)

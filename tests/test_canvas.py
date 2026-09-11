@@ -39,8 +39,8 @@ class TestCounters:
 
         assert counters.is_empty()
 
-        counters.histograms_2d[0] += 1
-        counters.images[1] += 1
+        counters.histograms[0] += 1
+        counters.scatter_plots[1] += 1
 
         assert not counters.is_empty()
 
@@ -75,7 +75,7 @@ class TestCanvas:
 
 
 class TestPlotIndices:
-    """Tests for `Canvas._plot_indices`."""
+    """Tests for `Canvas.plot_indices`."""
 
     @pytest.mark.parametrize(
         "plot_n, expected",
@@ -89,13 +89,49 @@ class TestPlotIndices:
     def test_resolves_to_the_expected_subplot_indices(self, workspace: Path, plot_n: int | tuple[int, int] | str, expected: list[int]) -> None:
         """Each supported 'plot_n' form should resolve to its documented indices."""
         with plt.Canvas("plot_indices_labels", (1, 3), show=False) as canvas:
-            assert canvas._plot_indices(plot_n) == expected
+            assert canvas.plot_indices(plot_n) == expected
 
     def test_rejects_an_invalid_value(self, workspace: Path) -> None:
         """An unsupported 'plot_n' value should fail loudly."""
         with plt.Canvas("plot_indices_labels_invalid", (1, 3), show=False) as canvas:
             with pytest.raises(ValueError, match="not a valid value"):
-                canvas._plot_indices("first")
+                canvas.plot_indices("first")
+
+    @pytest.mark.parametrize(
+        "row, col, expected",
+        [
+            (0, None, [0, 1, 2]),
+            (1, None, [3, 4, 5]),
+            (None, 0, [0, 3]),
+            (None, 1, [1, 4]),
+            (None, 2, [2, 5]),
+        ],
+    )
+    def test_resolves_row_and_col_against_the_grid(
+        self, workspace: Path, row: int | None, col: int | None, expected: list[int]
+    ) -> None:
+        """'row'/'col' should resolve against the (row-major flattened) `rows_cols` grid."""
+        with plt.Canvas("plot_indices_row_col_labels", (2, 3), show=False) as canvas:
+            assert canvas.plot_indices(row=row, col=col) == expected
+
+    def test_rejects_more_than_one_of_plot_n_row_col(self, workspace: Path) -> None:
+        """Ambiguous targeting (more than one of 'plot_n'/'row'/'col') should fail loudly."""
+        with plt.Canvas("plot_indices_ambiguous_labels", (2, 3), show=False) as canvas:
+            with pytest.raises(ValueError, match="Exactly one of"):
+                canvas.plot_indices(plot_n=0, row=0)
+
+    def test_rejects_none_of_plot_n_row_col(self, workspace: Path) -> None:
+        """Targeting nothing at all should fail loudly rather than silently pick a default."""
+        with plt.Canvas("plot_indices_none_labels", (2, 3), show=False) as canvas:
+            with pytest.raises(ValueError, match="Exactly one of"):
+                canvas.plot_indices()
+
+    @pytest.mark.parametrize("row, col", [(2, None), (-1, None), (None, 3), (None, -1)])
+    def test_rejects_an_out_of_range_row_or_col(self, workspace: Path, row: int | None, col: int | None) -> None:
+        """A 'row'/'col' outside the `rows_cols` grid should fail loudly."""
+        with plt.Canvas("plot_indices_out_of_range_labels", (2, 3), show=False) as canvas:
+            with pytest.raises(ValueError, match="must be between"):
+                canvas.plot_indices(row=row, col=col)
 
 
 class TestSetup:

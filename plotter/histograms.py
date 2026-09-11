@@ -3,7 +3,7 @@ from typing import Any, ClassVar
 
 import matplotlib.colors as colors
 import numpy as np
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.collections import QuadMesh
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
@@ -138,9 +138,9 @@ class Hist2D(Drawable):
             It has shape (N_bins_X+1,).
         ybins (NArray1D[F64] or None): The array with the edges of each y-bin (flattened).
             It has shape (N_bins_Y+1,).
+        mappable (QuadMesh or None): The mesh artist returned by `hist2d`, populated
+            after `draw` runs. Pass it (via this `Hist2D`) as a `Colorbar`'s `source`.
     """
-
-    label_name: ClassVar[str] = "histograms_2d"
 
     x: NArray1D[Any]
     y: NArray1D[Any]
@@ -150,8 +150,9 @@ class Hist2D(Drawable):
     bin_vals: NArray2D[F64] | None = Field(init=False, default=None)
     xbins: NArray1D[F64] | None = Field(init=False, default=None)
     ybins: NArray1D[F64] | None = Field(init=False, default=None)
+    mappable: QuadMesh | None = Field(init=False, default=None)
 
-    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, **kwargs) -> None:
         """
         Draws the 2D histogram on the canvas.
 
@@ -159,7 +160,6 @@ class Hist2D(Drawable):
             canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw the histogram on.
             plot_n (int, optional): The index of the subplot to draw on.
                 Defaults to 0.
-            label (str, optional): The label for the colorbar. Defaults to `None`.
 
         Keyword Arguments:
             bin_ranges (tuple[tuple[float,float],tuple[float,float]]): The tuple with the left
@@ -186,7 +186,7 @@ class Hist2D(Drawable):
         else:
             normalization = colors.Normalize()
 
-        self.bin_vals, self.xbins, self.ybins, patches = canvas.axes[plot_n].hist2d(
+        self.bin_vals, self.xbins, self.ybins, self.mappable = canvas.axes[plot_n].hist2d(
             self.x,
             self.y,
             bins=self.nbins,
@@ -197,8 +197,3 @@ class Hist2D(Drawable):
             norm=normalization,
         )
         logger.debug("2D Hist drawn")
-
-        # make colorbar that fits the histogram
-        divider = make_axes_locatable(canvas.axes[plot_n])
-        cax = divider.append_axes("right", size="5%", pad=0.1)
-        canvas.figure.colorbar(patches, cax=cax, label=label)

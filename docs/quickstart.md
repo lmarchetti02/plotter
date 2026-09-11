@@ -34,9 +34,7 @@ axis labels, a title, and drawable labels:
     "scatter_plots": ["data"],
     "line_plots": ["model"],
     "bar_charts": [""],
-    "histograms": [""],
-    "histograms_2d": [""],
-    "images": [""]
+    "histograms": [""]
   }
 ]
 ```

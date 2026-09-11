@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from matplotlib.image import AxesImage
 
 import plotter as plt
 
@@ -26,8 +27,8 @@ class TestImage:
 class TestDraw:
     """Tests for `Image.draw`."""
 
-    def test_can_add_a_labeled_colorbar(self, single_text_file, show_plots) -> None:
-        """A grayscale image with a label should create a matching colorbar."""
+    def test_exposes_its_mappable_without_creating_a_colorbar(self, single_text_file, show_plots) -> None:
+        """Drawing an image should expose its AxesImage as `mappable` and never draw a colorbar implicitly."""
         img = np.zeros((50, 50))
         img[20:30, 20:30] = 1.0
 
@@ -35,11 +36,10 @@ class TestDraw:
             canvas.setup(nogrid=True)
             image = plt.Image(img)
 
-            image.draw(canvas, label="Intensity", colorbar={"position": "right", "size": "5%", "padding": 0.1})
+            image.draw(canvas)
 
-            assert canvas.counters.images[0] == 1
-            assert len(canvas.figure.axes) == 2
-            assert canvas.figure.axes[1].get_ylabel() == "Intensity"
+            assert isinstance(image.mappable, AxesImage)
+            assert len(canvas.figure.axes) == 1
 
     @pytest.mark.parametrize("channels", [None, 3, 4], ids=["grayscale", "rgb", "rgba"])
     def test_auto_crops_full_resolution_data_into_a_zoom_inset(self, single_text_file, show_plots, channels: int | None) -> None:

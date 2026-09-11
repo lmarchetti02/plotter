@@ -285,17 +285,23 @@ Defines what happens when the user exits a 'Canvas' context.
 #### `plot_indices`
 
 ```python
-_plot_indices(self, plot_n: int | tuple[int, int] | str) -> list[int]
+plot_indices(self, plot_n: int | tuple[int, int] | str | None=None, row: int | None=None, col: int | None=None) -> list[int]
 ```
 
-Resolves 'plot_n' into the list of subplot indices it refers to.
+Resolves 'plot_n', 'row', or 'col' into the list of subplot indices they refer to.
+
+Exactly one of 'plot_n', 'row', 'col' must be given. `axes` is flattened
+row-major, so a row is a contiguous range of indices while a column is a
+stride of `n_cols`.
 
 
 **Args:**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `plot_n` | int, tuple\[int, int\], str | The index or indices of the subplots. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `row` | int, optional | A 0-based row index in the `rows_cols` grid; resolves to every subplot in that row. |
+| `col` | int, optional | A 0-based column index in the `rows_cols` grid; resolves to every subplot in that column. |
 
 **Returns:**
 
@@ -307,6 +313,8 @@ Resolves 'plot_n' into the list of subplot indices it refers to.
 
 | Type | Description |
 | --- | --- |
+| ValueError | If zero, or more than one, of 'plot_n', 'row', 'col' is given. |
+| ValueError | If 'row' or 'col' is out of range for `rows_cols`. |
 | ValueError | If 'plot_n' is not a valid value. |
 
 

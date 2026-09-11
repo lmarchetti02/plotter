@@ -326,24 +326,50 @@ class Canvas:
 
         plt.show()
 
-    def _plot_indices(self, plot_n: int | tuple[int, int] | str) -> list[int]:
+    def plot_indices(
+        self, plot_n: int | tuple[int, int] | str | None = None, row: int | None = None, col: int | None = None
+    ) -> list[int]:
         """
-        Resolves 'plot_n' into the list of subplot indices it refers to.
+        Resolves 'plot_n', 'row', or 'col' into the list of subplot indices they refer to.
+
+        Exactly one of 'plot_n', 'row', 'col' must be given. `axes` is flattened
+        row-major, so a row is a contiguous range of indices while a column is a
+        stride of `n_cols`.
 
         Args:
-            plot_n (int, tuple[int, int], str): The index or indices of the
+            plot_n (int, tuple[int, int], str, optional): The index or indices of the
                 subplots. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+            row (int, optional): A 0-based row index in the `rows_cols` grid;
+                resolves to every subplot in that row.
+            col (int, optional): A 0-based column index in the `rows_cols` grid;
+                resolves to every subplot in that column.
 
         Returns:
             list[int]: The resolved, ordered subplot indices.
 
         Raises:
+            ValueError: If zero, or more than one, of 'plot_n', 'row', 'col' is given.
+            ValueError: If 'row' or 'col' is out of range for `rows_cols`.
             ValueError: If 'plot_n' is not a valid value.
         """
+        n_rows, n_cols = self.rows_cols
+        if sum(value is not None for value in (plot_n, row, col)) != 1:
+            raise ValueError("Exactly one of 'plot_n', 'row', or 'col' must be given.")
+
+        if row is not None:
+            if not 0 <= row < n_rows:
+                raise ValueError(f"'row' must be between 0 and {n_rows - 1}.")
+            return list(range(row * n_cols, (row + 1) * n_cols))
+
+        if col is not None:
+            if not 0 <= col < n_cols:
+                raise ValueError(f"'col' must be between 0 and {n_cols - 1}.")
+            return list(range(col, self._n_plots, n_cols))
+
         if isinstance(plot_n, int):
             limits = (plot_n, plot_n + 1)
         elif isinstance(plot_n, str) and plot_n == "all":
@@ -383,7 +409,7 @@ class Canvas:
         """
         logger.info("Called 'Canvas.setup()'")
 
-        for plot_i in self._plot_indices(plot_n):
+        for plot_i in self.plot_indices(plot_n):
             _configure_axes(self.axes[plot_i], self.text[plot_i], **kwargs)
 
             # legend
@@ -428,7 +454,7 @@ class Canvas:
             "label": kwargs.get("label", None),
         }
 
-        for plot_i in self._plot_indices(plot_n):
+        for plot_i in self.plot_indices(plot_n):
             if orientation == "v":
                 self.axes[plot_i].axvline(**args)
             else:
@@ -481,7 +507,7 @@ class Canvas:
         text_kwargs = {key: value for key, value in text_kwargs.items() if value is not None}
         arrowprops = kwargs.get("arrowprops", {"arrowstyle": "->"})
 
-        for plot_i in self._plot_indices(plot_n):
+        for plot_i in self.plot_indices(plot_n):
             if point is None:
                 self.axes[plot_i].text(position[0], position[1], text, **text_kwargs)
                 continue
@@ -523,7 +549,7 @@ class Canvas:
         if isinstance(limits, int):
             limits = (limits, limits)
 
-        for plot_i in self._plot_indices(plot_n):
+        for plot_i in self.plot_indices(plot_n):
             self.axes[plot_i].ticklabel_format(style="sci", axis=axis, scilimits=limits)
 
     def set_ticks(
@@ -558,7 +584,7 @@ class Canvas:
         if axis not in ("x", "y"):
             raise ValueError("Invalid axis type")
 
-        for plot_i in self._plot_indices(plot_n):
+        for plot_i in self.plot_indices(plot_n):
             if axis == "x":
                 self.axes[plot_i].set_xticks(positions, labels=labels)
                 continue
@@ -590,7 +616,7 @@ class Canvas:
         """
         logger.info("Called 'Canvas.add_scalebar()'")
 
-        for plot_i in self._plot_indices(plot_n):
+        for plot_i in self.plot_indices(plot_n):
             # Calculate vertical size if not provided
             v_size = kwargs.get("v_size", None)
             if not v_size:
@@ -708,7 +734,7 @@ class Canvas:
         """
         logger.info("Called 'Canvas.add_zoom_inset()'")
 
-        insets = [self._add_zoom_inset(xlim, ylim, plot_i, **kwargs) for plot_i in self._plot_indices(plot_n)]
+        insets = [self._add_zoom_inset(xlim, ylim, plot_i, **kwargs) for plot_i in self.plot_indices(plot_n)]
         return insets[0] if isinstance(plot_n, int) else insets
 
     def _legend(self) -> None:

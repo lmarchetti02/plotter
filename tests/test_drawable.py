@@ -40,6 +40,4 @@ class TestGetLabelNames:
             "line_plots",
             "bar_charts",
             "histograms",
-            "histograms_2d",
-            "images",
         )

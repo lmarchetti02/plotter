@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from matplotlib.collections import QuadMesh
 from unittest.mock import patch
 
 import plotter as plt
@@ -60,7 +61,7 @@ class TestHist2DDraw:
     """Tests for `Hist2D.draw`."""
 
     @pytest.mark.parametrize("log", [(False, 0.0), (True, 0.0), (True, 1.0)])
-    def test_adds_a_colorbar_for_supported_normalizations(self, single_text_file, log: tuple[bool, float], show_plots) -> None:
+    def test_renders_for_supported_normalizations(self, single_text_file, log: tuple[bool, float], show_plots) -> None:
         """Hist2D should render successfully for linear, log, and symlog normalization modes."""
         rng = np.random.default_rng(0)
         x = rng.normal(5.0, 1.5, 1_000)
@@ -70,11 +71,11 @@ class TestHist2DDraw:
             canvas.setup()
             hist = plt.Hist2D(x, y, 20)
 
-            hist.draw(canvas, label="Density", log=log)
+            hist.draw(canvas, log=log)
 
             assert hist.xbins is not None
             assert hist.ybins is not None
             assert hist.bin_vals is not None
             assert hist.bin_vals.shape == (20, 20)
-            assert len(canvas.figure.axes) == 2
-            assert canvas.figure.axes[1].get_ylabel() == "Density"
+            assert isinstance(hist.mappable, QuadMesh)
+            assert len(canvas.figure.axes) == 1

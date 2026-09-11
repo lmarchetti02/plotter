@@ -41,8 +41,6 @@ def sample_text_data() -> list[dict[str, object]]:
             "line_plots": ["line"],
             "bar_charts": ["bars"],
             "histograms": ["hist"],
-            "histograms_2d": ["hist"],
-            "images": ["img1", "img2"],
         },
         {
             "title": "Test 2",
@@ -52,8 +50,6 @@ def sample_text_data() -> list[dict[str, object]]:
             "line_plots": ["line"],
             "bar_charts": ["bars1", "bars2"],
             "histograms": ["hist1", "hist2", "hist3"],
-            "histograms_2d": [""],
-            "images": [""],
         },
     ]
 

@@ -1,11 +1,11 @@
 from logging import getLogger
-from typing import Any, ClassVar, TypedDict
+from typing import Any
 
 import matplotlib.colors as colors
 import numpy as np
 from matplotlib.axes import Axes
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from pydantic import ConfigDict
+from matplotlib.image import AxesImage
+from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas, ZoomInset
@@ -13,12 +13,6 @@ from .drawable import Drawable
 from .helpers import NArray2D, NArray3D
 
 logger = getLogger(__name__)
-
-
-class ColorbarAttributes(TypedDict):
-    position: str
-    size: str
-    padding: float
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -29,6 +23,8 @@ class Image(Drawable):
     Attributes:
         data (NArray2D[Any] | NArray3D[Any]): The 2D or 3D numpy array containing the
             image data. If 3D, the third dimension must contain 3 (RGB) or 4 (RGBA) values.
+        mappable (AxesImage or None): The image artist returned by `imshow`, populated
+            after `draw` runs. Pass it (via this `Image`) as a `Colorbar`'s `source`.
 
     Raises:
         ValueError: If the data is not a 2D or 3D array.
@@ -36,9 +32,9 @@ class Image(Drawable):
         ValueError: If the data is not real.
     """
 
-    label_name: ClassVar[str] = "images"
-
     data: NArray2D[Any] | NArray3D[Any]
+
+    mappable: AxesImage | None = Field(init=False, default=None)
 
     def __post_init__(self) -> None:
         logger.info("Created 'Image' object")
@@ -52,7 +48,7 @@ class Image(Drawable):
         if not np.all(np.isreal(self.data)):
             raise ValueError("The image data has to be real.")
 
-    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, **kwargs) -> None:
         """
         Draws the image on the canvas.
 
@@ -60,7 +56,6 @@ class Image(Drawable):
             canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw the image on.
             plot_n (int, optional): The index of the subplot to draw on.
                 Defaults to 0.
-            label (str, optional): The label for the colorbar. Defaults to `None`.
 
         Keyword Arguments:
             colormap (str): The Matplotlib colormap to use. Defaults to "plasma".
@@ -79,10 +74,6 @@ class Image(Drawable):
                 `ZoomInset` with `limits` left as `None`, `data` is instead expected to
                 be the same full-resolution array shown on the source subplot: it gets
                 automatically cropped and placed to match the panel's requested region.
-            colorbar (dict): To style the colorbar. Defaults to `None`.
-                - `"pos"` (str): where to put the colorbar (right, left, top, bottom)
-                - `"size"` (str): % of size of axes
-                - `"pad"` (float): padding between colorbar and image
         """
 
         logger.info("Called 'Image.draw()'")
@@ -105,7 +96,7 @@ class Image(Drawable):
         if isinstance(canvas, ZoomInset) and extent is None:
             data, extent = self._crop_to_view(data, canvas.axes[plot_n])
 
-        self._img = canvas.axes[plot_n].imshow(
+        self.mappable = canvas.axes[plot_n].imshow(
             data,
             cmap=kwargs.get("colormap", "gray"),
             norm=normalization,
@@ -116,50 +107,6 @@ class Image(Drawable):
             extent=extent,
         )
         logger.debug("Image drawn")
-
-        self._cb_attributes = kwargs.get("colorbar", None)
-        if self._cb_attributes is None:
-            self._cb_attributes = ColorbarAttributes(position="right", size="5%", padding=0.1)
-
-        _, self._label = self._get_label(
-            canvas,
-            plot_n,
-            label,
-            self.label_name,
-            logger,
-            "No label for the plot in the json file.",
-        )
-
-        if self._label:
-            self._add_colorbar(canvas, plot_n)
-        getattr(canvas.counters, self.label_name)[plot_n] += 1
-
-    def _add_colorbar(self, canvas: Canvas | ZoomInset, plot_n: int) -> None:
-        """
-        Adds the colorbar to an image.
-
-        Args:
-            See `draw`.
-        """
-        logger.info("Called 'Image.add.colorbar()'")
-
-        divider = make_axes_locatable(canvas.axes[plot_n])
-
-        if self._cb_attributes is None:
-            return
-
-        orientation = "vertical"
-        if self._cb_attributes["position"] in ("top", "bottom"):
-            orientation = "horizontal"
-        else:
-            logger.warning("The position of the colorbar is incorrect.")
-
-        cax = divider.append_axes(
-            position=self._cb_attributes["position"],
-            size=self._cb_attributes["size"],
-            pad=self._cb_attributes["padding"],
-        )
-        canvas.figure.colorbar(self._img, cax=cax, label=self._label, orientation=orientation)
 
     @staticmethod
     def _crop_to_view(
