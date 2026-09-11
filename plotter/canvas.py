@@ -613,7 +613,11 @@ class Canvas:
                     `inf` to `sup` (inclusive).
 
         Keyword Arguments:
-            location (str): Where to put the scalebar. Defaults to "upper right".
+            location (str, tuple[float, float]): Where to put the scalebar.
+                Either a named matplotlib location (e.g. "upper right",
+                the default) or an (x, y) position in axes fraction
+                coordinates (0-1 each, independent of the data range), which
+                centers the scalebar exactly at that point.
             color (str): The color. Defaults to "black".
             v_size (float): The vertical size. Defaults to None,
                 which results in 1% of the height of the axis.
@@ -623,29 +627,41 @@ class Canvas:
         """
         logger.info("Called 'Canvas.add_scalebar()'")
 
+        location = kwargs.get("location", "upper right")
+
         for plot_i in self.plot_indices(plot_n):
+            axis = self.axes[plot_i]
+
             # Calculate vertical size if not provided
             v_size = kwargs.get("v_size", None)
             if not v_size:
                 # Calculate v_size as 1% of the y-axis data range
-                y_min, y_max = self.axes[plot_i].get_ylim()
+                y_min, y_max = axis.get_ylim()
                 y_range = abs(y_max - y_min)
                 v_size = 0.01 * y_range
 
+            if isinstance(location, str):
+                loc, bbox_to_anchor, bbox_transform = location, None, None
+            else:
+                # An explicit (x, y) always anchors the box's center to that point.
+                loc, bbox_to_anchor, bbox_transform = "center", location, axis.transAxes
+
             scalebar = AnchoredSizeBar(
-                self.axes[plot_i].transData,
+                axis.transData,
                 size=size,
                 label=label,
-                loc=kwargs.get("location", "upper right"),
+                loc=loc,
+                bbox_to_anchor=bbox_to_anchor,
+                bbox_transform=bbox_transform,
                 color=kwargs.get("color", "black"),
                 pad=0.5,
                 size_vertical=v_size,
                 frameon=False,
             )
 
-            self.axes[plot_i].add_artist(scalebar)
-            self.axes[plot_i].set_yticks([])
-            self.axes[plot_i].set_xticks([])
+            axis.add_artist(scalebar)
+            axis.set_yticks([])
+            axis.set_xticks([])
 
     def _add_zoom_inset(self, xlim: tuple[float, float], ylim: tuple[float, float], plot_i: int, **kwargs) -> ZoomInset:
         """

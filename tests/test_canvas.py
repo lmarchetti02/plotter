@@ -7,6 +7,7 @@ import matplotlib
 import numpy as np
 import pytest
 from matplotlib.layout_engine import PlaceHolderLayoutEngine
+from matplotlib.offsetbox import AnchoredOffsetbox
 
 import plotter as plt
 
@@ -357,6 +358,22 @@ class TestAddScalebar:
             canvas.add_scalebar(size=0.5, label="5 um", plot_n="all")
 
             assert all(len(axis.artists) == 1 for axis in canvas.axes)
+
+    def test_can_place_the_scalebar_at_a_precise_axes_fraction_position(self, single_text_file: Path, show_plots) -> None:
+        """A location tuple should center the scalebar on that axes-fraction point, rather than a named corner."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            canvas.add_scalebar(size=0.5, label="5 um", location=(0.3, 0.7))
+
+            axis = canvas.axes[0]
+            scalebar = axis.artists[0]
+            canvas.figure.canvas.draw()
+
+            assert scalebar.loc == AnchoredOffsetbox.codes["center"]
+            anchor_bbox = scalebar.get_bbox_to_anchor()
+            expected_x, expected_y = axis.transAxes.transform((0.3, 0.7))
+            assert (anchor_bbox.x0, anchor_bbox.y0) == pytest.approx((expected_x, expected_y))
 
 
 class TestAddZoomInset:
