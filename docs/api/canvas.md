@@ -282,6 +282,34 @@ __exit__(self, exc_type, exc_val, exc_tb)
 Defines what happens when the user exits a 'Canvas' context.
 
 
+#### `plot_indices`
+
+```python
+_plot_indices(self, plot_n: int | tuple[int, int] | str) -> list[int]
+```
+
+Resolves 'plot_n' into the list of subplot indices it refers to.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `plot_n` | int, tuple\[int, int\], str | The index or indices of the subplots. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+
+**Returns:**
+
+| Type | Description |
+| --- | --- |
+| list\[int\] | The resolved, ordered subplot indices. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If 'plot_n' is not a valid value. |
+
+
 #### `setup`
 
 ```python
@@ -319,7 +347,7 @@ Sets up the properties of the subplots.
 #### `draw_line`
 
 ```python
-draw_line(self, orientation: str, point: float=0.0, plot_n: int=0, **kwargs) -> None
+draw_line(self, orientation: str, point: float=0.0, plot_n: int | tuple[int, int] | str=0, **kwargs) -> None
 ```
 
 Draws horizontal and vertical lines on the canvas.
@@ -331,7 +359,7 @@ Draws horizontal and vertical lines on the canvas.
 | --- | --- | --- |
 | `orientation` | str | The orientation of the line. Use 'v' for vertical or 'h' for horizontal. |
 | `point` | float, optional | The coordinate of the line. Defaults to 0. |
-| `plot_n` | int, optional | The index of the subplot to draw on. Defaults to 0. |
+| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Keyword Arguments:**
 
@@ -347,12 +375,13 @@ Draws horizontal and vertical lines on the canvas.
 | Type | Description |
 | --- | --- |
 | ValueError | If the orientation is not 'v' or 'h'. |
+| ValueError | If 'plot_n' is not a valid value. |
 
 
 #### `add_text`
 
 ```python
-add_text(self, text: str, position: tuple[float, float], plot_n: int=0, point: tuple[float, float] | None=None, **kwargs) -> None
+add_text(self, text: str, position: tuple[float, float], plot_n: int | tuple[int, int] | str=0, point: tuple[float, float] | None=None, **kwargs) -> None
 ```
 
 Adds a text label to the canvas.
@@ -364,7 +393,7 @@ Adds a text label to the canvas.
 | --- | --- | --- |
 | `text` | str | The text to display. |
 | `position` | tuple\[float, float\] | The position of the text in data coordinates. |
-| `plot_n` | int, optional | The index of the subplot to draw on. Defaults to 0. |
+| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 | `point` | tuple\[float, float\] \| None, optional | A point to annotate. When provided, an arrow is drawn from the text to this point. |
 
 **Keyword Arguments:**
@@ -378,11 +407,17 @@ Adds a text label to the canvas.
 | `rotation` | float | The text rotation in degrees. Defaults to 0. |
 | `arrowprops` | dict | Arrow styling passed to `Axes.annotate`. |
 
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If 'plot_n' is not a valid value. |
+
 
 #### `turn_scientific`
 
 ```python
-turn_scientific(self, axis: str, plot_n: int=0, limits: tuple[int, int] | int=(0, 0)) -> None
+turn_scientific(self, axis: str, plot_n: int | tuple[int, int] | str=0, limits: tuple[int, int] | int=(0, 0)) -> None
 ```
 
 Sets the ticks of an axis to scientific notation.
@@ -393,7 +428,7 @@ Sets the ticks of an axis to scientific notation.
 | Name | Type | Description |
 | --- | --- | --- |
 | `axis` | str | The axis to modify: 'x', 'y', or 'both'. |
-| `plot_n` | int, optional | The index of the subplot to consider. Defaults to 0. |
+| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 | `limits` | tuple\[int, int\] or int, optional | Controls the scientific notation.<br>- `(m, n)`: Scientific notation is used for numbers outside 10^m to 10^n.<br>- `0`: Scientific notation is used for all numbers.<br>- `m`: Fixes the order of magnitude to 10^m. If only one int is passed, m=n is assumed. Defaults to (0, 0). |
 
 **Raises:**
@@ -401,12 +436,13 @@ Sets the ticks of an axis to scientific notation.
 | Type | Description |
 | --- | --- |
 | ValueError | If the axis is not 'x', 'y', or 'both'. |
+| ValueError | If 'plot_n' is not a valid value. |
 
 
 #### `set_ticks`
 
 ```python
-set_ticks(self, axis: str, positions: tuple[float, ...], labels: tuple[str, ...] | None=None, plot_n: int=0) -> None
+set_ticks(self, axis: str, positions: tuple[float, ...], labels: tuple[str, ...] | None=None, plot_n: int | tuple[int, int] | str=0) -> None
 ```
 
 Modifies the ticks of an axis.
@@ -419,19 +455,20 @@ Modifies the ticks of an axis.
 | `axis` | str | The axis to modify: 'x' or 'y'. |
 | `positions` | tuple\[float, ...\] | A tuple with the positions of the ticks. |
 | `labels` | tuple\[str, ...\], optional | A tuple with the labels for the ticks. If None, the labels will be the same as the positions. Defaults to None. |
-| `plot_n` | int, optional | The index of the subplot to consider. Defaults to 0. |
+| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Raises:**
 
 | Type | Description |
 | --- | --- |
 | ValueError | If the axis is not 'x' or 'y'. |
+| ValueError | If 'plot_n' is not a valid value. |
 
 
 #### `add_scalebar`
 
 ```python
-add_scalebar(self, size: float, label: str, plot_n: int=0, **kwargs) -> None
+add_scalebar(self, size: float, label: str, plot_n: int | tuple[int, int] | str=0, **kwargs) -> None
 ```
 
 Adds a scalebar (and, thus, removes the axis labels).
@@ -443,7 +480,7 @@ Adds a scalebar (and, thus, removes the axis labels).
 | --- | --- | --- |
 | `size` | float | The horizontal size (in coordinates of axis). |
 | `label` | str | The label (e.g., "1 cm", "10 μm"). |
-| `plot_n` | int, optional | The index of the subplot. Defaults to 0. |
+| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to target. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Keyword Arguments:**
 
@@ -453,27 +490,59 @@ Adds a scalebar (and, thus, removes the axis labels).
 | `color` | str | The color. Defaults to "black". |
 | `v_size` | float | The vertical size. Defaults to None, which results in 1% of the height of the axis. |
 
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If 'plot_n' is not a valid value. |
+
 
 #### `add_zoom_inset`
 
 ```python
-add_zoom_inset(self, xlim: tuple[float, float], ylim: tuple[float, float], plot_n: int=0, **kwargs) -> ZoomInset
+_add_zoom_inset(self, xlim: tuple[float, float], ylim: tuple[float, float], plot_i: int, **kwargs) -> ZoomInset
 ```
 
-Adds a zoomed-in inset panel showing a region of a subplot.
+Adds a single zoomed-in inset panel for one subplot.
 
-The source subplot gets a rectangle around the requested region, connected
-to the inset panel by two lines. The panel itself starts empty: draw into
-it via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
+See `add_zoom_inset` for the meaning of the arguments and keyword arguments.
 
 
 **Args:**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `xlim` | tuple\[float, float\] | The x-axis limits of the region to zoom into, in either order — the panel matches whichever direction (increasing or decreasing) the source subplot's own x-axis already has (e.g. an image drawn with the default `origin="upper"` has a decreasing y-axis). |
+| `xlim` | tuple\[float, float\] | The x-axis limits of the region to zoom into. |
+| `ylim` | tuple\[float, float\] | The y-axis limits of the region to zoom into. |
+| `plot_i` | int | The index of the subplot to zoom into. |
+
+**Returns:**
+
+| Type | Description |
+| --- | --- |
+| - | The panel to draw the zoomed-in content into. |
+
+
+#### `add_zoom_inset`
+
+```python
+add_zoom_inset(self, xlim: tuple[float, float], ylim: tuple[float, float], plot_n: int | tuple[int, int] | str=0, **kwargs) -> ZoomInset | list[ZoomInset]
+```
+
+Adds a zoomed-in inset panel showing a region of one or more subplots.
+
+Each source subplot gets a rectangle around the requested region, connected
+to its own inset panel by two lines. Each panel starts empty: draw into it
+via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `xlim` | tuple\[float, float\] | The x-axis limits of the region to zoom into, in either order — each panel matches whichever direction (increasing or decreasing) its own source subplot's x-axis already has (e.g. an image drawn with the default `origin="upper"` has a decreasing y-axis). |
 | `ylim` | tuple\[float, float\] | The y-axis limits of the region to zoom into, same ordering behavior as `xlim`. |
-| `plot_n` | int, optional | The index of the subplot to zoom into. Defaults to 0. |
+| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to zoom into. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Keyword Arguments:**
 
@@ -491,7 +560,13 @@ it via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
 
 | Type | Description |
 | --- | --- |
-| - | The panel to draw the zoomed-in content into. |
+| ZoomInset \| list\[ZoomInset\] | The panel to draw the zoomed-in content into, when `plot_n` is a single int; otherwise, one panel per targeted subplot, in subplot order. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If 'plot_n' is not a valid value. |
 
 
 #### `legend`

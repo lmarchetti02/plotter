@@ -74,6 +74,30 @@ class TestCanvas:
         warn("unrelated warning raised after the canvas context has exited", UserWarning)
 
 
+class TestPlotIndices:
+    """Tests for `Canvas._plot_indices`."""
+
+    @pytest.mark.parametrize(
+        "plot_n, expected",
+        [
+            (1, [1]),
+            ("all", [0, 1, 2]),
+            ((0, 1), [0, 1]),
+            ((1, 2), [1, 2]),
+        ],
+    )
+    def test_resolves_to_the_expected_subplot_indices(self, workspace: Path, plot_n: int | tuple[int, int] | str, expected: list[int]) -> None:
+        """Each supported 'plot_n' form should resolve to its documented indices."""
+        with plt.Canvas("plot_indices_labels", (1, 3), show=False) as canvas:
+            assert canvas._plot_indices(plot_n) == expected
+
+    def test_rejects_an_invalid_value(self, workspace: Path) -> None:
+        """An unsupported 'plot_n' value should fail loudly."""
+        with plt.Canvas("plot_indices_labels_invalid", (1, 3), show=False) as canvas:
+            with pytest.raises(ValueError, match="not a valid value"):
+                canvas._plot_indices("first")
+
+
 class TestSetup:
     """Tests for `Canvas.setup`."""
 
@@ -99,6 +123,23 @@ class TestSetup:
             assert axis.get_ylabel() == "$ y $"
             assert axis.get_title() == "Test 2"
             assert canvas._loc_legend[1] == 3
+
+    def test_applies_to_all_subplots_by_default(self, text_file: Path) -> None:
+        """The default plot_n='all' should configure every subplot."""
+        with plt.Canvas(str(text_file), (1, 2), show=False) as canvas:
+            canvas.setup(xlim=(0.0, 5.0))
+
+            assert canvas.axes[0].get_xlim() == pytest.approx((0.0, 5.0))
+            assert canvas.axes[1].get_xlim() == pytest.approx((0.0, 5.0))
+
+    def test_applies_to_a_range_of_subplots(self, workspace: Path) -> None:
+        """A tuple plot_n should configure only the requested inclusive range."""
+        with plt.Canvas("setup_range_labels", (1, 3), show=False) as canvas:
+            canvas.setup(plot_n=(0, 1), xlim=(0.0, 5.0))
+
+            assert canvas.axes[0].get_xlim() == pytest.approx((0.0, 5.0))
+            assert canvas.axes[1].get_xlim() == pytest.approx((0.0, 5.0))
+            assert canvas.axes[2].get_xlim() != pytest.approx((0.0, 5.0))
 
 
 class TestDrawLine:
@@ -126,6 +167,15 @@ class TestDrawLine:
 
             with pytest.raises(ValueError, match="Invalid line type"):
                 canvas.draw_line("diagonal")
+
+    def test_can_draw_on_every_subplot_at_once(self, workspace: Path) -> None:
+        """plot_n='all' should add the line to every subplot."""
+        with plt.Canvas("draw_line_all_labels", (1, 3), show=False) as canvas:
+            canvas.setup()
+
+            canvas.draw_line("h", point=1.5, plot_n="all", color="red")
+
+            assert all(axis.lines[-1].get_color() == "red" for axis in canvas.axes)
 
 
 class TestAddText:
@@ -167,6 +217,17 @@ class TestAddText:
             assert annotation.arrow_patch is not None
             assert annotation.arrow_patch.get_edgecolor()[:3] == pytest.approx((1.0, 0.0, 0.0))
 
+    def test_can_add_text_to_a_range_of_subplots(self, workspace: Path) -> None:
+        """A tuple plot_n should add the text to only the requested inclusive range."""
+        with plt.Canvas("add_text_range_labels", (1, 3), show=False) as canvas:
+            canvas.setup()
+
+            canvas.add_text("Note", position=(0.25, 0.75), plot_n=(0, 1))
+
+            assert [t.get_text() for t in canvas.axes[0].texts] == ["Note"]
+            assert [t.get_text() for t in canvas.axes[1].texts] == ["Note"]
+            assert len(canvas.axes[2].texts) == 0
+
 
 class TestTurnScientific:
     """Tests for `Canvas.turn_scientific`."""
@@ -178,6 +239,15 @@ class TestTurnScientific:
 
             with pytest.raises(ValueError, match="is not a valid axis"):
                 canvas.turn_scientific("z")
+
+    def test_can_apply_to_every_subplot_at_once(self, workspace: Path) -> None:
+        """plot_n='all' should switch every subplot's axis to scientific notation."""
+        with plt.Canvas("turn_scientific_all_labels", (1, 3), show=False) as canvas:
+            canvas.setup()
+
+            canvas.turn_scientific("y", plot_n="all")
+
+            assert all(axis.yaxis.get_major_formatter()._scientific for axis in canvas.axes)
 
 
 class TestSetTicks:
@@ -204,6 +274,17 @@ class TestSetTicks:
             with pytest.raises(ValueError, match="Invalid axis type"):
                 canvas.set_ticks("z", (0.0, 1.0))
 
+    def test_can_update_every_subplot_at_once(self, workspace: Path) -> None:
+        """plot_n='all' should update the ticks of every subplot."""
+        with plt.Canvas("set_ticks_all_labels", (1, 3), show=False) as canvas:
+            canvas.setup()
+
+            canvas.set_ticks("x", (0.0, 1.0), labels=("left", "right"), plot_n="all")
+
+            for axis in canvas.axes:
+                assert list(axis.get_xticks()) == [0.0, 1.0]
+                assert [label.get_text() for label in axis.get_xticklabels()] == ["left", "right"]
+
 
 class TestAddScalebar:
     """Tests for `Canvas.add_scalebar`."""
@@ -219,6 +300,15 @@ class TestAddScalebar:
             assert list(axis.get_xticks()) == []
             assert list(axis.get_yticks()) == []
             assert len(axis.artists) == 1
+
+    def test_can_add_a_scalebar_to_every_subplot_at_once(self, workspace: Path) -> None:
+        """plot_n='all' should add a scalebar to every subplot."""
+        with plt.Canvas("add_scalebar_all_labels", (1, 3), show=False) as canvas:
+            canvas.setup()
+
+            canvas.add_scalebar(size=0.5, label="5 um", plot_n="all")
+
+            assert all(len(axis.artists) == 1 for axis in canvas.axes)
 
 
 class TestAddZoomInset:
@@ -304,6 +394,18 @@ class TestAddZoomInset:
             plt.LinePlot(x=np.array([1.0, 1.5, 2.0]), f=np.array([0.1, 0.5, 0.9])).draw(inset)
 
             assert len(inset.axes[0].lines) == 1
+
+    def test_returns_one_panel_per_subplot_when_targeting_multiple(self, workspace: Path) -> None:
+        """plot_n='all' should add an inset to every subplot and return one panel each."""
+        with plt.Canvas("add_zoom_inset_all_labels", (1, 3), show=False) as canvas:
+            canvas.setup()
+
+            insets = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0), plot_n="all")
+
+            assert isinstance(insets, list)
+            assert len(insets) == 3
+            assert all(isinstance(inset, plt.ZoomInset) for inset in insets)
+            assert len({id(inset.axes[0]) for inset in insets}) == 3
 
 
 class TestZoomInsetSetup:
