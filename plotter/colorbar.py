@@ -104,19 +104,24 @@ def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, s
         edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(p.x1 if position == "right" else p.x0, edge, abs_tol=1e-9)]
 
         for ax, _ in edge_axes:
+            # a ZoomInset's Axes has a locator (from inset_axes()) that recomputes its
+            # position on every render, overriding set_position() below -- clear it first
             ax.set_axes_locator(None)
-            # 'datalim' keeps this exact box on later renders; 'box' (e.g. Image's
-            # default aspect="equal") would otherwise re-shrink it to keep the data
-            # square, silently fighting the size we just set.
-            ax.set_adjustable("datalim")
         margin = max((_decoration_margin(ax, figure, position, p) for ax, p in edge_axes), default=0.0)
 
         for ax, p in edge_axes:
             new_x0 = p.x0 if position == "right" else p.x0 + shrink
             ax.set_position([new_x0, p.y0, p.width - shrink, p.height])
 
+        # re-read: for a fixed-aspect Axes (e.g. Image's default aspect="equal"),
+        # set_position() above may have just shrunk its *other* dimension too, to keep
+        # the data square within the narrower box -- match the colorbar to that actual
+        # final size, not the pre-shrink one
+        final_y0 = min(ax.get_position().y0 for ax in axes)
+        final_y1 = max(ax.get_position().y1 for ax in axes)
+
         cax_x0 = edge + margin - thickness if position == "right" else edge - margin
-        return figure.add_axes([cax_x0, y0, thickness, y1 - y0])
+        return figure.add_axes([cax_x0, final_y0, thickness, final_y1 - final_y0])
 
     thickness = size_frac * (y1 - y0)
     shrink = thickness + padding / fig_height_in
@@ -125,15 +130,17 @@ def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, s
 
     for ax, _ in edge_axes:
         ax.set_axes_locator(None)
-        ax.set_adjustable("datalim")
     margin = max((_decoration_margin(ax, figure, position, p) for ax, p in edge_axes), default=0.0)
 
     for ax, p in edge_axes:
         new_y0 = p.y0 if position == "top" else p.y0 + shrink
         ax.set_position([p.x0, new_y0, p.width, p.height - shrink])
 
+    final_x0 = min(ax.get_position().x0 for ax in axes)
+    final_x1 = max(ax.get_position().x1 for ax in axes)
+
     cax_y0 = edge + margin - thickness if position == "top" else edge - margin
-    return figure.add_axes([x0, cax_y0, x1 - x0, thickness])
+    return figure.add_axes([final_x0, cax_y0, final_x1 - final_x0, thickness])
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))

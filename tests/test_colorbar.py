@@ -168,8 +168,11 @@ class TestPositioning:
 
     @pytest.mark.parametrize("position", ["left", "right", "top", "bottom"])
     def test_attaches_with_the_requested_size_and_gap(self, single_text_file, show_plots, position: str) -> None:
-        """The colorbar should match the target's own length and thickness, shrink the
-        target by exactly thickness+padding, and never overlap its ticks/labels/title."""
+        """The colorbar should shrink the target by exactly thickness+padding in the
+        attachment direction, match its actual final length in the other direction
+        (an aspect="equal" Image, like the one used here, may itself shrink further to
+        keep its data square within the narrower/shorter box), and never overlap its
+        ticks/labels/title."""
         with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
             canvas.setup()
             image = make_image()
@@ -188,11 +191,10 @@ class TestPositioning:
             if position in ("left", "right"):
                 thickness = 0.10 * original.width
                 pad_frac = 0.2 / fig_width_in
-                assert shrunk.height == pytest.approx(original.height)
                 assert original.width - shrunk.width == pytest.approx(thickness + pad_frac)
                 assert cax.width == pytest.approx(thickness)
-                assert cax.height == pytest.approx(original.height)
-                assert cax.y0 == pytest.approx(original.y0)
+                assert cax.height == pytest.approx(shrunk.height)
+                assert cax.y0 == pytest.approx(shrunk.y0)
                 if position == "right":
                     assert shrunk.x0 == pytest.approx(original.x0)
                     assert cax.x0 >= shrunk.x1
@@ -202,11 +204,10 @@ class TestPositioning:
             else:
                 thickness = 0.10 * original.height
                 pad_frac = 0.2 / fig_height_in
-                assert shrunk.width == pytest.approx(original.width)
                 assert original.height - shrunk.height == pytest.approx(thickness + pad_frac)
                 assert cax.height == pytest.approx(thickness)
-                assert cax.width == pytest.approx(original.width)
-                assert cax.x0 == pytest.approx(original.x0)
+                assert cax.width == pytest.approx(shrunk.width)
+                assert cax.x0 == pytest.approx(shrunk.x0)
                 if position == "top":
                     assert shrunk.y0 == pytest.approx(original.y0)
                     assert cax.y0 >= shrunk.y1
@@ -258,3 +259,28 @@ class TestPositioning:
 
             assert canvas.axes[0].get_position().width < original0.width
             assert canvas.axes[1].get_position().width < original1.width
+
+    def test_geometry_is_stable_across_repeated_renders(self, text_file, show_plots) -> None:
+        """Re-rendering the figure multiple times (e.g. once for savefig, once for
+        show()) must not keep shrinking an aspect="equal" target -- regression test
+        for a real bug where a since-removed adjustable="datalim" override caused the
+        shrunk Axes' data limits to drift further apart on every subsequent render."""
+        with plt.Canvas(str(text_file), (1, 2), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            image0 = make_image()
+            image0.draw(canvas, plot_n=0)
+            image1 = make_image()
+            image1.draw(canvas, plot_n=1)
+
+            colorbar = plt.Colorbar(source=image1)
+            colorbar.draw(canvas, row=0)
+
+            after_draw = canvas.axes[1].get_position().bounds
+            xlim_after_draw = canvas.axes[1].get_xlim()
+            ylim_after_draw = canvas.axes[1].get_ylim()
+
+            for _ in range(3):
+                canvas.figure.canvas.draw()
+                assert canvas.axes[1].get_position().bounds == pytest.approx(after_draw)
+                assert canvas.axes[1].get_xlim() == pytest.approx(xlim_after_draw)
+                assert canvas.axes[1].get_ylim() == pytest.approx(ylim_after_draw)
