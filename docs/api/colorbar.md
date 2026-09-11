@@ -55,6 +55,35 @@ to its left) extend beyond `plain`, in figure-fraction units.
 | - | The margin, in figure-fraction units, never negative. |
 
 
+## function `_resize_others_to_match`
+
+```python
+_resize_others_to_match(axes: list[Axes], positions: list[Bbox], edge_axes: set[Axes], final_size: float, vertical: bool) -> None
+```
+
+Centers every group Axes not in `edge_axes` on `final_size` along the cross
+dimension (height if `vertical`, width otherwise).
+
+A fixed-aspect edge Axes (e.g. `Image`'s default `aspect="equal"`) may end up
+shrinking that dimension too, as a side effect of `_make_colorbar_axes` shrinking
+its other dimension to make room for the colorbar; without this, the rest of the
+group would be left visually mismatched. Each resized Axes' own aspect settles in
+turn (via the same immediate, stable `set_position()` behavior noted in
+`_make_colorbar_axes`) -- if it shares the edge Axes' data aspect ratio, it
+converges to the exact same final box; if not, only this dimension is matched.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `axes` | list\[Axes\] | The full target group. |
+| `positions` | list\[Bbox\] | `axes`' original position boxes (`get_position()`, captured before any resizing), in the same order. |
+| `edge_axes` | set\[Axes\] | The subset already resized by `_make_colorbar_axes`; left untouched here. |
+| `final_size` | float | The edge Axes' actual final height/width, in figure-fraction units, to match. |
+| `vertical` | bool | `True` to match height (for a "left"/"right" colorbar), `False` to match width (for a "top"/"bottom" one). |
+
+
 ## function `_make_colorbar_axes`
 
 ```python
@@ -68,7 +97,11 @@ for a row of Axes and `position="right"`, only the rightmost one; for a column,
 all of them, since they share that edge) so the colorbar occupies space that
 used to belong to the group's own footprint, without overlapping any Axes
 outside the group. The colorbar itself is placed just outside those Axes' own
-ticks/axis-label/title on that side, so it doesn't overlap them either.
+ticks/axis-label/title on that side, so it doesn't overlap them either. Any other
+Axes in the group (e.g. the rest of a row, for a "left"/"right" colorbar) gets its
+cross dimension matched to the edge Axes' actual final size, via
+`_resize_others_to_match`, so the group stays visually uniform even when a
+fixed-aspect edge Axes had to shrink further than just the requested thickness.
 
 
 **Args:**

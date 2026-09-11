@@ -221,8 +221,10 @@ class TestPositioning:
             separated = cax.x0 >= shrunk_tight.x1 or cax.x1 <= shrunk_tight.x0 or cax.y0 >= shrunk_tight.y1 or cax.y1 <= shrunk_tight.y0
             assert separated
 
-    def test_sharing_a_row_only_shrinks_the_edge_subplot(self, text_file, show_plots) -> None:
-        """A row-shared colorbar on the right should only shrink the row's rightmost subplot."""
+    def test_sharing_a_row_keeps_same_aspect_subplots_uniform(self, text_file, show_plots) -> None:
+        """A row-shared colorbar on the right shrinks the row's rightmost subplot for its
+        own space; since both images here share the same (square) data aspect ratio, the
+        other subplot should be resized to match it too, rather than being left taller."""
         with plt.Canvas(str(text_file), (1, 2), show=show_plots) as canvas:
             canvas.setup(plot_n="all")
             image0 = make_image()
@@ -236,10 +238,33 @@ class TestPositioning:
             colorbar = plt.Colorbar(source=image1)
             colorbar.draw(canvas, row=0)
 
-            assert canvas.axes[0].get_position().bounds == pytest.approx(original0.bounds)
-            assert canvas.axes[1].get_position().width < original1.width
+            final0 = canvas.axes[0].get_position()
+            final1 = canvas.axes[1].get_position()
+
+            assert final1.width < original1.width
+            assert final0.width < original0.width
+            assert final0.height == pytest.approx(final1.height)
+            assert final0.width == pytest.approx(final1.width)
             cax = canvas.figure.axes[2].get_position()
+            assert cax.height == pytest.approx(final1.height)
             assert cax.x1 == pytest.approx(original1.x1)
+
+    def test_sharing_a_row_does_not_resize_others_without_a_shape_mismatch(self, text_file, show_plots) -> None:
+        """When nothing forces a cross-dimension change (e.g. an aspect='auto' Hist2D),
+        the rest of the row should be left exactly as it was."""
+        with plt.Canvas(str(text_file), (1, 2), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            hist0 = make_hist2d()
+            hist0.draw(canvas, plot_n=0)
+            hist1 = make_hist2d()
+            hist1.draw(canvas, plot_n=1)
+
+            original0 = canvas.axes[0].get_position()
+
+            colorbar = plt.Colorbar(source=hist1)
+            colorbar.draw(canvas, row=0)
+
+            assert canvas.axes[0].get_position().bounds == pytest.approx(original0.bounds)
 
     def test_sharing_a_column_shrinks_every_subplot_in_it(self, text_file, show_plots) -> None:
         """A column-shared colorbar on the right should shrink every subplot in that column,

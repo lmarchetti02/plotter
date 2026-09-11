@@ -65,6 +65,45 @@ def _decoration_margin(ax: Axes, figure: Figure, position: _Position, plain: Bbo
     return max(0.0, plain.y0 - tight.y0)
 
 
+def _resize_others_to_match(axes: list[Axes], positions: list[Bbox], edge_axes: set[Axes], final_size: float, vertical: bool) -> None:
+    """
+    Centers every group Axes not in `edge_axes` on `final_size` along the cross
+    dimension (height if `vertical`, width otherwise).
+
+    A fixed-aspect edge Axes (e.g. `Image`'s default `aspect="equal"`) may end up
+    shrinking that dimension too, as a side effect of `_make_colorbar_axes` shrinking
+    its other dimension to make room for the colorbar; without this, the rest of the
+    group would be left visually mismatched. Each resized Axes' own aspect settles in
+    turn (via the same immediate, stable `set_position()` behavior noted in
+    `_make_colorbar_axes`) -- if it shares the edge Axes' data aspect ratio, it
+    converges to the exact same final box; if not, only this dimension is matched.
+
+    Args:
+        axes (list[Axes]): The full target group.
+        positions (list[Bbox]): `axes`' original position boxes (`get_position()`,
+            captured before any resizing), in the same order.
+        edge_axes (set[Axes]): The subset already resized by `_make_colorbar_axes`;
+            left untouched here.
+        final_size (float): The edge Axes' actual final height/width, in figure-fraction
+            units, to match.
+        vertical (bool): `True` to match height (for a "left"/"right" colorbar),
+            `False` to match width (for a "top"/"bottom" one).
+    """
+    for ax, p in zip(axes, positions):
+        if ax in edge_axes:
+            continue
+        current = p.height if vertical else p.width
+        if isclose(current, final_size, abs_tol=1e-9):
+            continue
+        ax.set_axes_locator(None)
+        if vertical:
+            new_y0 = p.y0 + (p.height - final_size) / 2
+            ax.set_position([p.x0, new_y0, p.width, final_size])
+        else:
+            new_x0 = p.x0 + (p.width - final_size) / 2
+            ax.set_position([new_x0, p.y0, final_size, p.height])
+
+
 def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, size: str | float, padding: float) -> Axes:
     """
     Carves out a new Axes for a colorbar next to a group of Axes.
@@ -74,7 +113,11 @@ def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, s
     all of them, since they share that edge) so the colorbar occupies space that
     used to belong to the group's own footprint, without overlapping any Axes
     outside the group. The colorbar itself is placed just outside those Axes' own
-    ticks/axis-label/title on that side, so it doesn't overlap them either.
+    ticks/axis-label/title on that side, so it doesn't overlap them either. Any other
+    Axes in the group (e.g. the rest of a row, for a "left"/"right" colorbar) gets its
+    cross dimension matched to the edge Axes' actual final size, via
+    `_resize_others_to_match`, so the group stays visually uniform even when a
+    fixed-aspect edge Axes had to shrink further than just the requested thickness.
 
     Args:
         figure (Figure): The parent Figure the Axes belong to.
@@ -113,10 +156,14 @@ def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, s
             new_x0 = p.x0 if position == "right" else p.x0 + shrink
             ax.set_position([new_x0, p.y0, p.width - shrink, p.height])
 
-        # re-read: for a fixed-aspect Axes (e.g. Image's default aspect="equal"),
-        # set_position() above may have just shrunk its *other* dimension too, to keep
-        # the data square within the narrower box -- match the colorbar to that actual
-        # final size, not the pre-shrink one
+        # a fixed-aspect edge Axes (e.g. Image's default aspect="equal") may have just
+        # shrunk its height too, to keep the data square within the narrower box --
+        # propagate that to the rest of the group so it stays visually uniform, then
+        # match the colorbar to the actual final size, not the pre-shrink one
+        edge_ax_set = {ax for ax, _ in edge_axes}
+        final_height = max(ax.get_position().height for ax in edge_ax_set)
+        _resize_others_to_match(axes, positions, edge_ax_set, final_height, vertical=True)
+
         final_y0 = min(ax.get_position().y0 for ax in axes)
         final_y1 = max(ax.get_position().y1 for ax in axes)
 
@@ -135,6 +182,10 @@ def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, s
     for ax, p in edge_axes:
         new_y0 = p.y0 if position == "top" else p.y0 + shrink
         ax.set_position([p.x0, new_y0, p.width, p.height - shrink])
+
+    edge_ax_set = {ax for ax, _ in edge_axes}
+    final_width = max(ax.get_position().width for ax in edge_ax_set)
+    _resize_others_to_match(axes, positions, edge_ax_set, final_width, vertical=False)
 
     final_x0 = min(ax.get_position().x0 for ax in axes)
     final_x1 = max(ax.get_position().x1 for ax in axes)
