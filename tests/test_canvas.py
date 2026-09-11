@@ -3,8 +3,10 @@
 from pathlib import Path
 from warnings import warn
 
+import matplotlib
 import numpy as np
 import pytest
+from matplotlib.layout_engine import PlaceHolderLayoutEngine
 
 import plotter as plt
 
@@ -72,6 +74,16 @@ class TestCanvas:
             canvas.setup()
 
         warn("unrelated warning raised after the canvas context has exited", UserWarning)
+
+    def test_disables_any_active_layout_engine(self, single_text_file: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A layout engine (auto-enabled by plt.subplots() whenever the caller's own
+        rcParams -- unrelated to plotter's own style -- has figure.autolayout or
+        figure.constrained_layout.use set) would silently re-run on every render and
+        undo Colorbar's manual axes repositioning; Canvas must disable it regardless."""
+        monkeypatch.setitem(matplotlib.rcParams, "figure.autolayout", True)
+
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            assert isinstance(canvas.figure.get_layout_engine(), PlaceHolderLayoutEngine)
 
 
 class TestPlotIndices:

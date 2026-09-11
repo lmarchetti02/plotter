@@ -288,6 +288,13 @@ class Canvas:
 
         # plot properties
         self.figure, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=self.figsize, dpi=self.dpi)
+        # Canvas/Colorbar manage subplot positions explicitly (e.g. Colorbar.draw()'s
+        # manual set_position() calls); a layout engine would silently re-run on every
+        # render and undo that. plt.subplots() enables one automatically whenever
+        # rcParams["figure.autolayout"] or ["figure.constrained_layout.use"] is True
+        # (e.g. set by the user's own matplotlib config or another imported library),
+        # regardless of any style plotter itself applies -- always disable it.
+        self.figure.set_layout_engine("none")
         if self._n_plots < 2:
             self.axes = [axes]
         else:
