@@ -1,6 +1,12 @@
 from logging import getLogger
+from math import isclose
+from typing import Literal
 
-from pydantic import ConfigDict
+from matplotlib.axes import Axes
+from matplotlib.colorbar import Colorbar as MplColorbar
+from matplotlib.figure import Figure
+from matplotlib.transforms import Bbox
+from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas, ZoomInset
@@ -8,6 +14,126 @@ from .histograms import Hist2D
 from .images import Image
 
 logger = getLogger(__name__)
+
+_Position = Literal["left", "right", "top", "bottom"]
+
+
+def _parse_fraction(value: str | float) -> float:
+    """
+    Parses a size/fraction value into a plain float in [0, 1].
+
+    Args:
+        value (str | float): Either a percentage string (e.g. "5%") or a bare
+            float already expressed as a fraction (e.g. 0.05).
+
+    Returns:
+        float: The parsed fraction.
+
+    Raises:
+        ValueError: If `value` is a string that doesn't end in '%'.
+    """
+    if isinstance(value, str):
+        if not value.endswith("%"):
+            raise ValueError(f"'{value}' is not a valid size (expected e.g. '5%').")
+        return float(value[:-1]) / 100
+    return value
+
+
+def _decoration_margin(ax: Axes, figure: Figure, position: _Position, plain: Bbox) -> float:
+    """
+    Measures how far `ax`'s ticks/axis-label/title on the `position` side (the
+    decorations matplotlib draws just outside the Axes' own box, e.g. y-tick labels
+    to its left) extend beyond `plain`, in figure-fraction units.
+
+    Args:
+        ax (Axes): The Axes to measure.
+        figure (Figure): The parent Figure (for the figure-fraction transform).
+        position (str): Which side to measure ('left', 'right', 'top', 'bottom').
+        plain (Bbox): `ax`'s own position box (`ax.get_position()`), passed in to
+            avoid recomputing it.
+
+    Returns:
+        float: The margin, in figure-fraction units, never negative.
+    """
+    tight = ax.get_tightbbox().transformed(figure.transFigure.inverted())
+    if position == "left":
+        return max(0.0, plain.x0 - tight.x0)
+    if position == "right":
+        return max(0.0, tight.x1 - plain.x1)
+    if position == "top":
+        return max(0.0, tight.y1 - plain.y1)
+    return max(0.0, plain.y0 - tight.y0)
+
+
+def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, size: str | float, padding: float) -> Axes:
+    """
+    Carves out a new Axes for a colorbar next to a group of Axes.
+
+    Shrinks whichever Axes in `axes` sit on the group's edge facing `position` (e.g.
+    for a row of Axes and `position="right"`, only the rightmost one; for a column,
+    all of them, since they share that edge) so the colorbar occupies space that
+    used to belong to the group's own footprint, without overlapping any Axes
+    outside the group. The colorbar itself is placed just outside those Axes' own
+    ticks/axis-label/title on that side, so it doesn't overlap them either.
+
+    Args:
+        figure (Figure): The parent Figure the Axes belong to.
+        axes (list[Axes]): The target group (one or more Axes sharing part of an edge).
+        position (str): Which side of the group's bounding box to attach the colorbar to.
+        size (str | float): The colorbar's thickness -- a percentage string (e.g. "5%")
+            or a bare fraction -- of the group's width ('left'/'right') or height
+            ('top'/'bottom').
+        padding (float): The gap between the group's Axes (and their ticks/labels) and
+            the colorbar, in inches.
+
+    Returns:
+        Axes: The new Axes to draw the colorbar into.
+    """
+    size_frac = _parse_fraction(size)
+    positions = [ax.get_position() for ax in axes]
+    x0 = min(p.x0 for p in positions)
+    y0 = min(p.y0 for p in positions)
+    x1 = max(p.x1 for p in positions)
+    y1 = max(p.y1 for p in positions)
+    fig_width_in, fig_height_in = figure.get_size_inches()
+
+    if position in ("left", "right"):
+        thickness = size_frac * (x1 - x0)
+        shrink = thickness + padding / fig_width_in
+        edge = x1 if position == "right" else x0
+        edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(p.x1 if position == "right" else p.x0, edge, abs_tol=1e-9)]
+
+        for ax, _ in edge_axes:
+            ax.set_axes_locator(None)
+            # 'datalim' keeps this exact box on later renders; 'box' (e.g. Image's
+            # default aspect="equal") would otherwise re-shrink it to keep the data
+            # square, silently fighting the size we just set.
+            ax.set_adjustable("datalim")
+        margin = max((_decoration_margin(ax, figure, position, p) for ax, p in edge_axes), default=0.0)
+
+        for ax, p in edge_axes:
+            new_x0 = p.x0 if position == "right" else p.x0 + shrink
+            ax.set_position([new_x0, p.y0, p.width - shrink, p.height])
+
+        cax_x0 = edge + margin - thickness if position == "right" else edge - margin
+        return figure.add_axes([cax_x0, y0, thickness, y1 - y0])
+
+    thickness = size_frac * (y1 - y0)
+    shrink = thickness + padding / fig_height_in
+    edge = y1 if position == "top" else y0
+    edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(p.y1 if position == "top" else p.y0, edge, abs_tol=1e-9)]
+
+    for ax, _ in edge_axes:
+        ax.set_axes_locator(None)
+        ax.set_adjustable("datalim")
+    margin = max((_decoration_margin(ax, figure, position, p) for ax, p in edge_axes), default=0.0)
+
+    for ax, p in edge_axes:
+        new_y0 = p.y0 if position == "top" else p.y0 + shrink
+        ax.set_position([p.x0, new_y0, p.width, p.height - shrink])
+
+    cax_y0 = edge + margin - thickness if position == "top" else edge - margin
+    return figure.add_axes([x0, cax_y0, x1 - x0, thickness])
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -19,9 +145,13 @@ class Colorbar:
     Attributes:
         source (Image | Hist2D): The already-drawn drawable whose color mapping
             (mappable, colormap, normalization) the colorbar represents.
+        mpl_colorbar (MplColorbar or None): The underlying `matplotlib.colorbar.Colorbar`
+            artist, populated after `draw` runs, for advanced customization.
     """
 
     source: Image | Hist2D
+
+    mpl_colorbar: MplColorbar | None = Field(init=False, default=None)
 
     def draw(
         self,
@@ -30,10 +160,19 @@ class Colorbar:
         row: int | None = None,
         col: int | None = None,
         label: str | None = None,
+        position: _Position = "right",
+        size: str | float = "5%",
+        padding: float = 0.1,
         **kwargs,
     ) -> None:
         """
         Draws the colorbar, spanning one or more subplots.
+
+        The colorbar always ends up positioned right next to the targeted subplot(s),
+        with the requested spacing, and the same length as them (their full shared
+        height for `position="left"/"right"`, or width for `"top"/"bottom"`) -- the
+        targeted subplot(s) are shrunk just enough to make room for it within their
+        own footprint, so it never overlaps a neighboring subplot outside the target.
 
         Args:
             canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw the colorbar on.
@@ -45,13 +184,21 @@ class Colorbar:
             col (int, optional): A column of the `canvas`'s grid to share the colorbar
                 across. Not supported when `canvas` is a `ZoomInset`.
             label (str, optional): The colorbar's label. Defaults to `None`.
+            position (str, optional): Which side to attach the colorbar to -- "left",
+                "right", "top", or "bottom". Defaults to "right".
+            size (str | float, optional): The colorbar's thickness, as a percentage
+                string (e.g. "5%") or bare fraction of the target(s)' own width
+                (for "left"/"right") or height (for "top"/"bottom"). Defaults to "5%".
+            padding (float, optional): The gap between the target(s) and the colorbar,
+                in inches. Defaults to 0.1.
 
         Keyword Arguments:
-            Passed straight through to `matplotlib.figure.Figure.colorbar`
-            (e.g. `orientation`, `location`, `fraction`, `pad`, `shrink`, `aspect`).
+            Passed straight through to `matplotlib.figure.Figure.colorbar` for cosmetic
+            tweaks unrelated to placement (e.g. `ticks`, `format`, `extend`, `alpha`).
 
         Raises:
             RuntimeError: If `source` has not been drawn yet.
+            ValueError: If `position` is not one of "left", "right", "top", "bottom".
             ValueError: If more than one of `plot_n`, `row`, `col` is given.
             ValueError: If `row`/`col` is given for a `ZoomInset`.
         """
@@ -59,6 +206,9 @@ class Colorbar:
 
         if self.source.mappable is None:
             raise RuntimeError("'source' has not been drawn yet -- call its 'draw()' before 'Colorbar.draw()'.")
+
+        if position not in ("left", "right", "top", "bottom"):
+            raise ValueError(f"'{position}' is not a valid position (expected 'left', 'right', 'top', or 'bottom').")
 
         if isinstance(canvas, ZoomInset):
             if row is not None or col is not None:
@@ -69,4 +219,7 @@ class Colorbar:
                 plot_n = 0
             axes = [canvas.axes[i] for i in canvas.plot_indices(plot_n, row=row, col=col)]
 
-        canvas.figure.colorbar(self.source.mappable, ax=axes, label=label, **kwargs)
+        orientation = "vertical" if position in ("left", "right") else "horizontal"
+        cax = _make_colorbar_axes(canvas.figure, axes, position, size, padding)
+
+        self.mpl_colorbar = canvas.figure.colorbar(self.source.mappable, cax=cax, label=label, orientation=orientation, **kwargs)
