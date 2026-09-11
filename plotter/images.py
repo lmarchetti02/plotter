@@ -80,16 +80,15 @@ class Image(Drawable):
 
         log = kwargs.get("log", False)
         v_range = kwargs.get("v_range", (None, None))
-        # get normalization
+        # get normalization -- vmin/vmax must be set on the norm itself: matplotlib
+        # rejects passing a Normalize instance together with vmin/vmax to imshow()
         if log:
-            v_range = (None, None)
-
             if isinstance(log, tuple):
                 normalization = colors.SymLogNorm(log[1])
             else:
                 normalization = colors.LogNorm()
         else:
-            normalization = colors.Normalize()
+            normalization = colors.Normalize(vmin=v_range[0], vmax=v_range[1])
 
         data = self.data
         extent = kwargs.get("limits", None)
@@ -100,8 +99,6 @@ class Image(Drawable):
             data,
             cmap=kwargs.get("colormap", "gray"),
             norm=normalization,
-            vmin=v_range[0],
-            vmax=v_range[1],
             aspect=kwargs.get("aspect", "equal"),
             origin=kwargs.get("origin", "upper"),
             extent=extent,

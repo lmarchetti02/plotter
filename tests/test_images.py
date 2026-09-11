@@ -41,6 +41,19 @@ class TestDraw:
             assert isinstance(image.mappable, AxesImage)
             assert len(canvas.figure.axes) == 1
 
+    def test_applies_an_explicit_v_range(self, single_text_file, show_plots) -> None:
+        """An explicit v_range should clip the color scale without erroring."""
+        img = np.linspace(0.0, 10.0, 100).reshape(10, 10)
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup(nogrid=True)
+            image = plt.Image(img)
+
+            image.draw(canvas, v_range=(2.0, 8.0))
+
+            assert image.mappable.norm.vmin == pytest.approx(2.0)
+            assert image.mappable.norm.vmax == pytest.approx(8.0)
+
     @pytest.mark.parametrize("channels", [None, 3, 4], ids=["grayscale", "rgb", "rgba"])
     def test_auto_crops_full_resolution_data_into_a_zoom_inset(self, single_text_file, show_plots, channels: int | None) -> None:
         """Drawing the same full-resolution array into a ZoomInset should crop it to the
