@@ -3,6 +3,7 @@ from typing import Any, ClassVar, TypedDict
 
 import matplotlib.colors as colors
 import numpy as np
+from matplotlib.axes import Axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
@@ -74,7 +75,10 @@ class Image(Drawable):
             origin (str): The placement of the [0,0] element of the data.
                 `upper` for the top-left, `lower` for the bottom-left. Defaults to "upper".
             limits (list[float]): The limits of the x and y axes in the format
-                `[left, right, bottom, top]`. Defaults to `None`.
+                `[left, right, bottom, top]`. Defaults to `None`. When drawing into a
+                `ZoomInset` with `limits` left as `None`, `data` is instead expected to
+                be the same full-resolution array shown on the source subplot: it gets
+                automatically cropped and placed to match the panel's requested region.
             colorbar (dict): To style the colorbar. Defaults to `None`.
                 - `"pos"` (str): where to put the colorbar (right, left, top, bottom)
                 - `"size"` (str): % of size of axes
@@ -96,15 +100,20 @@ class Image(Drawable):
         else:
             normalization = colors.Normalize()
 
+        data = self.data
+        extent = kwargs.get("limits", None)
+        if isinstance(canvas, ZoomInset) and extent is None:
+            data, extent = self._crop_to_view(data, canvas.axes[plot_n])
+
         self._img = canvas.axes[plot_n].imshow(
-            self.data,
+            data,
             cmap=kwargs.get("colormap", "gray"),
             norm=normalization,
             vmin=v_range[0],
             vmax=v_range[1],
             aspect=kwargs.get("aspect", "equal"),
             origin=kwargs.get("origin", "upper"),
-            extent=kwargs.get("limits", None),
+            extent=extent,
         )
         logger.debug("Image drawn")
 
@@ -151,3 +160,28 @@ class Image(Drawable):
             pad=self._cb_attributes["padding"],
         )
         canvas.figure.colorbar(self._img, cax=cax, label=self._label, orientation=orientation)
+
+    @staticmethod
+    def _crop_to_view(data: NArray2D[Any], axes: Axes) -> tuple[NArray2D[Any], tuple[float, float, float, float]]:
+        """
+        Crops image data to an Axes' current view window.
+
+        Args:
+            data (NArray2D[Any]): The full-resolution image data to crop.
+            axes (Axes): The Axes whose current `xlim`/`ylim` define the region to keep.
+
+        Returns:
+            tuple[NArray2D[Any], tuple[float, float, float, float]]: The cropped data,
+                and the `extent` (left, right, bottom, top) to draw it at so it exactly
+                matches `axes`' current view, orientation included.
+        """
+        x0, x1 = axes.get_xlim()
+        y0, y1 = axes.get_ylim()
+
+        col_lo, col_hi = sorted((round(x0), round(x1)))
+        row_lo, row_hi = sorted((round(y0), round(y1)))
+
+        col_lo, row_lo = max(0, col_lo), max(0, row_lo)
+        col_hi, row_hi = min(data.shape[1], col_hi), min(data.shape[0], row_hi)
+
+        return data[row_lo:row_hi, col_lo:col_hi], (x0, x1, y0, y1)
