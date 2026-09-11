@@ -41,11 +41,14 @@ class TestDraw:
             assert len(canvas.figure.axes) == 2
             assert canvas.figure.axes[1].get_ylabel() == "Intensity"
 
-    def test_auto_crops_full_resolution_data_into_a_zoom_inset(self, single_text_file, show_plots) -> None:
+    @pytest.mark.parametrize("channels", [None, 3, 4], ids=["grayscale", "rgb", "rgba"])
+    def test_auto_crops_full_resolution_data_into_a_zoom_inset(self, single_text_file, show_plots, channels: int | None) -> None:
         """Drawing the same full-resolution array into a ZoomInset should crop it to the
         panel's requested region and place it at matching axis limits, with no `limits=`
-        needed."""
-        data = np.arange(100.0).reshape(10, 10)
+        needed -- for grayscale, RGB, and RGBA data alike (the channel axis, if any,
+        must be carried through the crop untouched)."""
+        shape = (10, 10) if channels is None else (10, 10, channels)
+        data = np.arange(np.prod(shape)).reshape(shape) / np.prod(shape)
 
         with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
             canvas.setup()

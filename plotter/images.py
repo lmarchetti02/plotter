@@ -10,7 +10,7 @@ from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas, ZoomInset
 from .drawable import Drawable
-from .helpers import NArray2D
+from .helpers import NArray2D, NArray3D
 
 logger = getLogger(__name__)
 
@@ -27,8 +27,8 @@ class Image(Drawable):
     Class for creating an image to be drawn on a canvas.
 
     Attributes:
-        data (np.ndarray): The 2D or 3D numpy array containing the image data.
-            If 3D, the third dimension must contain 3 (RGB) or 4 (RGBA) values.
+        data (NArray2D[Any] | NArray3D[Any]): The 2D or 3D numpy array containing the
+            image data. If 3D, the third dimension must contain 3 (RGB) or 4 (RGBA) values.
 
     Raises:
         ValueError: If the data is not a 2D or 3D array.
@@ -38,7 +38,7 @@ class Image(Drawable):
 
     label_name: ClassVar[str] = "images"
 
-    data: NArray2D[Any]
+    data: NArray2D[Any] | NArray3D[Any]
 
     def __post_init__(self) -> None:
         logger.info("Created 'Image' object")
@@ -162,18 +162,23 @@ class Image(Drawable):
         canvas.figure.colorbar(self._img, cax=cax, label=self._label, orientation=orientation)
 
     @staticmethod
-    def _crop_to_view(data: NArray2D[Any], axes: Axes) -> tuple[NArray2D[Any], tuple[float, float, float, float]]:
+    def _crop_to_view(
+        data: NArray2D[Any] | NArray3D[Any], axes: Axes
+    ) -> tuple[NArray2D[Any] | NArray3D[Any], tuple[float, float, float, float]]:
         """
         Crops image data to an Axes' current view window.
 
+        Only ever slices the first two axes (rows, columns): a 3D array's channel
+        axis (RGB or RGBA) is left untouched and carried through unchanged.
+
         Args:
-            data (NArray2D[Any]): The full-resolution image data to crop.
+            data (NArray2D[Any] | NArray3D[Any]): The full-resolution image data to crop.
             axes (Axes): The Axes whose current `xlim`/`ylim` define the region to keep.
 
         Returns:
-            tuple[NArray2D[Any], tuple[float, float, float, float]]: The cropped data,
-                and the `extent` (left, right, bottom, top) to draw it at so it exactly
-                matches `axes`' current view, orientation included.
+            tuple[NArray2D[Any] | NArray3D[Any], tuple[float, float, float, float]]: The
+                cropped data, and the `extent` (left, right, bottom, top) to draw it at
+                so it exactly matches `axes`' current view, orientation included.
         """
         x0, x1 = axes.get_xlim()
         y0, y1 = axes.get_ylim()
