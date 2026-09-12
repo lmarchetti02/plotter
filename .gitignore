@@ -162,6 +162,7 @@ cython_debug/
 # Luca
 /trash
 /.vscode
+/example/output
 .DS_Store
 /plotter/.DS_Store
 /plotter/data/.DS_Store

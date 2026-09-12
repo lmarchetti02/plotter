@@ -45,7 +45,6 @@ plotter
 ├── text
 │   └── text_example.json
 └── utils
-    ├── blueprint.txt
     ├── info
     ├── log_config.json
     └── style.mplstyle
@@ -106,6 +105,12 @@ with p.Canvas("example.json", rows_cols=(1, 2), show=False) as canvas:
 - `Image`: grayscale or RGB(A) image rendering.
 
 All drawable classes inherit from `Drawable` and implement a `draw(canvas, ...)` method.
+
+## Examples
+
+The [`example/`](example/) directory contains runnable scripts showing the library in
+practice, including `Colorbar` and zoom-inset usage. See [`example/README.md`](example/README.md)
+for how to run them.
 
 ## Documentation Website
 
