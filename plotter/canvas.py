@@ -703,6 +703,14 @@ class Canvas:
             axins.set_xticks([])
             axins.set_yticks([])
 
+        edgecolor = kwargs.get("edgecolor", "0.5")
+        linewidth = kwargs.get("linewidth", 0.8)
+
+        # outline of the inset panel itself, so it visually matches its own rectangle/lines
+        for spine in axins.spines.values():
+            spine.set_edgecolor(edgecolor)
+            spine.set_linewidth(linewidth)
+
         _draw_zoom_indicator(
             source,
             axins,
@@ -711,7 +719,8 @@ class Canvas:
             x_inverted=x_inverted,
             y_inverted=y_inverted,
             fc="none",
-            ec=kwargs.get("edgecolor", "0.5"),
+            ec=edgecolor,
+            lw=linewidth,
         )
 
         return ZoomInset(axes=[axins])
@@ -751,8 +760,12 @@ class Canvas:
                 lower left, lower right). Always refers to the visual corner, regardless
                 of whether the source subplot's axes are inverted. Defaults to 2.
             loc2 (int): The corner connected by the second line. Defaults to 4.
-            edgecolor (str): The color of the region rectangle and connector lines.
-                Defaults to "0.5".
+            edgecolor (str): The color of the region rectangle, connector lines, and the
+                inset panel's own outline (its Axes spines) — all three always share this
+                one color. Defaults to "0.5".
+            linewidth (float): The line width of the region rectangle, connector lines,
+                and the inset panel's own outline — all three always share this one width.
+                Defaults to 0.8.
             ticks (bool): If True, keeps the tick marks and labels on the inset panel.
                 Defaults to False, for a clean panel showing only the zoomed-in content.
 

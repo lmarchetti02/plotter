@@ -6,6 +6,7 @@ from warnings import warn
 import matplotlib
 import numpy as np
 import pytest
+from matplotlib.colors import to_rgb
 from matplotlib.layout_engine import PlaceHolderLayoutEngine
 from matplotlib.offsetbox import AnchoredOffsetbox
 
@@ -505,6 +506,54 @@ class TestAddZoomInset:
             plt.LinePlot(x=np.array([1.0, 1.5, 2.0]), f=np.array([0.1, 0.5, 0.9])).draw(inset)
 
             assert len(inset.axes[0].lines) == 1
+
+    def test_applies_matching_default_color_and_width_to_rectangle_lines_and_outline(
+        self, single_text_file: Path, show_plots
+    ) -> None:
+        """With no edgecolor/linewidth given, the rectangle, connector lines, and the
+        inset panel's own outline (its Axes spines) should all share the same defaults."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            axis = canvas.axes[0]
+
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
+
+            rect = next(p for p in axis.patches if isinstance(p, plt.canvas.BboxPatch))
+            connectors = [p for p in inset.axes[0].patches if isinstance(p, plt.canvas.BboxConnector)]
+            spines = inset.axes[0].spines.values()
+
+            assert rect.get_edgecolor()[:3] == pytest.approx(to_rgb("0.5"))
+            assert rect.get_linewidth() == pytest.approx(0.8)
+            for connector in connectors:
+                assert connector.get_edgecolor()[:3] == pytest.approx(to_rgb("0.5"))
+                assert connector.get_linewidth() == pytest.approx(0.8)
+            for spine in spines:
+                assert spine.get_edgecolor()[:3] == pytest.approx(to_rgb("0.5"))
+                assert spine.get_linewidth() == pytest.approx(0.8)
+
+    def test_applies_matching_custom_color_and_width_to_rectangle_lines_and_outline(
+        self, single_text_file: Path, show_plots
+    ) -> None:
+        """Passing edgecolor/linewidth should restyle the rectangle, connector lines, and
+        the inset panel's own outline identically."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            axis = canvas.axes[0]
+
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0), edgecolor="red", linewidth=2.5)
+
+            rect = next(p for p in axis.patches if isinstance(p, plt.canvas.BboxPatch))
+            connectors = [p for p in inset.axes[0].patches if isinstance(p, plt.canvas.BboxConnector)]
+            spines = inset.axes[0].spines.values()
+
+            assert rect.get_edgecolor()[:3] == pytest.approx(to_rgb("red"))
+            assert rect.get_linewidth() == pytest.approx(2.5)
+            for connector in connectors:
+                assert connector.get_edgecolor()[:3] == pytest.approx(to_rgb("red"))
+                assert connector.get_linewidth() == pytest.approx(2.5)
+            for spine in spines:
+                assert spine.get_edgecolor()[:3] == pytest.approx(to_rgb("red"))
+                assert spine.get_linewidth() == pytest.approx(2.5)
 
     def test_returns_one_panel_per_subplot_when_targeting_multiple(self, workspace: Path) -> None:
         """plot_n='all' should add an inset to every subplot and return one panel each."""
