@@ -704,7 +704,7 @@ class Canvas:
             axins.set_yticks([])
 
         edgecolor = kwargs.get("edgecolor", "black")
-        linewidth = kwargs.get("linewidth", 0.8)
+        linewidth = kwargs.get("linewidth", 0.5)
 
         # outline of the inset panel itself, so it visually matches its own rectangle/lines
         for spine in axins.spines.values():
@@ -765,7 +765,7 @@ class Canvas:
                 one color. Defaults to "black".
             linewidth (float): The line width of the region rectangle, connector lines,
                 and the inset panel's own outline — all three always share this one width.
-                Defaults to 0.8.
+                Defaults to 0.5.
             ticks (bool): If True, keeps the tick marks and labels on the inset panel.
                 Defaults to False, for a clean panel showing only the zoomed-in content.
 
