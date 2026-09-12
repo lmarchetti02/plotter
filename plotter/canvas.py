@@ -703,7 +703,7 @@ class Canvas:
             axins.set_xticks([])
             axins.set_yticks([])
 
-        edgecolor = kwargs.get("edgecolor", "0.5")
+        edgecolor = kwargs.get("edgecolor", "black")
         linewidth = kwargs.get("linewidth", 0.8)
 
         # outline of the inset panel itself, so it visually matches its own rectangle/lines
@@ -762,7 +762,7 @@ class Canvas:
             loc2 (int): The corner connected by the second line. Defaults to 4.
             edgecolor (str): The color of the region rectangle, connector lines, and the
                 inset panel's own outline (its Axes spines) — all three always share this
-                one color. Defaults to "0.5".
+                one color. Defaults to "black".
             linewidth (float): The line width of the region rectangle, connector lines,
                 and the inset panel's own outline — all three always share this one width.
                 Defaults to 0.8.

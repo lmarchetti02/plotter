@@ -585,7 +585,7 @@ via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
 | `height` | str or float | The height of the inset panel, same format as `width`. Defaults to "30%". |
 | `loc1` | int | The corner of the region rectangle connected to the inset panel by the first line (Matplotlib corner codes, 1-4: upper right, upper left, lower left, lower right). Always refers to the visual corner, regardless of whether the source subplot's axes are inverted. Defaults to 2. |
 | `loc2` | int | The corner connected by the second line. Defaults to 4. |
-| `edgecolor` | str | The color of the region rectangle, connector lines, and the inset panel's own outline (its Axes spines) — all three always share this one color. Defaults to "0.5". |
+| `edgecolor` | str | The color of the region rectangle, connector lines, and the inset panel's own outline (its Axes spines) — all three always share this one color. Defaults to "black". |
 | `linewidth` | float | The line width of the region rectangle, connector lines, and the inset panel's own outline — all three always share this one width. Defaults to 0.8. |
 | `ticks` | bool | If True, keeps the tick marks and labels on the inset panel. Defaults to False, for a clean panel showing only the zoomed-in content. |
 

@@ -522,13 +522,13 @@ class TestAddZoomInset:
             connectors = [p for p in inset.axes[0].patches if isinstance(p, plt.canvas.BboxConnector)]
             spines = inset.axes[0].spines.values()
 
-            assert rect.get_edgecolor()[:3] == pytest.approx(to_rgb("0.5"))
+            assert rect.get_edgecolor()[:3] == pytest.approx(to_rgb("black"))
             assert rect.get_linewidth() == pytest.approx(0.8)
             for connector in connectors:
-                assert connector.get_edgecolor()[:3] == pytest.approx(to_rgb("0.5"))
+                assert connector.get_edgecolor()[:3] == pytest.approx(to_rgb("black"))
                 assert connector.get_linewidth() == pytest.approx(0.8)
             for spine in spines:
-                assert spine.get_edgecolor()[:3] == pytest.approx(to_rgb("0.5"))
+                assert spine.get_edgecolor()[:3] == pytest.approx(to_rgb("black"))
                 assert spine.get_linewidth() == pytest.approx(0.8)
 
     def test_applies_matching_custom_color_and_width_to_rectangle_lines_and_outline(
