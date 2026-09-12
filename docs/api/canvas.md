@@ -473,6 +473,30 @@ Modifies the ticks of an axis.
 | ValueError | If 'plot_n' is not a valid value. |
 
 
+#### `remove_ticks`
+
+```python
+remove_ticks(self, axis: str, plot_n: int | tuple[int, int] | str=0) -> None
+```
+
+Removes the ticks (and their labels) from an axis.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `axis` | str | The axis to clear: 'x', 'y', or 'both'. |
+| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If the axis is not 'x', 'y', or 'both'. |
+| ValueError | If 'plot_n' is not a valid value. |
+
+
 #### `add_scalebar`
 
 ```python

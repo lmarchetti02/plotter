@@ -598,6 +598,31 @@ class Canvas:
 
             self.axes[plot_i].set_yticks(positions, labels=labels)
 
+    def remove_ticks(self, axis: str, plot_n: int | tuple[int, int] | str = 0) -> None:
+        """
+        Removes the ticks (and their labels) from an axis.
+
+        Args:
+            axis (str): The axis to clear: 'x', 'y', or 'both'.
+            plot_n (int, tuple[int, int], str, optional): The index or indices
+                of the subplots to consider. Defaults to 0. Options:
+                - int: The index of a single plot (e.g., 0, 1).
+                - str: 'all' to target all plots.
+                - tuple[int, int]: A range of plots to target, from
+                    `inf` to `sup` (inclusive).
+
+        Raises:
+            ValueError: If the axis is not 'x', 'y', or 'both'.
+            ValueError: If 'plot_n' is not a valid value.
+        """
+        logger.info("Called 'Canvas.remove_ticks()'")
+
+        if axis not in ("x", "y", "both"):
+            raise ValueError(f"{axis} is not a valid axis.")
+
+        for single_axis in ("x", "y") if axis == "both" else (axis,):
+            self.set_ticks(single_axis, (), plot_n=plot_n)
+
     def add_scalebar(self, size: float, label: str, plot_n: int | tuple[int, int] | str = 0, **kwargs) -> None:
         """
         Adds a scalebar (and, thus, removes the axis labels).

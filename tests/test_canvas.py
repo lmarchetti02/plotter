@@ -335,6 +335,52 @@ class TestSetTicks:
                 assert [label.get_text() for label in axis.get_xticklabels()] == ["left", "right"]
 
 
+class TestRemoveTicks:
+    """Tests for `Canvas.remove_ticks`."""
+
+    def test_clears_positions_and_labels(self, single_text_file: Path, show_plots) -> None:
+        """remove_ticks should clear both the tick positions and their labels."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            canvas.set_ticks("x", (0.0, 1.0), labels=("left", "right"))
+            canvas.remove_ticks("x")
+
+            axis = canvas.axes[0]
+            assert list(axis.get_xticks()) == []
+            assert axis.get_xticklabels() == []
+
+    def test_both_clears_x_and_y(self, single_text_file: Path) -> None:
+        """axis='both' should clear ticks on both axes at once."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup()
+
+            canvas.remove_ticks("both")
+
+            axis = canvas.axes[0]
+            assert list(axis.get_xticks()) == []
+            assert list(axis.get_yticks()) == []
+
+    def test_rejects_invalid_axis(self, single_text_file: Path) -> None:
+        """remove_ticks should fail loudly on an unsupported axis value."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup()
+
+            with pytest.raises(ValueError, match="is not a valid axis"):
+                canvas.remove_ticks("z")
+
+    def test_can_clear_every_subplot_at_once(self, workspace: Path) -> None:
+        """plot_n='all' should clear the ticks of every subplot."""
+        with plt.Canvas("remove_ticks_all_labels", (1, 3), show=False) as canvas:
+            canvas.setup()
+
+            canvas.remove_ticks("both", plot_n="all")
+
+            for axis in canvas.axes:
+                assert list(axis.get_xticks()) == []
+                assert list(axis.get_yticks()) == []
+
+
 class TestAddScalebar:
     """Tests for `Canvas.add_scalebar`."""
 

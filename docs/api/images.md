@@ -48,7 +48,7 @@ Draws the image on the canvas.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `colormap` | str | The Matplotlib colormap to use. Defaults to "plasma". |
+| `colormap` | str | The Matplotlib colormap to use. Defaults to "gray". |
 | `log` | bool or tuple\[bool, float\] | Controls the scale of the colormap.<br>- `bool`: `True` for logarithmic scale.<br>- `tuple`: `(True, float)` for a 'symlog' scale with a linear range of `float`. This parameter is ignored if the data is RGB(A). Defaults to `False`. |
 | `v_range` | tuple\[float, float\] | The minimum and maximum intensity values. Ignored if the data is RGB(A). Defaults to `(None, None)`. |
 | `aspect` | str | The aspect ratio of the axes. `equal` for squared pixels, `auto` for a squared image. Defaults to "equal". |
