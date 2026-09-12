@@ -309,3 +309,111 @@ class TestPositioning:
                 assert canvas.axes[1].get_position().bounds == pytest.approx(after_draw)
                 assert canvas.axes[1].get_xlim() == pytest.approx(xlim_after_draw)
                 assert canvas.axes[1].get_ylim() == pytest.approx(ylim_after_draw)
+
+
+class TestGridRealignment:
+    """Tests for how `Colorbar.draw` realigns the rest of the canvas's grid."""
+
+    def test_realigns_other_rows_to_match_a_row_colorbar(self, workspace, show_plots) -> None:
+        """A colorbar on only one row of a 2x2 grid should shrink the untouched row's
+        columns to match, not leave it wider than the row with the colorbar."""
+        with plt.Canvas("grid_row_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            images = [make_image() for _ in range(4)]
+            for i, image in enumerate(images):
+                image.draw(canvas, plot_n=i)
+
+            original = [ax.get_position() for ax in canvas.axes]
+
+            colorbar = plt.Colorbar(source=images[3])
+            colorbar.draw(canvas, row=1)
+
+            final = [ax.get_position() for ax in canvas.axes]
+
+            # row 1 (the colorbar's own row) shrank, as before
+            assert final[2].width < original[2].width
+            assert final[3].width < original[3].width
+            # row 0 (untouched by the colorbar itself) should now match row 1's columns,
+            # aligned on the same (left) edge, not just equal-width
+            assert final[0].width == pytest.approx(final[2].width)
+            assert final[0].x0 == pytest.approx(final[2].x0)
+            assert final[1].width == pytest.approx(final[3].width)
+            assert final[1].x0 == pytest.approx(final[3].x0)
+            # row 0's own aspect="equal" images may need their height reduced too, to
+            # stay square at the new narrower width -- centered within their original
+            # vertical span, same convention used elsewhere for an unanchored dimension
+            assert final[0].height <= original[0].height
+            assert final[0].y0 + final[0].height / 2 == pytest.approx(original[0].y0 + original[0].height / 2)
+            assert final[1].height <= original[1].height
+            assert final[1].y0 + final[1].height / 2 == pytest.approx(original[1].y0 + original[1].height / 2)
+
+    def test_realigns_other_columns_to_match_a_column_colorbar(self, workspace, show_plots) -> None:
+        """A 'top' colorbar on only one column of a 2x2 grid should shrink the other
+        column's rows to match, row by row, not leave them taller than column 1."""
+        with plt.Canvas("grid_col_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            images = [make_image() for _ in range(4)]
+            for i, image in enumerate(images):
+                image.draw(canvas, plot_n=i)
+
+            original = [ax.get_position() for ax in canvas.axes]
+
+            colorbar = plt.Colorbar(source=images[1])
+            colorbar.draw(canvas, col=1, position="top")
+
+            final = [ax.get_position() for ax in canvas.axes]
+
+            # column 1 (the colorbar's own column) shrank in height, as before
+            assert final[1].height < original[1].height
+            # column 0's row 0 (untouched by the colorbar itself) should now match
+            # column 1's row 0 height, since they're in the same row -- aligned on the
+            # same (top) edge, not just equal-height
+            assert final[0].height == pytest.approx(final[1].height)
+            assert final[0].y0 == pytest.approx(final[1].y0)
+            # column 1's row 1 (index 3) may itself need a small height adjustment to
+            # stay square at its (within-group) width-matched width -- whatever it
+            # ends up at, column 0's row 1 (index 2) should still match it exactly,
+            # aligned on the same edge
+            assert final[2].height == pytest.approx(final[3].height)
+            assert final[2].y0 == pytest.approx(final[3].y0)
+
+    def test_does_not_realign_other_columns_for_a_column_colorbar(self, workspace, show_plots) -> None:
+        """A 'right' colorbar on a whole column has no columns left to realign --
+        every Axes sharing that column is already inside the target group."""
+        with plt.Canvas("grid_col_only_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            images = [make_image() for _ in range(4)]
+            for i, image in enumerate(images):
+                image.draw(canvas, plot_n=i)
+
+            original1 = canvas.axes[1].get_position()
+            original3 = canvas.axes[3].get_position()
+
+            colorbar = plt.Colorbar(source=images[0])
+            colorbar.draw(canvas, col=0)
+
+            assert canvas.axes[1].get_position().bounds == pytest.approx(original1.bounds)
+            assert canvas.axes[3].get_position().bounds == pytest.approx(original3.bounds)
+
+    def test_realigns_only_the_shared_column_for_a_single_subplot_target(self, workspace, show_plots) -> None:
+        """A colorbar on a single subplot should only realign the rest of its own
+        column, leaving the other column untouched."""
+        with plt.Canvas("grid_single_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            images = [make_image() for _ in range(4)]
+            for i, image in enumerate(images):
+                image.draw(canvas, plot_n=i)
+
+            original0 = canvas.axes[0].get_position()
+            original1 = canvas.axes[1].get_position()
+            original3 = canvas.axes[3].get_position()
+
+            colorbar = plt.Colorbar(source=images[2])
+            colorbar.draw(canvas, plot_n=2)
+
+            # column 0 (subplots 0 and 2): subplot 0 realigns to match subplot 2
+            assert canvas.axes[0].get_position().width < original0.width
+            assert canvas.axes[0].get_position().width == pytest.approx(canvas.axes[2].get_position().width)
+            # column 1 (subplots 1 and 3): untouched
+            assert canvas.axes[1].get_position().bounds == pytest.approx(original1.bounds)
+            assert canvas.axes[3].get_position().bounds == pytest.approx(original3.bounds)

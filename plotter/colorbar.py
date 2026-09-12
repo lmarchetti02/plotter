@@ -65,7 +65,43 @@ def _decoration_margin(ax: Axes, figure: Figure, position: _Position, plain: Bbo
     return max(0.0, plain.y0 - tight.y0)
 
 
-def _resize_others_to_match(axes: list[Axes], positions: list[Bbox], edge_axes: set[Axes], final_size: float, vertical: bool) -> None:
+def _reanchor_secondary_dimension(ax: Axes, original_p: Bbox, position: _Position, vertical: bool) -> None:
+    """
+    Re-anchors an Axes' *other* dimension after `_resize_others_to_match` matched its
+    primary one, in case a fixed-aspect Axes' own aspect settling adjusted it too.
+
+    Given `vertical=True` (height was just matched), a width side effect is possible;
+    given `vertical=False` (width was just matched), a height side effect is possible.
+    Either way, matplotlib's own aspect settling centers that side effect within the
+    Axes' *original* span, rather than anchoring it on the same side `position`
+    itself anchors on (e.g. "right": fixed x0) -- left alone, this Axes would end up
+    correctly *sized* but not correctly *aligned* with a sibling elsewhere in the
+    canvas that shares its column/row (see `_realign_grid_siblings`). Re-anchoring is
+    a pure translation (same width/height as just settled), so it doesn't trigger
+    any further aspect adjustment.
+
+    Args:
+        ax (Axes): The Axes just resized by `_resize_others_to_match`.
+        original_p (Bbox): Its position box before that resize.
+        position (str): The colorbar's position, as passed to `_make_colorbar_axes`.
+        vertical (bool): Matches `_resize_others_to_match`'s own `vertical` argument.
+    """
+    current = ax.get_position()
+    if vertical:
+        if isclose(current.width, original_p.width, abs_tol=1e-9):
+            return
+        new_x0 = original_p.x0 if position == "right" else original_p.x1 - current.width
+        ax.set_position([new_x0, current.y0, current.width, current.height])
+    else:
+        if isclose(current.height, original_p.height, abs_tol=1e-9):
+            return
+        new_y0 = original_p.y0 if position == "top" else original_p.y1 - current.height
+        ax.set_position([current.x0, new_y0, current.width, current.height])
+
+
+def _resize_others_to_match(
+    axes: list[Axes], positions: list[Bbox], edge_axes: set[Axes], final_size: float, position: _Position, vertical: bool
+) -> None:
     """
     Centers every group Axes not in `edge_axes` on `final_size` along the cross
     dimension (height if `vertical`, width otherwise).
@@ -77,6 +113,8 @@ def _resize_others_to_match(axes: list[Axes], positions: list[Bbox], edge_axes: 
     turn (via the same immediate, stable `set_position()` behavior noted in
     `_make_colorbar_axes`) -- if it shares the edge Axes' data aspect ratio, it
     converges to the exact same final box; if not, only this dimension is matched.
+    `_reanchor_secondary_dimension` then fixes up the *other* dimension, in case that
+    settling centered it instead of anchoring it like the edge Axes' own shrink did.
 
     Args:
         axes (list[Axes]): The full target group.
@@ -86,6 +124,7 @@ def _resize_others_to_match(axes: list[Axes], positions: list[Bbox], edge_axes: 
             left untouched here.
         final_size (float): The edge Axes' actual final height/width, in figure-fraction
             units, to match.
+        position (str): The colorbar's position, as passed to `_make_colorbar_axes`.
         vertical (bool): `True` to match height (for a "left"/"right" colorbar),
             `False` to match width (for a "top"/"bottom" one).
     """
@@ -102,9 +141,71 @@ def _resize_others_to_match(axes: list[Axes], positions: list[Bbox], edge_axes: 
         else:
             new_x0 = p.x0 + (p.width - final_size) / 2
             ax.set_position([new_x0, p.y0, final_size, p.height])
+        _reanchor_secondary_dimension(ax, p, position, vertical)
 
 
-def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, size: str | float, padding: float) -> Axes:
+def _realign_grid_siblings(
+    all_axes: list[Axes], all_positions: list[Bbox], target_axes: list[Axes], target_positions: list[Bbox], position: _Position
+) -> None:
+    """
+    Realigns the rest of the canvas's grid with the (already resized) target group, so
+    a colorbar attached to only one row/column doesn't leave it visually narrower or
+    shorter than the rest of the grid.
+
+    For each target Axes, finds every *other* Axes in `all_axes` that originally
+    shared its column ("left"/"right" `position`, i.e. same x0/x1) or row ("top"/
+    "bottom", i.e. same y0/y1), and matches its width (or height) to that target
+    Axes' actual final size, anchored on the same side `position` itself anchors on
+    (e.g. "right": fixed x0, matching x1 moves inward) so the whole column/row of the
+    grid stays exactly aligned, not just equal-sized. This is a no-op for any sibling
+    that already matches (e.g. a target group whose shrink didn't need to touch this
+    dimension in the first place), and finds no siblings at all for a `col=`/`row=`
+    target whose position is perpendicular to the group's own arrangement (e.g.
+    `col=` with a "left"/"right" colorbar: every Axes sharing a column is already
+    inside the target group, since a column *is* that set of Axes).
+
+    Args:
+        all_axes (list[Axes]): Every Axes in the canvas's grid.
+        all_positions (list[Bbox]): `all_axes`' original position boxes
+            (`get_position()`, captured before any resizing), in the same order.
+        target_axes (list[Axes]): The (already resized) target group passed to
+            `_make_colorbar_axes`.
+        target_positions (list[Bbox]): `target_axes`' original position boxes,
+            in the same order -- used to identify which column/row each one was in.
+        position (str): The colorbar's position, as passed to `_make_colorbar_axes`.
+    """
+    match_width = position in ("left", "right")
+    target_set = set(target_axes)
+    for target_ax, target_p in zip(target_axes, target_positions):
+        final_size = target_ax.get_position().width if match_width else target_ax.get_position().height
+
+        for ax, p in zip(all_axes, all_positions):
+            if ax in target_set:
+                continue
+            same_column_or_row = (
+                isclose(p.x0, target_p.x0, abs_tol=1e-9) and isclose(p.x1, target_p.x1, abs_tol=1e-9)
+                if match_width
+                else isclose(p.y0, target_p.y0, abs_tol=1e-9) and isclose(p.y1, target_p.y1, abs_tol=1e-9)
+            )
+            if not same_column_or_row:
+                continue
+
+            current = p.width if match_width else p.height
+            if isclose(current, final_size, abs_tol=1e-9):
+                continue
+
+            ax.set_axes_locator(None)
+            if match_width:
+                new_x0 = p.x0 if position == "right" else p.x1 - final_size
+                ax.set_position([new_x0, p.y0, final_size, p.height])
+            else:
+                new_y0 = p.y0 if position == "top" else p.y1 - final_size
+                ax.set_position([p.x0, new_y0, p.width, final_size])
+
+
+def _make_colorbar_axes(
+    figure: Figure, axes: list[Axes], all_axes: list[Axes], position: _Position, size: str | float, padding: float
+) -> Axes:
     """
     Carves out a new Axes for a colorbar next to a group of Axes.
 
@@ -118,10 +219,15 @@ def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, s
     cross dimension matched to the edge Axes' actual final size, via
     `_resize_others_to_match`, so the group stays visually uniform even when a
     fixed-aspect edge Axes had to shrink further than just the requested thickness.
+    The rest of the canvas's grid is then realigned to match too, via
+    `_realign_grid_siblings`, so a colorbar on only one row/column doesn't leave it
+    narrower/shorter than the rest of the grid.
 
     Args:
         figure (Figure): The parent Figure the Axes belong to.
         axes (list[Axes]): The target group (one or more Axes sharing part of an edge).
+        all_axes (list[Axes]): Every Axes in the canvas's grid (a superset of `axes`),
+            for `_realign_grid_siblings`.
         position (str): Which side of the group's bounding box to attach the colorbar to.
         size (str | float): The colorbar's thickness -- a percentage string (e.g. "5%")
             or a bare fraction -- of the group's width ('left'/'right') or height
@@ -134,6 +240,7 @@ def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, s
     """
     size_frac = _parse_fraction(size)
     positions = [ax.get_position() for ax in axes]
+    all_positions = [ax.get_position() for ax in all_axes]
     x0 = min(p.x0 for p in positions)
     y0 = min(p.y0 for p in positions)
     x1 = max(p.x1 for p in positions)
@@ -162,7 +269,11 @@ def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, s
         # match the colorbar to the actual final size, not the pre-shrink one
         edge_ax_set = {ax for ax, _ in edge_axes}
         final_height = max(ax.get_position().height for ax in edge_ax_set)
-        _resize_others_to_match(axes, positions, edge_ax_set, final_height, vertical=True)
+        _resize_others_to_match(axes, positions, edge_ax_set, final_height, position, vertical=True)
+
+        # keep the rest of the canvas's grid aligned with this now-narrower group,
+        # so a colorbar on only one row doesn't leave the others too wide
+        _realign_grid_siblings(all_axes, all_positions, axes, positions, position)
 
         final_y0 = min(ax.get_position().y0 for ax in axes)
         final_y1 = max(ax.get_position().y1 for ax in axes)
@@ -185,7 +296,11 @@ def _make_colorbar_axes(figure: Figure, axes: list[Axes], position: _Position, s
 
     edge_ax_set = {ax for ax, _ in edge_axes}
     final_width = max(ax.get_position().width for ax in edge_ax_set)
-    _resize_others_to_match(axes, positions, edge_ax_set, final_width, vertical=False)
+    _resize_others_to_match(axes, positions, edge_ax_set, final_width, position, vertical=False)
+
+    # keep the rest of the canvas's grid aligned with this now-shorter group, so a
+    # colorbar on only one column doesn't leave the others too tall
+    _realign_grid_siblings(all_axes, all_positions, axes, positions, position)
 
     final_x0 = min(ax.get_position().x0 for ax in axes)
     final_x1 = max(ax.get_position().x1 for ax in axes)
@@ -280,6 +395,6 @@ class Colorbar:
             axes = [canvas.axes[i] for i in canvas.plot_indices(plot_n, row=row, col=col)]
 
         orientation = "vertical" if position in ("left", "right") else "horizontal"
-        cax = _make_colorbar_axes(canvas.figure, axes, position, size, padding)
+        cax = _make_colorbar_axes(canvas.figure, axes, canvas.axes, position, size, padding)
 
         self.mpl_colorbar = canvas.figure.colorbar(self.source.mappable, cax=cax, label=label, orientation=orientation, **kwargs)
