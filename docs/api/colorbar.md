@@ -1,5 +1,72 @@
 # `plotter.colorbar`
 
+## function `_get_reservation`
+
+```python
+_get_reservation(ax: Axes, position: _Position) -> dict | None
+```
+
+Returns the colorbar margin reservation stamped on `ax` for `position`, if any.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ax` | Axes | The Axes to check. |
+| `position` | str | Which side's reservation to look up. |
+
+**Returns:**
+
+| Type | Description |
+| --- | --- |
+| dict or None | `{"edge", "shrink", "thickness", "caxes"}` (see `_stamp_reservation`) if `ax` was previously touched by a `Colorbar` reserving space on that side; `None` otherwise. |
+
+
+## function `_stamp_reservation`
+
+```python
+_stamp_reservation(ax: Axes, position: _Position, edge: float, shrink: float, thickness: float, caxes: list[Axes]) -> None
+```
+
+Records a colorbar margin reservation on `ax`, so a later `Colorbar` targeting a
+sibling row/column that shares this edge can detect it via `_get_reservation` and
+reuse (or grow) the same margin instead of carving out a second one.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ax` | Axes | The Axes to stamp. |
+| `position` | str | Which side the margin is on. |
+| `edge` | float | The margin's fixed outer boundary (figure-fraction; the side away from the grid, e.g. `cax.x1` for "right"), stable across however many colorbars end up sharing it. |
+| `shrink` | float | The total space (thickness + padding, figure-fraction) this margin currently reserves from the grid's original size. |
+| `thickness` | float | The margin's current colorbar thickness (figure-fraction). |
+| `caxes` | list\[Axes\] | Every colorbar Axes currently sharing this margin, so a later, larger colorbar can grow all of them to match. |
+
+
+## function `_grow_existing_cax`
+
+```python
+_grow_existing_cax(cax: Axes, position: _Position, new_thickness: float) -> None
+```
+
+Widens (or heightens) a previously-created colorbar Axes to `new_thickness`,
+keeping its outer edge (the fixed side, away from the grid) in place -- so an
+earlier, smaller colorbar sharing a margin with a new, larger one ends up the
+same size, per `_make_colorbar_axes`' "reuse the shared margin" behavior.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `cax` | Axes | The existing colorbar Axes to grow. |
+| `position` | str | Which side it's attached to. |
+| `new_thickness` | float | Its new thickness, in figure-fraction units. |
+
+
 ## function `_parse_fraction`
 
 ```python
@@ -120,7 +187,7 @@ settling centered it instead of anchoring it like the edge Axes' own shrink did.
 ## function `_realign_grid_siblings`
 
 ```python
-_realign_grid_siblings(all_axes: list[Axes], all_positions: list[Bbox], target_axes: list[Axes], target_positions: list[Bbox], position: _Position) -> None
+_realign_grid_siblings(all_axes: list[Axes], all_positions: list[Bbox], target_axes: list[Axes], target_positions: list[Bbox], position: _Position) -> list[Axes]
 ```
 
 Realigns the rest of the canvas's grid with the (already resized) target group, so
@@ -150,6 +217,12 @@ inside the target group, since a column *is* that set of Axes).
 | `target_positions` | list\[Bbox\] | `target_axes`' original position boxes, in the same order -- used to identify which column/row each one was in. |
 | `position` | str | The colorbar's position, as passed to `_make_colorbar_axes`. |
 
+**Returns:**
+
+| Type | Description |
+| --- | --- |
+| list\[Axes\] | Every sibling Axes found (whether or not it needed resizing), so the caller can stamp them all with a margin reservation too. |
+
 
 ## function `_make_colorbar_axes`
 
@@ -172,6 +245,17 @@ fixed-aspect edge Axes had to shrink further than just the requested thickness.
 The rest of the canvas's grid is then realigned to match too, via
 `_realign_grid_siblings`, so a colorbar on only one row/column doesn't leave it
 narrower/shorter than the rest of the grid.
+
+If the edge Axes already carries a margin reservation on this side (stamped by an
+earlier `Colorbar` targeting a sibling row/column that shares it, via
+`_get_reservation`/`_stamp_reservation`), that margin is reused instead of
+carving out a second one: only the extra space this call needs *beyond* what's
+already reserved is taken (zero, if this call's own thickness+padding doesn't
+exceed it), and any previously-created colorbar sharing the margin is grown to
+match if this call needs more. Without this, two colorbars on different rows of
+the same columns (or columns of the same rows) would compound: each one's
+`_realign_grid_siblings` step would shrink the other's row/column again, on top of
+what the first one already reserved.
 
 
 **Args:**

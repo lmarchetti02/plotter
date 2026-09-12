@@ -17,6 +17,72 @@ logger = getLogger(__name__)
 
 _Position = Literal["left", "right", "top", "bottom"]
 
+_RESERVATIONS_ATTR = "_plotter_colorbar_reservations"
+
+
+def _get_reservation(ax: Axes, position: _Position) -> dict | None:
+    """
+    Returns the colorbar margin reservation stamped on `ax` for `position`, if any.
+
+    Args:
+        ax (Axes): The Axes to check.
+        position (str): Which side's reservation to look up.
+
+    Returns:
+        dict or None: `{"edge", "shrink", "thickness", "caxes"}` (see
+            `_stamp_reservation`) if `ax` was previously touched by a `Colorbar`
+            reserving space on that side; `None` otherwise.
+    """
+    return getattr(ax, _RESERVATIONS_ATTR, {}).get(position)
+
+
+def _stamp_reservation(ax: Axes, position: _Position, edge: float, shrink: float, thickness: float, caxes: list[Axes]) -> None:
+    """
+    Records a colorbar margin reservation on `ax`, so a later `Colorbar` targeting a
+    sibling row/column that shares this edge can detect it via `_get_reservation` and
+    reuse (or grow) the same margin instead of carving out a second one.
+
+    Args:
+        ax (Axes): The Axes to stamp.
+        position (str): Which side the margin is on.
+        edge (float): The margin's fixed outer boundary (figure-fraction; the side
+            away from the grid, e.g. `cax.x1` for "right"), stable across however many
+            colorbars end up sharing it.
+        shrink (float): The total space (thickness + padding, figure-fraction) this
+            margin currently reserves from the grid's original size.
+        thickness (float): The margin's current colorbar thickness (figure-fraction).
+        caxes (list[Axes]): Every colorbar Axes currently sharing this margin, so a
+            later, larger colorbar can grow all of them to match.
+    """
+    reservations = getattr(ax, _RESERVATIONS_ATTR, None)
+    if reservations is None:
+        reservations = {}
+        setattr(ax, _RESERVATIONS_ATTR, reservations)
+    reservations[position] = {"edge": edge, "shrink": shrink, "thickness": thickness, "caxes": caxes}
+
+
+def _grow_existing_cax(cax: Axes, position: _Position, new_thickness: float) -> None:
+    """
+    Widens (or heightens) a previously-created colorbar Axes to `new_thickness`,
+    keeping its outer edge (the fixed side, away from the grid) in place -- so an
+    earlier, smaller colorbar sharing a margin with a new, larger one ends up the
+    same size, per `_make_colorbar_axes`' "reuse the shared margin" behavior.
+
+    Args:
+        cax (Axes): The existing colorbar Axes to grow.
+        position (str): Which side it's attached to.
+        new_thickness (float): Its new thickness, in figure-fraction units.
+    """
+    p = cax.get_position()
+    if position == "right":
+        cax.set_position([p.x1 - new_thickness, p.y0, new_thickness, p.height])
+    elif position == "left":
+        cax.set_position([p.x0, p.y0, new_thickness, p.height])
+    elif position == "top":
+        cax.set_position([p.x0, p.y1 - new_thickness, p.width, new_thickness])
+    else:
+        cax.set_position([p.x0, p.y0, p.width, new_thickness])
+
 
 def _parse_fraction(value: str | float) -> float:
     """
@@ -146,7 +212,7 @@ def _resize_others_to_match(
 
 def _realign_grid_siblings(
     all_axes: list[Axes], all_positions: list[Bbox], target_axes: list[Axes], target_positions: list[Bbox], position: _Position
-) -> None:
+) -> list[Axes]:
     """
     Realigns the rest of the canvas's grid with the (already resized) target group, so
     a colorbar attached to only one row/column doesn't leave it visually narrower or
@@ -173,9 +239,14 @@ def _realign_grid_siblings(
         target_positions (list[Bbox]): `target_axes`' original position boxes,
             in the same order -- used to identify which column/row each one was in.
         position (str): The colorbar's position, as passed to `_make_colorbar_axes`.
+
+    Returns:
+        list[Axes]: Every sibling Axes found (whether or not it needed resizing), so
+            the caller can stamp them all with a margin reservation too.
     """
     match_width = position in ("left", "right")
     target_set = set(target_axes)
+    siblings: list[Axes] = []
     for target_ax, target_p in zip(target_axes, target_positions):
         final_size = target_ax.get_position().width if match_width else target_ax.get_position().height
 
@@ -189,6 +260,7 @@ def _realign_grid_siblings(
             )
             if not same_column_or_row:
                 continue
+            siblings.append(ax)
 
             current = p.width if match_width else p.height
             if isclose(current, final_size, abs_tol=1e-9):
@@ -201,6 +273,7 @@ def _realign_grid_siblings(
             else:
                 new_y0 = p.y0 if position == "top" else p.y1 - final_size
                 ax.set_position([p.x0, new_y0, p.width, final_size])
+    return siblings
 
 
 def _make_colorbar_axes(
@@ -222,6 +295,17 @@ def _make_colorbar_axes(
     The rest of the canvas's grid is then realigned to match too, via
     `_realign_grid_siblings`, so a colorbar on only one row/column doesn't leave it
     narrower/shorter than the rest of the grid.
+
+    If the edge Axes already carries a margin reservation on this side (stamped by an
+    earlier `Colorbar` targeting a sibling row/column that shares it, via
+    `_get_reservation`/`_stamp_reservation`), that margin is reused instead of
+    carving out a second one: only the extra space this call needs *beyond* what's
+    already reserved is taken (zero, if this call's own thickness+padding doesn't
+    exceed it), and any previously-created colorbar sharing the margin is grown to
+    match if this call needs more. Without this, two colorbars on different rows of
+    the same columns (or columns of the same rows) would compound: each one's
+    `_realign_grid_siblings` step would shrink the other's row/column again, on top of
+    what the first one already reserved.
 
     Args:
         figure (Figure): The parent Figure the Axes belong to.
@@ -248,10 +332,22 @@ def _make_colorbar_axes(
     fig_width_in, fig_height_in = figure.get_size_inches()
 
     if position in ("left", "right"):
-        thickness = size_frac * (x1 - x0)
-        shrink = thickness + padding / fig_width_in
+        requested_thickness = size_frac * (x1 - x0)
+        requested_shrink = requested_thickness + padding / fig_width_in
         edge = x1 if position == "right" else x0
         edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(p.x1 if position == "right" else p.x0, edge, abs_tol=1e-9)]
+
+        existing = max(
+            (r for ax, _ in edge_axes if (r := _get_reservation(ax, position)) is not None), key=lambda r: r["shrink"], default=None
+        )
+        existing_shrink = existing["shrink"] if existing else 0.0
+        existing_thickness = existing["thickness"] if existing else 0.0
+        existing_caxes = existing["caxes"] if existing else []
+        outer_edge = existing["edge"] if existing else edge
+
+        final_thickness = max(requested_thickness, existing_thickness)
+        final_shrink = max(requested_shrink, existing_shrink)
+        incremental = final_shrink - existing_shrink
 
         for ax, _ in edge_axes:
             # a ZoomInset's Axes has a locator (from inset_axes()) that recomputes its
@@ -259,54 +355,89 @@ def _make_colorbar_axes(
             ax.set_axes_locator(None)
         margin = max((_decoration_margin(ax, figure, position, p) for ax, p in edge_axes), default=0.0)
 
-        for ax, p in edge_axes:
-            new_x0 = p.x0 if position == "right" else p.x0 + shrink
-            ax.set_position([new_x0, p.y0, p.width - shrink, p.height])
+        siblings: list[Axes] = []
+        if incremental > 1e-9:
+            for ax, p in edge_axes:
+                new_x0 = p.x0 if position == "right" else p.x0 + incremental
+                ax.set_position([new_x0, p.y0, p.width - incremental, p.height])
 
-        # a fixed-aspect edge Axes (e.g. Image's default aspect="equal") may have just
-        # shrunk its height too, to keep the data square within the narrower box --
-        # propagate that to the rest of the group so it stays visually uniform, then
-        # match the colorbar to the actual final size, not the pre-shrink one
-        edge_ax_set = {ax for ax, _ in edge_axes}
-        final_height = max(ax.get_position().height for ax in edge_ax_set)
-        _resize_others_to_match(axes, positions, edge_ax_set, final_height, position, vertical=True)
+            # a fixed-aspect edge Axes (e.g. Image's default aspect="equal") may have
+            # just shrunk its height too, to keep the data square within the narrower
+            # box -- propagate that to the rest of the group so it stays visually
+            # uniform, then match the colorbar to the actual final size, not the
+            # pre-shrink one
+            edge_ax_set = {ax for ax, _ in edge_axes}
+            final_height = max(ax.get_position().height for ax in edge_ax_set)
+            _resize_others_to_match(axes, positions, edge_ax_set, final_height, position, vertical=True)
 
-        # keep the rest of the canvas's grid aligned with this now-narrower group,
-        # so a colorbar on only one row doesn't leave the others too wide
-        _realign_grid_siblings(all_axes, all_positions, axes, positions, position)
+            # keep the rest of the canvas's grid aligned with this now-narrower group,
+            # so a colorbar on only one row doesn't leave the others too wide
+            siblings = _realign_grid_siblings(all_axes, all_positions, axes, positions, position)
 
         final_y0 = min(ax.get_position().y0 for ax in axes)
         final_y1 = max(ax.get_position().y1 for ax in axes)
 
-        cax_x0 = edge + margin - thickness if position == "right" else edge - margin
-        return figure.add_axes([cax_x0, final_y0, thickness, final_y1 - final_y0])
+        cax_x0 = outer_edge + margin - final_thickness if position == "right" else outer_edge - margin
+        new_cax = figure.add_axes([cax_x0, final_y0, final_thickness, final_y1 - final_y0])
 
-    thickness = size_frac * (y1 - y0)
-    shrink = thickness + padding / fig_height_in
+        if final_thickness > existing_thickness + 1e-9:
+            for old_cax in existing_caxes:
+                _grow_existing_cax(old_cax, position, final_thickness)
+        all_caxes = [*existing_caxes, new_cax]
+        for ax in [*axes, *siblings]:
+            _stamp_reservation(ax, position, outer_edge, final_shrink, final_thickness, all_caxes)
+
+        return new_cax
+
+    requested_thickness = size_frac * (y1 - y0)
+    requested_shrink = requested_thickness + padding / fig_height_in
     edge = y1 if position == "top" else y0
     edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(p.y1 if position == "top" else p.y0, edge, abs_tol=1e-9)]
+
+    existing = max(
+        (r for ax, _ in edge_axes if (r := _get_reservation(ax, position)) is not None), key=lambda r: r["shrink"], default=None
+    )
+    existing_shrink = existing["shrink"] if existing else 0.0
+    existing_thickness = existing["thickness"] if existing else 0.0
+    existing_caxes = existing["caxes"] if existing else []
+    outer_edge = existing["edge"] if existing else edge
+
+    final_thickness = max(requested_thickness, existing_thickness)
+    final_shrink = max(requested_shrink, existing_shrink)
+    incremental = final_shrink - existing_shrink
 
     for ax, _ in edge_axes:
         ax.set_axes_locator(None)
     margin = max((_decoration_margin(ax, figure, position, p) for ax, p in edge_axes), default=0.0)
 
-    for ax, p in edge_axes:
-        new_y0 = p.y0 if position == "top" else p.y0 + shrink
-        ax.set_position([p.x0, new_y0, p.width, p.height - shrink])
+    siblings = []
+    if incremental > 1e-9:
+        for ax, p in edge_axes:
+            new_y0 = p.y0 if position == "top" else p.y0 + incremental
+            ax.set_position([p.x0, new_y0, p.width, p.height - incremental])
 
-    edge_ax_set = {ax for ax, _ in edge_axes}
-    final_width = max(ax.get_position().width for ax in edge_ax_set)
-    _resize_others_to_match(axes, positions, edge_ax_set, final_width, position, vertical=False)
+        edge_ax_set = {ax for ax, _ in edge_axes}
+        final_width = max(ax.get_position().width for ax in edge_ax_set)
+        _resize_others_to_match(axes, positions, edge_ax_set, final_width, position, vertical=False)
 
-    # keep the rest of the canvas's grid aligned with this now-shorter group, so a
-    # colorbar on only one column doesn't leave the others too tall
-    _realign_grid_siblings(all_axes, all_positions, axes, positions, position)
+        # keep the rest of the canvas's grid aligned with this now-shorter group, so a
+        # colorbar on only one column doesn't leave the others too tall
+        siblings = _realign_grid_siblings(all_axes, all_positions, axes, positions, position)
 
     final_x0 = min(ax.get_position().x0 for ax in axes)
     final_x1 = max(ax.get_position().x1 for ax in axes)
 
-    cax_y0 = edge + margin - thickness if position == "top" else edge - margin
-    return figure.add_axes([final_x0, cax_y0, final_x1 - final_x0, thickness])
+    cax_y0 = outer_edge + margin - final_thickness if position == "top" else outer_edge - margin
+    new_cax = figure.add_axes([final_x0, cax_y0, final_x1 - final_x0, final_thickness])
+
+    if final_thickness > existing_thickness + 1e-9:
+        for old_cax in existing_caxes:
+            _grow_existing_cax(old_cax, position, final_thickness)
+    all_caxes = [*existing_caxes, new_cax]
+    for ax in [*axes, *siblings]:
+        _stamp_reservation(ax, position, outer_edge, final_shrink, final_thickness, all_caxes)
+
+    return new_cax
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))

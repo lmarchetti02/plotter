@@ -417,3 +417,97 @@ class TestGridRealignment:
             # column 1 (subplots 1 and 3): untouched
             assert canvas.axes[1].get_position().bounds == pytest.approx(original1.bounds)
             assert canvas.axes[3].get_position().bounds == pytest.approx(original3.bounds)
+
+
+class TestSharedMarginReuse:
+    """Tests for how `Colorbar.draw` shares a margin between colorbars on different
+    rows/columns of the same grid, instead of compounding their shrinks."""
+
+    def test_two_same_size_colorbars_on_different_rows_do_not_compound(self, workspace, show_plots) -> None:
+        """Regression test: a second Colorbar on a sibling row used to shrink the grid
+        a second time, since its own grid-realignment step treated the first
+        colorbar's already-adjusted columns as the 'original' size to shrink from."""
+        with plt.Canvas("shared_margin_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            images = [make_image() for _ in range(4)]
+            for i, image in enumerate(images):
+                image.draw(canvas, plot_n=i)
+
+            colorbar_row0 = plt.Colorbar(source=images[1])
+            colorbar_row0.draw(canvas, row=0)
+
+            after_first = [ax.get_position().bounds for ax in canvas.axes]
+
+            colorbar_row1 = plt.Colorbar(source=images[3])
+            colorbar_row1.draw(canvas, row=1)
+
+            after_second = [ax.get_position().bounds for ax in canvas.axes]
+
+            # nothing should have moved again -- the second colorbar reused the
+            # margin the first one already reserved
+            for before, after in zip(after_first, after_second):
+                assert after == pytest.approx(before)
+
+            # both colorbars share the exact same horizontal strip
+            cax0 = colorbar_row0.mpl_colorbar.ax.get_position()
+            cax1 = colorbar_row1.mpl_colorbar.ax.get_position()
+            assert cax0.x0 == pytest.approx(cax1.x0)
+            assert cax0.x1 == pytest.approx(cax1.x1)
+            # but each covers only its own row's height
+            assert cax0.y0 == pytest.approx(canvas.axes[1].get_position().y0)
+            assert cax1.y0 == pytest.approx(canvas.axes[3].get_position().y0)
+
+    def test_a_larger_second_colorbar_grows_the_shared_margin(self, workspace, show_plots) -> None:
+        """If a second colorbar on a sibling row needs more room than the first one
+        reserved, the shared margin (and the first colorbar) should grow to fit it,
+        rather than the two colorbars ending up different widths."""
+        with plt.Canvas("grow_margin_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            images = [make_image() for _ in range(4)]
+            for i, image in enumerate(images):
+                image.draw(canvas, plot_n=i)
+
+            colorbar_row0 = plt.Colorbar(source=images[1])
+            colorbar_row0.draw(canvas, row=0, size="2%")
+
+            narrow_col1_width = canvas.axes[1].get_position().width
+
+            colorbar_row1 = plt.Colorbar(source=images[3])
+            colorbar_row1.draw(canvas, row=1, size="8%")
+
+            # row 0 should have shrunk further to match row 1's larger requirement
+            assert canvas.axes[1].get_position().width < narrow_col1_width
+            assert canvas.axes[1].get_position().width == pytest.approx(canvas.axes[3].get_position().width)
+
+            # the first colorbar should have grown to the same, larger thickness
+            cax0 = colorbar_row0.mpl_colorbar.ax.get_position()
+            cax1 = colorbar_row1.mpl_colorbar.ax.get_position()
+            assert cax0.width == pytest.approx(cax1.width)
+            assert cax0.x0 == pytest.approx(cax1.x0)
+            assert cax0.x1 == pytest.approx(cax1.x1)
+
+    def test_two_same_size_colorbars_on_different_columns_do_not_compound(self, workspace, show_plots) -> None:
+        """Same as the row case, but for two 'top' colorbars on different columns."""
+        with plt.Canvas("shared_margin_col_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            images = [make_image() for _ in range(4)]
+            for i, image in enumerate(images):
+                image.draw(canvas, plot_n=i)
+
+            colorbar_col0 = plt.Colorbar(source=images[0])
+            colorbar_col0.draw(canvas, col=0, position="top")
+
+            after_first = [ax.get_position().bounds for ax in canvas.axes]
+
+            colorbar_col1 = plt.Colorbar(source=images[1])
+            colorbar_col1.draw(canvas, col=1, position="top")
+
+            after_second = [ax.get_position().bounds for ax in canvas.axes]
+
+            for before, after in zip(after_first, after_second):
+                assert after == pytest.approx(before)
+
+            cax0 = colorbar_col0.mpl_colorbar.ax.get_position()
+            cax1 = colorbar_col1.mpl_colorbar.ax.get_position()
+            assert cax0.y0 == pytest.approx(cax1.y0)
+            assert cax0.y1 == pytest.approx(cax1.y1)
