@@ -58,7 +58,7 @@ class Image(Drawable):
                 Defaults to 0.
 
         Keyword Arguments:
-            colormap (str): The Matplotlib colormap to use. Defaults to "plasma".
+            colormap (str): The Matplotlib colormap to use. Defaults to "gray".
             log (bool or tuple[bool, float]): Controls the scale of the colormap.
                 - `bool`: `True` for logarithmic scale.
                 - `tuple`: `(True, float)` for a 'symlog' scale with a linear range of `float`.
