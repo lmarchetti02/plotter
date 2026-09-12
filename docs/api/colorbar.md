@@ -300,7 +300,7 @@ several subplots.
 #### `draw`
 
 ```python
-draw(self, canvas: Canvas | ZoomInset, plot_n: int | tuple[int, int] | str | None=None, row: int | None=None, col: int | None=None, label: str | None=None, **kwargs) -> None
+draw(self, canvas: Canvas | ZoomInset, plot_n: PlotN | None=None, row: int | None=None, col: int | None=None, label: str | None=None, **kwargs) -> None
 ```
 
 Draws the colorbar, spanning one or more subplots.
@@ -317,7 +317,7 @@ own footprint, so it never overlaps a neighboring subplot outside the target.
 | Name | Type | Description |
 | --- | --- | --- |
 | `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) to draw the colorbar on. |
-| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to attach the colorbar to. At most one of `plot_n`, `row`, `col` may be given; defaults to `0` when none are. See `Canvas.plot_indices`. |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to attach the colorbar to. At most one of `plot_n`, `row`, `col` may be given; defaults to `0` when none are. See `Canvas.plot_indices`. |
 | `row` | int, optional | A row of the `canvas`'s grid to share the colorbar across. Not supported when `canvas` is a `ZoomInset`. |
 | `col` | int, optional | A column of the `canvas`'s grid to share the colorbar across. Not supported when `canvas` is a `ZoomInset`. |
 | `label` | str, optional | The colorbar's label. Defaults to `None`. |

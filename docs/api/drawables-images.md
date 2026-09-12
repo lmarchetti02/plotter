@@ -1,4 +1,4 @@
-# `plotter.images`
+# `plotter.drawables.images`
 
 ## class `Image(Drawable)`
 

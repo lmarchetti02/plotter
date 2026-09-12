@@ -12,7 +12,7 @@ from mpl_toolkits.axes_grid1.inset_locator import (BboxConnector, BboxPatch,
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
-from .drawable import Drawable
+from .drawables import Drawable
 from .helpers import PlotN, PlotText, Text
 
 logger = getLogger(__name__)

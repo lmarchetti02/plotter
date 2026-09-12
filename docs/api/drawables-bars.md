@@ -1,4 +1,4 @@
-# `plotter.bars`
+# `plotter.drawables.bars`
 
 ## class `BarChart(Drawable)`
 

@@ -10,9 +10,9 @@ from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas, ZoomInset
+from .drawables.histograms import Hist2D
+from .drawables.images import Image
 from .helpers import PlotN
-from .histograms import Hist2D
-from .images import Image
 
 logger = getLogger(__name__)
 

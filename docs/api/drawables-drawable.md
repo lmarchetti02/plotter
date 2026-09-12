@@ -1,4 +1,4 @@
-# `plotter.drawable`
+# `plotter.drawables.drawable`
 
 ## class `Drawable(ABC)`
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from plotter.drawable import Drawable
+from plotter.drawables.drawable import Drawable
 from plotter.helpers.text import PlotText, Text
 
 

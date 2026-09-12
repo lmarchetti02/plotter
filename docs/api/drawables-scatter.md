@@ -1,4 +1,4 @@
-# `plotter.scatter`
+# `plotter.drawables.scatter`
 
 ## class `ScatterPlot(Drawable)`
 

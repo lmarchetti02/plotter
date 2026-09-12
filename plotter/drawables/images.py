@@ -8,9 +8,9 @@ from matplotlib.image import AxesImage
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
-from .canvas import Canvas, ZoomInset
+from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
-from .helpers import NArray2D, NArray3D
+from ..helpers import NArray2D, NArray3D
 
 logger = getLogger(__name__)
 

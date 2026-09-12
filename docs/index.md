@@ -31,4 +31,4 @@ with p.Canvas("example.json", rows_cols=(1, 1), show=False) as canvas:
 - [Quickstart](quickstart.md): setup, workspace layout, and the main plotting flow.
 - [API Reference](api/index.md): every module, class, method, and function with a docstring.
 - [Canvas](api/canvas.md): figure lifecycle, subplot setup, legends, ticks, guide lines, and scale bars.
-- [Drawables](api/scatter.md): scatter plots, line plots, bar charts, histograms, and images.
+- [Drawables](api/drawables-scatter.md): scatter plots, line plots, bar charts, histograms, and images.

@@ -5,9 +5,9 @@ import numpy as np
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
-from .canvas import Canvas, ZoomInset
+from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
-from .helpers import NArray1D
+from ..helpers import NArray1D
 
 logger = getLogger(__name__)
 

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 # avoid importing Canvas at runtime
 if TYPE_CHECKING:
-    from .canvas import Canvas, ZoomInset
+    from ..canvas import Canvas, ZoomInset
 
 
 DRAWABLE_LABEL_NAMES = (

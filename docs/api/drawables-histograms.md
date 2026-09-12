@@ -1,4 +1,4 @@
-# `plotter.histograms`
+# `plotter.drawables.histograms`
 
 ## class `Hist(Drawable)`
 

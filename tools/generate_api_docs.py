@@ -18,12 +18,12 @@ API = DOCS / "api"
 PUBLIC_MODULES = [
     "plotter.__init__",
     "plotter.canvas",
-    "plotter.drawable",
-    "plotter.scatter",
-    "plotter.lines",
-    "plotter.bars",
-    "plotter.histograms",
-    "plotter.images",
+    "plotter.drawables.drawable",
+    "plotter.drawables.scatter",
+    "plotter.drawables.lines",
+    "plotter.drawables.bars",
+    "plotter.drawables.histograms",
+    "plotter.drawables.images",
     "plotter.colorbar",
     "plotter.helpers.text",
     "plotter.helpers.initialization",
@@ -312,7 +312,7 @@ with p.Canvas("example.json", rows_cols=(1, 1), show=False) as canvas:
 - [Quickstart](quickstart.md): setup, workspace layout, and the main plotting flow.
 - [API Reference](api/index.md): every module, class, method, and function with a docstring.
 - [Canvas](api/canvas.md): figure lifecycle, subplot setup, legends, ticks, guide lines, and scale bars.
-- [Drawables](api/scatter.md): scatter plots, line plots, bar charts, histograms, and images.
+- [Drawables](api/drawables-scatter.md): scatter plots, line plots, bar charts, histograms, and images.
 """,
     )
 

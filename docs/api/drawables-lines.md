@@ -1,4 +1,4 @@
-# `plotter.lines`
+# `plotter.drawables.lines`
 
 ## class `LinePlot(Drawable)`
 

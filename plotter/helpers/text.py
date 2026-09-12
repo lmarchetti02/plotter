@@ -3,7 +3,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Iterator, Self
 
-from ..drawable import Drawable
+from ..drawables.drawable import Drawable
 
 logger = getLogger(__name__)
 

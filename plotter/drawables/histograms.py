@@ -7,9 +7,9 @@ from matplotlib.collections import QuadMesh
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
-from .canvas import Canvas, ZoomInset
+from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
-from .helpers import F64, NArray1D, NArray2D
+from ..helpers import F64, NArray1D, NArray2D
 
 logger = getLogger(__name__)
 

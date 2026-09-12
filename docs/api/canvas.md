@@ -285,7 +285,7 @@ Defines what happens when the user exits a 'Canvas' context.
 #### `plot_indices`
 
 ```python
-plot_indices(self, plot_n: int | tuple[int, int] | str | None=None, row: int | None=None, col: int | None=None) -> list[int]
+plot_indices(self, plot_n: PlotN | None=None, row: int | None=None, col: int | None=None) -> list[int]
 ```
 
 Resolves 'plot_n', 'row', or 'col' into the list of subplot indices they refer to.
@@ -299,7 +299,7 @@ stride of `n_cols`.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `plot_n` | PlotN, optional | The index or indices of the subplots. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 | `row` | int, optional | A 0-based row index in the `rows_cols` grid; resolves to every subplot in that row. |
 | `col` | int, optional | A 0-based column index in the `rows_cols` grid; resolves to every subplot in that column. |
 
@@ -321,7 +321,7 @@ stride of `n_cols`.
 #### `setup`
 
 ```python
-setup(self, plot_n: int | tuple[int, int] | str='all', **kwargs) -> None
+setup(self, plot_n: PlotN='all', **kwargs) -> None
 ```
 
 Sets up the properties of the subplots.
@@ -331,7 +331,7 @@ Sets up the properties of the subplots.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to configure. Defaults to 'all'. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to configure. Defaults to 'all'. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Keyword Arguments:**
 
@@ -355,7 +355,7 @@ Sets up the properties of the subplots.
 #### `draw_line`
 
 ```python
-draw_line(self, orientation: str, point: float=0.0, plot_n: int | tuple[int, int] | str=0, **kwargs) -> None
+draw_line(self, orientation: str, point: float=0.0, plot_n: PlotN=0, **kwargs) -> None
 ```
 
 Draws horizontal and vertical lines on the canvas.
@@ -367,7 +367,7 @@ Draws horizontal and vertical lines on the canvas.
 | --- | --- | --- |
 | `orientation` | str | The orientation of the line. Use 'v' for vertical or 'h' for horizontal. |
 | `point` | float, optional | The coordinate of the line. Defaults to 0. |
-| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Keyword Arguments:**
 
@@ -389,7 +389,7 @@ Draws horizontal and vertical lines on the canvas.
 #### `add_text`
 
 ```python
-add_text(self, text: str, position: tuple[float, float], plot_n: int | tuple[int, int] | str=0, point: tuple[float, float] | None=None, **kwargs) -> None
+add_text(self, text: str, position: tuple[float, float], plot_n: PlotN=0, point: tuple[float, float] | None=None, **kwargs) -> None
 ```
 
 Adds a text label to the canvas.
@@ -401,7 +401,7 @@ Adds a text label to the canvas.
 | --- | --- | --- |
 | `text` | str | The text to display. |
 | `position` | tuple\[float, float\] | The position of the text in data coordinates. |
-| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 | `point` | tuple\[float, float\] \| None, optional | A point to annotate. When provided, an arrow is drawn from the text to this point. |
 
 **Keyword Arguments:**
@@ -425,7 +425,7 @@ Adds a text label to the canvas.
 #### `turn_scientific`
 
 ```python
-turn_scientific(self, axis: str, plot_n: int | tuple[int, int] | str=0, limits: tuple[int, int] | int=(0, 0)) -> None
+turn_scientific(self, axis: str, plot_n: PlotN=0, limits: tuple[int, int] | int=(0, 0)) -> None
 ```
 
 Sets the ticks of an axis to scientific notation.
@@ -436,7 +436,7 @@ Sets the ticks of an axis to scientific notation.
 | Name | Type | Description |
 | --- | --- | --- |
 | `axis` | str | The axis to modify: 'x', 'y', or 'both'. |
-| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 | `limits` | tuple\[int, int\] or int, optional | Controls the scientific notation.<br>- `(m, n)`: Scientific notation is used for numbers outside 10^m to 10^n.<br>- `0`: Scientific notation is used for all numbers.<br>- `m`: Fixes the order of magnitude to 10^m. If only one int is passed, m=n is assumed. Defaults to (0, 0). |
 
 **Raises:**
@@ -450,7 +450,7 @@ Sets the ticks of an axis to scientific notation.
 #### `set_ticks`
 
 ```python
-set_ticks(self, axis: str, positions: tuple[float, ...], labels: tuple[str, ...] | None=None, plot_n: int | tuple[int, int] | str=0) -> None
+set_ticks(self, axis: str, positions: tuple[float, ...], labels: tuple[str, ...] | None=None, plot_n: PlotN=0) -> None
 ```
 
 Modifies the ticks of an axis.
@@ -463,7 +463,7 @@ Modifies the ticks of an axis.
 | `axis` | str | The axis to modify: 'x' or 'y'. |
 | `positions` | tuple\[float, ...\] | A tuple with the positions of the ticks. |
 | `labels` | tuple\[str, ...\], optional | A tuple with the labels for the ticks. If None, the labels will be the same as the positions. Defaults to None. |
-| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Raises:**
 
@@ -476,7 +476,7 @@ Modifies the ticks of an axis.
 #### `remove_ticks`
 
 ```python
-remove_ticks(self, axis: str, plot_n: int | tuple[int, int] | str=0) -> None
+remove_ticks(self, axis: str, plot_n: PlotN=0) -> None
 ```
 
 Removes the ticks (and their labels) from an axis.
@@ -487,7 +487,7 @@ Removes the ticks (and their labels) from an axis.
 | Name | Type | Description |
 | --- | --- | --- |
 | `axis` | str | The axis to clear: 'x', 'y', or 'both'. |
-| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Raises:**
 
@@ -500,7 +500,7 @@ Removes the ticks (and their labels) from an axis.
 #### `add_scalebar`
 
 ```python
-add_scalebar(self, size: float, label: str, plot_n: int | tuple[int, int] | str=0, **kwargs) -> None
+add_scalebar(self, size: float, label: str, plot_n: PlotN=0, **kwargs) -> None
 ```
 
 Adds a scalebar (and, thus, removes the axis labels).
@@ -512,7 +512,7 @@ Adds a scalebar (and, thus, removes the axis labels).
 | --- | --- | --- |
 | `size` | float | The horizontal size (in coordinates of axis). |
 | `label` | str | The label (e.g., "1 cm", "10 μm"). |
-| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to target. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to target. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Keyword Arguments:**
 
@@ -558,7 +558,7 @@ See `add_zoom_inset` for the meaning of the arguments and keyword arguments.
 #### `add_zoom_inset`
 
 ```python
-add_zoom_inset(self, xlim: tuple[float, float], ylim: tuple[float, float], plot_n: int | tuple[int, int] | str=0, **kwargs) -> ZoomInset | list[ZoomInset]
+add_zoom_inset(self, xlim: tuple[float, float], ylim: tuple[float, float], plot_n: PlotN=0, **kwargs) -> ZoomInset | list[ZoomInset]
 ```
 
 Adds a zoomed-in inset panel showing a region of one or more subplots.
@@ -574,7 +574,7 @@ via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
 | --- | --- | --- |
 | `xlim` | tuple\[float, float\] | The x-axis limits of the region to zoom into, in either order — each panel matches whichever direction (increasing or decreasing) its own source subplot's x-axis already has (e.g. an image drawn with the default `origin="upper"` has a decreasing y-axis). |
 | `ylim` | tuple\[float, float\] | The y-axis limits of the region to zoom into, same ordering behavior as `xlim`. |
-| `plot_n` | int, tuple\[int, int\], str, optional | The index or indices of the subplots to zoom into. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to zoom into. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Keyword Arguments:**
 
