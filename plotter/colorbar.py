@@ -218,9 +218,6 @@ class Colorbar:
         row: int | None = None,
         col: int | None = None,
         label: str | None = None,
-        position: _Position = "right",
-        size: str | float = "5%",
-        padding: float = 0.1,
         **kwargs,
     ) -> None:
         """
@@ -242,17 +239,18 @@ class Colorbar:
             col (int, optional): A column of the `canvas`'s grid to share the colorbar
                 across. Not supported when `canvas` is a `ZoomInset`.
             label (str, optional): The colorbar's label. Defaults to `None`.
-            position (str, optional): Which side to attach the colorbar to -- "left",
-                "right", "top", or "bottom". Defaults to "right".
-            size (str | float, optional): The colorbar's thickness, as a percentage
-                string (e.g. "5%") or bare fraction of the target(s)' own width
-                (for "left"/"right") or height (for "top"/"bottom"). Defaults to "5%".
-            padding (float, optional): The gap between the target(s) and the colorbar,
-                in inches. Defaults to 0.1.
 
         Keyword Arguments:
-            Passed straight through to `matplotlib.figure.Figure.colorbar` for cosmetic
-            tweaks unrelated to placement (e.g. `ticks`, `format`, `extend`, `alpha`).
+            position (str): Which side to attach the colorbar to -- "left", "right",
+                "top", or "bottom". Defaults to "right".
+            size (str | float): The colorbar's thickness, as a percentage string
+                (e.g. "5%") or bare fraction of the target(s)' own width (for
+                "left"/"right") or height (for "top"/"bottom"). Defaults to "5%".
+            padding (float): The gap between the target(s) and the colorbar, in
+                inches. Defaults to 0.1.
+            **kwargs: Anything else is passed straight through to
+                `matplotlib.figure.Figure.colorbar` for cosmetic tweaks unrelated to
+                placement (e.g. `ticks`, `format`, `extend`, `alpha`).
 
         Raises:
             RuntimeError: If `source` has not been drawn yet.
@@ -264,6 +262,10 @@ class Colorbar:
 
         if self.source.mappable is None:
             raise RuntimeError("'source' has not been drawn yet -- call its 'draw()' before 'Colorbar.draw()'.")
+
+        position: _Position = kwargs.pop("position", "right")
+        size = kwargs.pop("size", "5%")
+        padding = kwargs.pop("padding", 0.1)
 
         if position not in ("left", "right", "top", "bottom"):
             raise ValueError(f"'{position}' is not a valid position (expected 'left', 'right', 'top', or 'bottom').")

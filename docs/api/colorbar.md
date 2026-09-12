@@ -145,7 +145,7 @@ several subplots.
 #### `draw`
 
 ```python
-draw(self, canvas: Canvas | ZoomInset, plot_n: int | tuple[int, int] | str | None=None, row: int | None=None, col: int | None=None, label: str | None=None, position: _Position='right', size: str | float='5%', padding: float=0.1, **kwargs) -> None
+draw(self, canvas: Canvas | ZoomInset, plot_n: int | tuple[int, int] | str | None=None, row: int | None=None, col: int | None=None, label: str | None=None, **kwargs) -> None
 ```
 
 Draws the colorbar, spanning one or more subplots.
@@ -166,15 +166,15 @@ own footprint, so it never overlaps a neighboring subplot outside the target.
 | `row` | int, optional | A row of the `canvas`'s grid to share the colorbar across. Not supported when `canvas` is a `ZoomInset`. |
 | `col` | int, optional | A column of the `canvas`'s grid to share the colorbar across. Not supported when `canvas` is a `ZoomInset`. |
 | `label` | str, optional | The colorbar's label. Defaults to `None`. |
-| `position` | str, optional | Which side to attach the colorbar to -- "left", "right", "top", or "bottom". Defaults to "right". |
-| `size` | str \| float, optional | The colorbar's thickness, as a percentage string (e.g. "5%") or bare fraction of the target(s)' own width (for "left"/"right") or height (for "top"/"bottom"). Defaults to "5%". |
-| `padding` | float, optional | The gap between the target(s) and the colorbar, in inches. Defaults to 0.1. |
 
 **Keyword Arguments:**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `` | - | Passed straight through to `matplotlib.figure.Figure.colorbar` for cosmetic tweaks unrelated to placement (e.g. `ticks`, `format`, `extend`, `alpha`). |
+| `position` | str | Which side to attach the colorbar to -- "left", "right", "top", or "bottom". Defaults to "right". |
+| `size` | str \| float | The colorbar's thickness, as a percentage string (e.g. "5%") or bare fraction of the target(s)' own width (for "left"/"right") or height (for "top"/"bottom"). Defaults to "5%". |
+| `padding` | float | The gap between the target(s) and the colorbar, in inches. Defaults to 0.1. |
+| `**kwargs` | - | Anything else is passed straight through to `matplotlib.figure.Figure.colorbar` for cosmetic tweaks unrelated to placement (e.g. `ticks`, `format`, `extend`, `alpha`). |
 
 **Raises:**
 

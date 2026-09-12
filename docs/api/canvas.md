@@ -494,7 +494,7 @@ Adds a scalebar (and, thus, removes the axis labels).
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `location` | str | Where to put the scalebar. Defaults to "upper right". |
+| `location` | str, tuple\[float, float\] | Where to put the scalebar. Either a named matplotlib location (e.g. "upper right", the default) or an (x, y) position in axes fraction coordinates (0-1 each, independent of the data range), which centers the scalebar exactly at that point. |
 | `color` | str | The color. Defaults to "black". |
 | `v_size` | float | The vertical size. Defaults to None, which results in 1% of the height of the axis. |
 
