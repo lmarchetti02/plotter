@@ -10,6 +10,7 @@ from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas, ZoomInset
+from .helpers import PlotN
 from .histograms import Hist2D
 from .images import Image
 
@@ -460,7 +461,7 @@ class Colorbar:
     def draw(
         self,
         canvas: Canvas | ZoomInset,
-        plot_n: int | tuple[int, int] | str | None = None,
+        plot_n: PlotN | None = None,
         row: int | None = None,
         col: int | None = None,
         label: str | None = None,
@@ -477,7 +478,7 @@ class Colorbar:
 
         Args:
             canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw the colorbar on.
-            plot_n (int, tuple[int, int], str, optional): The index or indices of the
+            plot_n (PlotN, optional): The index or indices of the
                 subplots to attach the colorbar to. At most one of `plot_n`, `row`, `col`
                 may be given; defaults to `0` when none are. See `Canvas.plot_indices`.
             row (int, optional): A row of the `canvas`'s grid to share the colorbar

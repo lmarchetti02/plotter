@@ -9,3 +9,7 @@ NArray2D = Annotated[NDArray[DType], Literal[2]]
 NArray3D = Annotated[NDArray[DType], Literal[3]]
 
 F64 = float64
+
+# A single subplot index (e.g. 0), 'all', or an inclusive (inf, sup) range of indices,
+# as accepted by `Canvas.plot_indices` and the methods built on top of it.
+PlotN = int | tuple[int, int] | Literal["all"]

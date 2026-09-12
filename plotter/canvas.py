@@ -7,12 +7,13 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.transforms import TransformedBbox
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
-from mpl_toolkits.axes_grid1.inset_locator import BboxConnector, BboxPatch, inset_axes
+from mpl_toolkits.axes_grid1.inset_locator import (BboxConnector, BboxPatch,
+                                                   inset_axes)
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .drawable import Drawable
-from .helpers import PlotText, Text
+from .helpers import PlotN, PlotText, Text
 
 logger = getLogger(__name__)
 
@@ -67,9 +68,7 @@ def _reoriented_loc(loc: int, x_inverted: bool, y_inverted: bool) -> int:
     return _CORNERS_LOC[(is_right, is_upper)]
 
 
-def _draw_zoom_indicator(
-    parent_axes: Axes, inset_axes: Axes, loc1: int, loc2: int, x_inverted: bool, y_inverted: bool, **kwargs
-) -> None:
+def _draw_zoom_indicator(parent_axes: Axes, inset_axes: Axes, loc1: int, loc2: int, x_inverted: bool, y_inverted: bool, **kwargs) -> None:
     """
     Draws a rectangle around an inset's region on its source subplot, connected to the
     inset panel by two lines.
@@ -333,9 +332,7 @@ class Canvas:
 
         plt.show()
 
-    def plot_indices(
-        self, plot_n: int | tuple[int, int] | str | None = None, row: int | None = None, col: int | None = None
-    ) -> list[int]:
+    def plot_indices(self, plot_n: PlotN | None = None, row: int | None = None, col: int | None = None) -> list[int]:
         """
         Resolves 'plot_n', 'row', or 'col' into the list of subplot indices they refer to.
 
@@ -344,7 +341,7 @@ class Canvas:
         stride of `n_cols`.
 
         Args:
-            plot_n (int, tuple[int, int], str, optional): The index or indices of the
+            plot_n (PlotN, optional): The index or indices of the
                 subplots. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
@@ -388,12 +385,12 @@ class Canvas:
 
         return list(range(*limits))
 
-    def setup(self, plot_n: int | tuple[int, int] | str = "all", **kwargs) -> None:
+    def setup(self, plot_n: PlotN = "all", **kwargs) -> None:
         """
         Sets up the properties of the subplots.
 
         Args:
-            plot_n (int, tuple[int, int], str, optional): The index or indices
+            plot_n (PlotN, optional): The index or indices
                 of the subplots to configure. Defaults to 'all'. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
@@ -422,7 +419,7 @@ class Canvas:
             # legend
             self._loc_legend[plot_i] = kwargs.get("legend", 0)
 
-    def draw_line(self, orientation: str, point: float = 0.0, plot_n: int | tuple[int, int] | str = 0, **kwargs) -> None:
+    def draw_line(self, orientation: str, point: float = 0.0, plot_n: PlotN = 0, **kwargs) -> None:
         """
         Draws horizontal and vertical lines on the canvas.
 
@@ -430,7 +427,7 @@ class Canvas:
             orientation (str): The orientation of the line. Use 'v' for vertical
                 or 'h' for horizontal.
             point (float, optional): The coordinate of the line. Defaults to 0.
-            plot_n (int, tuple[int, int], str, optional): The index or indices
+            plot_n (PlotN, optional): The index or indices
                 of the subplots to draw on. Defaults to 0. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
@@ -468,12 +465,7 @@ class Canvas:
                 self.axes[plot_i].axhline(**args)
 
     def add_text(
-        self,
-        text: str,
-        position: tuple[float, float],
-        plot_n: int | tuple[int, int] | str = 0,
-        point: tuple[float, float] | None = None,
-        **kwargs,
+        self, text: str, position: tuple[float, float], plot_n: PlotN = 0, point: tuple[float, float] | None = None, **kwargs
     ) -> None:
         """
         Adds a text label to the canvas.
@@ -482,7 +474,7 @@ class Canvas:
             text (str): The text to display.
             position (tuple[float, float]): The position of the text in data
                 coordinates.
-            plot_n (int, tuple[int, int], str, optional): The index or indices
+            plot_n (PlotN, optional): The index or indices
                 of the subplots to draw on. Defaults to 0. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
@@ -521,15 +513,13 @@ class Canvas:
 
             self.axes[plot_i].annotate(text, xy=point, xytext=position, arrowprops=arrowprops, **text_kwargs)
 
-    def turn_scientific(
-        self, axis: str, plot_n: int | tuple[int, int] | str = 0, limits: tuple[int, int] | int = (0, 0)
-    ) -> None:
+    def turn_scientific(self, axis: str, plot_n: PlotN = 0, limits: tuple[int, int] | int = (0, 0)) -> None:
         """
         Sets the ticks of an axis to scientific notation.
 
         Args:
             axis (str): The axis to modify: 'x', 'y', or 'both'.
-            plot_n (int, tuple[int, int], str, optional): The index or indices
+            plot_n (PlotN, optional): The index or indices
                 of the subplots to consider. Defaults to 0. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
@@ -559,13 +549,7 @@ class Canvas:
         for plot_i in self.plot_indices(plot_n):
             self.axes[plot_i].ticklabel_format(style="sci", axis=axis, scilimits=limits)
 
-    def set_ticks(
-        self,
-        axis: str,
-        positions: tuple[float, ...],
-        labels: tuple[str, ...] | None = None,
-        plot_n: int | tuple[int, int] | str = 0,
-    ) -> None:
+    def set_ticks(self, axis: str, positions: tuple[float, ...], labels: tuple[str, ...] | None = None, plot_n: PlotN = 0) -> None:
         """
         Modifies the ticks of an axis.
 
@@ -575,7 +559,7 @@ class Canvas:
             labels (tuple[str, ...], optional): A tuple with the labels for the
                 ticks. If None, the labels will be the same as the positions.
                 Defaults to None.
-            plot_n (int, tuple[int, int], str, optional): The index or indices
+            plot_n (PlotN, optional): The index or indices
                 of the subplots to consider. Defaults to 0. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
@@ -598,13 +582,13 @@ class Canvas:
 
             self.axes[plot_i].set_yticks(positions, labels=labels)
 
-    def remove_ticks(self, axis: str, plot_n: int | tuple[int, int] | str = 0) -> None:
+    def remove_ticks(self, axis: str, plot_n: PlotN = 0) -> None:
         """
         Removes the ticks (and their labels) from an axis.
 
         Args:
             axis (str): The axis to clear: 'x', 'y', or 'both'.
-            plot_n (int, tuple[int, int], str, optional): The index or indices
+            plot_n (PlotN, optional): The index or indices
                 of the subplots to consider. Defaults to 0. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
@@ -623,14 +607,14 @@ class Canvas:
         for single_axis in ("x", "y") if axis == "both" else (axis,):
             self.set_ticks(single_axis, (), plot_n=plot_n)
 
-    def add_scalebar(self, size: float, label: str, plot_n: int | tuple[int, int] | str = 0, **kwargs) -> None:
+    def add_scalebar(self, size: float, label: str, plot_n: PlotN = 0, **kwargs) -> None:
         """
         Adds a scalebar (and, thus, removes the axis labels).
 
         Args:
             size (float): The horizontal size (in coordinates of axis).
             label (str): The label (e.g., "1 cm", "10 μm").
-            plot_n (int, tuple[int, int], str, optional): The index or indices
+            plot_n (PlotN, optional): The index or indices
                 of the subplots to target. Defaults to 0. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
@@ -733,7 +717,7 @@ class Canvas:
         return ZoomInset(axes=[axins])
 
     def add_zoom_inset(
-        self, xlim: tuple[float, float], ylim: tuple[float, float], plot_n: int | tuple[int, int] | str = 0, **kwargs
+        self, xlim: tuple[float, float], ylim: tuple[float, float], plot_n: PlotN = 0, **kwargs
     ) -> ZoomInset | list[ZoomInset]:
         """
         Adds a zoomed-in inset panel showing a region of one or more subplots.
@@ -749,7 +733,7 @@ class Canvas:
                 drawn with the default `origin="upper"` has a decreasing y-axis).
             ylim (tuple[float, float]): The y-axis limits of the region to zoom into,
                 same ordering behavior as `xlim`.
-            plot_n (int, tuple[int, int], str, optional): The index or indices of the
+            plot_n (PlotN, optional): The index or indices of the
                 subplots to zoom into. Defaults to 0. Options:
                 - int: The index of a single plot (e.g., 0, 1).
                 - str: 'all' to target all plots.
