@@ -202,13 +202,14 @@ class TestDrawLine:
             canvas.setup()
             before = len(canvas.axes[0].lines)
 
-            canvas.draw_line(orientation, point=1.5, plot_n=0, color="red", linestyle="--", lw=2.0)
+            canvas.draw_line(orientation, point=1.5, plot_n=0, color="red", linestyle="--", lw=2.0, alpha=0.5)
 
             line = canvas.axes[0].lines[-1]
             assert len(canvas.axes[0].lines) == before + 1
             assert line.get_color() == "red"
             assert line.get_linestyle() == "--"
             assert line.get_linewidth() == pytest.approx(2.0)
+            assert line.get_alpha() == pytest.approx(0.5)
 
     def test_rejects_invalid_orientation(self, single_text_file: Path) -> None:
         """draw_line should fail loudly on an unsupported orientation."""

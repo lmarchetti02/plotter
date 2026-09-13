@@ -50,7 +50,7 @@ x = np.linspace(0, 10, 100)
 with p.Canvas("example.json", show=False, save="example.png") as canvas:
     canvas.setup(xlim=(0, 10), ylim=(-1.2, 1.2))
     p.LinePlot(x, np.sin).draw(canvas, color="darkgreen", label="sin(x)")
-    canvas.draw_line("h", point=0, style="--")
+    canvas.draw_line("h", point=0, linestyle="--")
 ```
 
 ![Plotter example](assets/example_2.png)

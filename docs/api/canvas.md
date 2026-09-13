@@ -374,8 +374,9 @@ Draws horizontal and vertical lines on the canvas.
 | Name | Type | Description |
 | --- | --- | --- |
 | `color` | str | The color of the line. Defaults to 'black'. |
-| `style` | str | The style of the line (e.g., '-', '--', '-.', ':'). Defaults to '-'. |
-| `width` | float | The width of the line. Defaults to 0.5. |
+| `linestyle` | str | The style of the line (e.g., '-', '--', '-.', ':'). Defaults to '-'. |
+| `lw` | float | The width of the line. Defaults to 0.5. |
+| `alpha` | float | The opacity of the line. Defaults to 1.0. |
 | `label` | str | The label for the line in the legend. Defaults to None. |
 
 **Raises:**

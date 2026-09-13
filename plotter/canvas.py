@@ -436,9 +436,10 @@ class Canvas:
 
         Keyword Arguments:
             color (str): The color of the line. Defaults to 'black'.
-            style (str): The style of the line (e.g., '-', '--', '-.', ':').
+            linestyle (str): The style of the line (e.g., '-', '--', '-.', ':').
                 Defaults to '-'.
-            width (float): The width of the line. Defaults to 0.5.
+            lw (float): The width of the line. Defaults to 0.5.
+            alpha (float): The opacity of the line. Defaults to 1.0.
             label (str): The label for the line in the legend. Defaults to None.
 
         Raises:
@@ -455,6 +456,7 @@ class Canvas:
             "color": kwargs.get("color", "black"),
             "linestyle": kwargs.get("linestyle", "-"),
             "lw": kwargs.get("lw", 0.5),
+            "alpha": kwargs.get("alpha", 1.0),
             "label": kwargs.get("label", None),
         }
 
