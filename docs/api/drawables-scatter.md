@@ -60,3 +60,4 @@ Draws the scatter plot on the canvas.
 | `ms` | float | The dimensions of the markers. Defaults to 4. |
 | `err_width` | float | The width of the error bars. Defaults to 1. |
 | `ticks_size` | float | The size of the ticks on the error bars. Defaults to 2. |
+| `alpha` | float | The opacity of the points. Defaults to 1.0. |

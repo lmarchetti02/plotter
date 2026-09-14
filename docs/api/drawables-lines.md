@@ -65,6 +65,7 @@ Draws the plot on the canvas.
 | `color` | str | The Matplotlib color of the plot. Defaults to "darkgreen". |
 | `lw` | float | The line width. Defaults to 1.5. |
 | `style` | str | The line style. Defaults to `"-"`. |
+| `alpha` | float | The opacity of the line. Defaults to 1.0. |
 | `inverted` | bool | If `True`, plots the inverse function. Defaults to `False`. |
 
 

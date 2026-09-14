@@ -229,6 +229,46 @@ class TestDrawLine:
             assert all(axis.lines[-1].get_color() == "red" for axis in canvas.axes)
 
 
+class TestDrawBand:
+    """Tests for `Canvas.draw_band`."""
+
+    @pytest.mark.parametrize("orientation", ["v", "h"])
+    def test_adds_a_single_shaded_band(self, single_text_file: Path, orientation: str, show_plots) -> None:
+        """Canvas.draw_band should add exactly one shaded region for either supported orientation."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            before = len(canvas.axes[0].patches)
+
+            canvas.draw_band(orientation, low=1.0, high=2.0, plot_n=0, color="red", linestyle="--", lw=2.0, alpha=0.3)
+
+            band = canvas.axes[0].patches[-1]
+            assert len(canvas.axes[0].patches) == before + 1
+            assert to_rgb(band.get_facecolor()) == to_rgb("red")
+            assert band.get_linewidth() == pytest.approx(2.0)
+            assert band.get_alpha() == pytest.approx(0.3)
+
+            bbox = band.get_bbox()
+            extent = (bbox.x0, bbox.x1) if orientation == "v" else (bbox.y0, bbox.y1)
+            assert extent == pytest.approx((1.0, 2.0))
+
+    def test_rejects_invalid_orientation(self, single_text_file: Path) -> None:
+        """draw_band should fail loudly on an unsupported orientation."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup()
+
+            with pytest.raises(ValueError, match="Invalid band type"):
+                canvas.draw_band("diagonal", low=0.0, high=1.0)
+
+    def test_can_draw_on_every_subplot_at_once(self, workspace: Path) -> None:
+        """plot_n='all' should add the band to every subplot."""
+        with plt.Canvas("draw_band_all_labels", (1, 3), show=False) as canvas:
+            canvas.setup()
+
+            canvas.draw_band("h", low=1.0, high=2.0, plot_n="all", color="red")
+
+            assert all(to_rgb(axis.patches[-1].get_facecolor()) == to_rgb("red") for axis in canvas.axes)
+
+
 class TestAddText:
     """Tests for `Canvas.add_text`."""
 

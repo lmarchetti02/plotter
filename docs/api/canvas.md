@@ -161,8 +161,8 @@ A single zoomed-in inset panel returned by `Canvas.add_zoom_inset`.
 Exposes the same `axes`/`counters`/`text`/`figure` surface as `Canvas`, so any
 `Drawable` can be drawn into it exactly like a real `Canvas` subplot (e.g.
 `some_drawable.draw(inset)`). Also exposes `setup` to configure its `Axes`.
-Other cosmetic `Canvas` helpers (`draw_line`, `add_text`, ...) are not available
-on it — use `inset.axes\[0\]` directly for those.
+Other cosmetic `Canvas` helpers (`draw_line`, `draw_band`, `add_text`, ...) are not
+available on it — use `inset.axes\[0\]` directly for those.
 
 
 **Attributes:**
@@ -378,6 +378,42 @@ Draws horizontal and vertical lines on the canvas.
 | `lw` | float | The width of the line. Defaults to 0.5. |
 | `alpha` | float | The opacity of the line. Defaults to 1.0. |
 | `label` | str | The label for the line in the legend. Defaults to None. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If the orientation is not 'v' or 'h'. |
+| ValueError | If 'plot_n' is not a valid value. |
+
+
+#### `draw_band`
+
+```python
+draw_band(self, orientation: str, low: float, high: float, plot_n: PlotN=0, **kwargs) -> None
+```
+
+Draws a shaded horizontal or vertical band on the canvas.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `orientation` | str | The orientation of the band. Use 'v' for a vertical band (spanning between two x-coordinates) or 'h' for a horizontal band (spanning between two y-coordinates). |
+| `low` | float | The lower edge of the band. |
+| `high` | float | The upper edge of the band. |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `color` | str | The color of the band. Defaults to 'black'. |
+| `linestyle` | str | The style of the band's border (e.g., '-', '--', '-.', ':'). Defaults to '-'. |
+| `lw` | float | The width of the band's border. Defaults to 0.0 (no visible border). |
+| `alpha` | float | The opacity of the band. Defaults to 0.2. |
+| `label` | str | The label for the band in the legend. Defaults to None. |
 
 **Raises:**
 

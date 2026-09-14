@@ -191,8 +191,8 @@ class ZoomInset:
     Exposes the same `axes`/`counters`/`text`/`figure` surface as `Canvas`, so any
     `Drawable` can be drawn into it exactly like a real `Canvas` subplot (e.g.
     `some_drawable.draw(inset)`). Also exposes `setup` to configure its `Axes`.
-    Other cosmetic `Canvas` helpers (`draw_line`, `add_text`, ...) are not available
-    on it — use `inset.axes[0]` directly for those.
+    Other cosmetic `Canvas` helpers (`draw_line`, `draw_band`, `add_text`, ...) are not
+    available on it — use `inset.axes[0]` directly for those.
 
     Attributes:
         axes (list[Axes]): A single-element list containing the inset `Axes`.
@@ -465,6 +465,54 @@ class Canvas:
                 self.axes[plot_i].axvline(**args)
             else:
                 self.axes[plot_i].axhline(**args)
+
+    def draw_band(self, orientation: str, low: float, high: float, plot_n: PlotN = 0, **kwargs) -> None:
+        """
+        Draws a shaded horizontal or vertical band on the canvas.
+
+        Args:
+            orientation (str): The orientation of the band. Use 'v' for a vertical
+                band (spanning between two x-coordinates) or 'h' for a horizontal
+                band (spanning between two y-coordinates).
+            low (float): The lower edge of the band.
+            high (float): The upper edge of the band.
+            plot_n (PlotN, optional): The index or indices
+                of the subplots to draw on. Defaults to 0. Options:
+                - int: The index of a single plot (e.g., 0, 1).
+                - str: 'all' to target all plots.
+                - tuple[int, int]: A range of plots to target, from
+                    `inf` to `sup` (inclusive).
+
+        Keyword Arguments:
+            color (str): The color of the band. Defaults to 'black'.
+            linestyle (str): The style of the band's border (e.g., '-', '--', '-.', ':').
+                Defaults to '-'.
+            lw (float): The width of the band's border. Defaults to 0.0 (no visible border).
+            alpha (float): The opacity of the band. Defaults to 0.2.
+            label (str): The label for the band in the legend. Defaults to None.
+
+        Raises:
+            ValueError: If the orientation is not 'v' or 'h'.
+            ValueError: If 'plot_n' is not a valid value.
+        """
+        logger.info("Called 'Canvas.draw_band()'")
+
+        if orientation not in ("v", "h"):
+            raise ValueError("Invalid band type")
+
+        args = {
+            "color": kwargs.get("color", "black"),
+            "linestyle": kwargs.get("linestyle", "-"),
+            "lw": kwargs.get("lw", 0.0),
+            "alpha": kwargs.get("alpha", 0.2),
+            "label": kwargs.get("label", None),
+        }
+
+        for plot_i in self.plot_indices(plot_n):
+            if orientation == "v":
+                self.axes[plot_i].axvspan(low, high, **args)
+            else:
+                self.axes[plot_i].axhspan(low, high, **args)
 
     def add_text(
         self, text: str, position: tuple[float, float], plot_n: PlotN = 0, point: tuple[float, float] | None = None, **kwargs
