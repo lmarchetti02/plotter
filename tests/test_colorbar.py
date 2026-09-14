@@ -13,12 +13,20 @@ def make_image(fill: float = 1.0) -> plt.Image:
     return plt.Image(data)
 
 
-def make_hist2d() -> plt.Hist2D:
+def make_hist2d() -> plt.RawHist2D:
     """Build a small 2D histogram for test use."""
     rng = np.random.default_rng(0)
     x = rng.normal(5.0, 1.5, 500)
     y = rng.normal(5.0, 2.5, 500)
-    return plt.Hist2D(x, y, 10)
+    return plt.RawHist2D(x, y, 10)
+
+
+def make_binned_hist2d() -> plt.BinnedHist2D:
+    """Build a small pre-binned 2D histogram for test use."""
+    bin_vals = np.ones((10, 10))
+    xbins = np.linspace(0.0, 10.0, 11)
+    ybins = np.linspace(0.0, 10.0, 11)
+    return plt.BinnedHist2D(bin_vals, xbins, ybins)
 
 
 class TestDraw:
@@ -37,11 +45,24 @@ class TestDraw:
             assert len(canvas.figure.axes) == 2
             assert canvas.figure.axes[1].get_ylabel() == "Intensity"
 
-    def test_creates_a_colorbar_for_a_hist2d_source(self, single_text_file, show_plots) -> None:
-        """A Colorbar should also work when its source is a Hist2D."""
+    def test_creates_a_colorbar_for_a_raw_hist2d_source(self, single_text_file, show_plots) -> None:
+        """A Colorbar should also work when its source is a RawHist2D."""
         with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
             canvas.setup()
             hist = make_hist2d()
+            hist.draw(canvas)
+
+            colorbar = plt.Colorbar(source=hist)
+            colorbar.draw(canvas, label="Density")
+
+            assert len(canvas.figure.axes) == 2
+            assert canvas.figure.axes[1].get_ylabel() == "Density"
+
+    def test_creates_a_colorbar_for_a_binned_hist2d_source(self, single_text_file, show_plots) -> None:
+        """A Colorbar should also work when its source is a BinnedHist2D."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            hist = make_binned_hist2d()
             hist.draw(canvas)
 
             colorbar = plt.Colorbar(source=hist)
@@ -250,7 +271,7 @@ class TestPositioning:
             assert cax.x1 == pytest.approx(original1.x1)
 
     def test_sharing_a_row_does_not_resize_others_without_a_shape_mismatch(self, text_file, show_plots) -> None:
-        """When nothing forces a cross-dimension change (e.g. an aspect='auto' Hist2D),
+        """When nothing forces a cross-dimension change (e.g. an aspect='auto' RawHist2D),
         the rest of the row should be left exactly as it was."""
         with plt.Canvas(str(text_file), (1, 2), show=show_plots) as canvas:
             canvas.setup(plot_n="all")

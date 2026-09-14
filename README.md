@@ -12,7 +12,7 @@ The current design revolves around:
 
 - a `Canvas` object, which owns the figure and axes and acts as a context manager;
 - drawable objects such as `ScatterPlot`, `LinePlot`, `BarChart`, `RawHist`, `BinnedHist`,
-  `Hist2D`, and `Image`;
+  `RawHist2D`, `BinnedHist2D`, and `Image`;
 - optional JSON text files used to populate titles, axis labels, and legend labels.
 
 ## Installation
@@ -103,7 +103,8 @@ with p.Canvas("example.json", rows_cols=(1, 2), show=False) as canvas:
 - `BarChart`: bar charts with optional y-error bars.
 - `RawHist`: one-dimensional histograms computed from raw sample data.
 - `BinnedHist`: one-dimensional histograms drawn from already pre-computed bin values.
-- `Hist2D`: two-dimensional histograms with colorbars.
+- `RawHist2D`: two-dimensional histograms computed from raw sample data, with colorbars.
+- `BinnedHist2D`: two-dimensional histograms drawn from already pre-computed bin values, with colorbars.
 - `Image`: grayscale or RGB(A) image rendering.
 
 All drawable classes inherit from `Drawable` and implement a `draw(canvas, ...)` method.

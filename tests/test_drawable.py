@@ -24,7 +24,8 @@ class TestDrawable:
             plt.BarChart(x, y),
             plt.RawHist(x),
             plt.BinnedHist(np.array([1.0]), np.array([0.0, 1.0])),
-            plt.Hist2D(x, y, 2),
+            plt.RawHist2D(x, y, 2),
+            plt.BinnedHist2D(np.array([[1.0]]), np.array([0.0, 1.0]), np.array([0.0, 1.0])),
             plt.Image(image),
         )
 

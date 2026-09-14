@@ -10,13 +10,13 @@ several subplots.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `source` | Image \| Hist2D | The already-drawn drawable whose color mapping (mappable, colormap, normalization) the colorbar represents. |
+| `source` | Image \| RawHist2D \| BinnedHist2D | The already-drawn drawable whose color mapping (mappable, colormap, normalization) the colorbar represents. |
 | `mpl_colorbar` | MplColorbar or None | The underlying `matplotlib.colorbar.Colorbar` artist, populated after `draw` runs, for advanced customization. |
 
 
 **Defined attributes:**
 
-- `source: Image | Hist2D`
+- `source: Image | RawHist2D | BinnedHist2D`
 - `mpl_colorbar: MplColorbar | None`
 
 ### Methods

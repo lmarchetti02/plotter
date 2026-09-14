@@ -10,8 +10,9 @@ from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .canvas import Canvas, ZoomInset
-from .drawables.histograms import Hist2D
+from .drawables.binned_histograms import BinnedHist2D
 from .drawables.images import Image
+from .drawables.raw_histograms import RawHist2D
 from .helpers import PlotN
 
 logger = getLogger(__name__)
@@ -419,13 +420,13 @@ class Colorbar:
     several subplots.
 
     Attributes:
-        source (Image | Hist2D): The already-drawn drawable whose color mapping
+        source (Image | RawHist2D | BinnedHist2D): The already-drawn drawable whose color mapping
             (mappable, colormap, normalization) the colorbar represents.
         mpl_colorbar (MplColorbar or None): The underlying `matplotlib.colorbar.Colorbar`
             artist, populated after `draw` runs, for advanced customization.
     """
 
-    source: Image | Hist2D
+    source: Image | RawHist2D | BinnedHist2D
 
     mpl_colorbar: MplColorbar | None = Field(init=False, default=None)
 
