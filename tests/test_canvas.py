@@ -77,6 +77,12 @@ class TestCanvas:
 
         warn("unrelated warning raised after the canvas context has exited", UserWarning)
 
+    @pytest.mark.parametrize("rows_cols", [(0, 1), (1, 0), (-1, 1), (1, -1)])
+    def test_rejects_non_positive_rows_or_columns(self, single_text_file: Path, rows_cols: tuple[int, int]) -> None:
+        """Zero or negative rows/columns should fail loudly instead of reaching `plt.subplots`."""
+        with pytest.raises(ValueError, match="must be at least 1"):
+            plt.Canvas(str(single_text_file), rows_cols=rows_cols, show=False)
+
     def test_disables_any_active_layout_engine(self, single_text_file: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """A layout engine (auto-enabled by plt.subplots() whenever the caller's own
         rcParams -- unrelated to plotter's own style -- has figure.autolayout or

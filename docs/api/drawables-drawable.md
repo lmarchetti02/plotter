@@ -20,33 +20,6 @@ get_label_names() -> tuple[str, ...]
 Returns the names of all supported drawable label groups.
 
 
-#### `get_label`
-
-```python
-_get_label(canvas: 'Canvas | ZoomInset', plot_n: int, label: str | None, name: str, logger: Logger, msg: str) -> tuple[int, str | None]
-```
-
-Retrieves the label associated with the drawable.
-
-
-**Args:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) the drawable is attached to. |
-| `plot_n` | int | The index of the subplot. |
-| `label` | str \| None | An explicit user-provided label. |
-| `name` | str | The name of the drawable. |
-| `logger` | Logger | The logger to use for warnings. |
-| `msg` | str | The warning to emit when no label can be found. |
-
-**Returns:**
-
-| Type | Description |
-| --- | --- |
-| tuple\[int, str \| None\] | The current drawable index and the resolved label. |
-
-
 #### `draw`
 
 ```python

@@ -10,7 +10,7 @@ version = "0.2.0"
 requires-python = ">=3.12"
 readme = "README.md"
 license = "MIT"
-dependencies = ["matplotlib", "numpy", "pydantic>=2.12.5", "pytest>=9.0.2"]
+dependencies = ["matplotlib", "numpy>=2.1", "pydantic>=2.12.5"]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -26,7 +26,7 @@ testpaths = ["tests"]
 pythonpath = "."
 
 [dependency-groups]
-dev = ["ruff>=0.15.2"]
+dev = ["pytest>=9.0.2", "ruff>=0.15.2"]
 docs = ["zensical>=0.0.39"]
 
 [project.urls]

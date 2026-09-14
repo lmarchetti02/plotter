@@ -22,8 +22,8 @@ class PlotText:
     def __init__(self, title: str, x_label: str, y_label: str, **kwargs) -> None:
         unexpected_keys = set(kwargs) - set(Drawable.get_label_names())
         if unexpected_keys:
-            unexpected_key = sorted(unexpected_keys)[0]
-            raise TypeError(f"Unexpected keyword argument: '{unexpected_key}'")
+            joined_keys = ", ".join(f"'{key}'" for key in sorted(unexpected_keys))
+            raise TypeError(f"Unexpected keyword argument(s): {joined_keys}")
 
         self.title = title
         self.x_label = x_label
@@ -134,7 +134,7 @@ class Text:
             logger.warning(f"JSON file not found. Creating {file_path}.")
 
             self.subplots_text = [PlotText.get_empy_text() for _ in range(self.n_plots)]
-            file_path.write_text(dumps([text.to_dict() for text in self.subplots_text]))
+            file_path.write_text(dumps([text.to_dict() for text in self.subplots_text], indent=2))
 
         except (JSONDecodeError, TypeError) as _:
             logger.warning(f"Could not parse JSON file {file_path}. Canvas will not display any text.")

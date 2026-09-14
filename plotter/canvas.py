@@ -278,8 +278,8 @@ class Canvas:
         """Initializes the necessary attributes."""
 
         n_rows, n_cols = self.rows_cols
-        if n_rows < 0 or n_cols < 0:
-            raise ValueError("The number of rows and/or columns cannt be negative.")
+        if n_rows < 1 or n_cols < 1:
+            raise ValueError("The number of rows and columns must be at least 1.")
         self._n_plots = n_rows * n_cols
 
         # initialize counters
@@ -319,6 +319,7 @@ class Canvas:
             print("\nException value:", exc_val)
             print("\nTraceback:", exc_tb)
 
+            plt.close(self.figure)
             return
 
         self._legend()  # draw legend if it exists
@@ -693,7 +694,7 @@ class Canvas:
 
             # Calculate vertical size if not provided
             v_size = kwargs.get("v_size", None)
-            if not v_size:
+            if v_size is None:
                 # Calculate v_size as 1% of the y-axis data range
                 y_min, y_max = axis.get_ylim()
                 y_range = abs(y_max - y_min)
@@ -847,7 +848,7 @@ class Canvas:
                         self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1)
 
                     logger.debug(f"Legend added to subplot {i}.")
-                except Exception as _:
+                except UserWarning:
                     logger.warning(f"Subplot {i} has an empty legend.")
 
     def _save(self) -> None:

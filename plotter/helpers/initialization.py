@@ -25,44 +25,47 @@ def setup_workspace(base_path: Path | str | None = None) -> None:
         base_path = Path(base_path or ".")
 
     parent_dir = base_path / "plotter"
-    if parent_dir.exists():
-        print("'plotter' directory already exists; skipping...")
-    else:
-        parent_dir.mkdir(parents=True, exist_ok=True)
+    if not parent_dir.exists():
+        print("Creating 'plotter' directory...")
 
-        # create necessary directories
-        dirs = ("img", "log", "text", "utils", "utils/info")
-        for dir in dirs:
-            destination = parent_dir / dir
-            destination.mkdir(exist_ok=True)
+    # create necessary directories -- mkdir(exist_ok=True) is a no-op if a directory
+    # is already there, so a partially set up 'plotter/' (e.g. from an interrupted
+    # previous run) self-heals instead of leaving something like utils/log_config.json
+    # permanently missing and crashing _setup_logging() below
+    dirs = ("img", "log", "text", "utils", "utils/info")
+    for dir in dirs:
+        (parent_dir / dir).mkdir(parents=True, exist_ok=True)
 
-        # define in and out directories
-        data_dir = resources.files("plotter") / "data"
-        info_dir = data_dir / "info"
-        destination = parent_dir / "utils"
-        destination_info = parent_dir / "utils/info"
-        text_destination = parent_dir / "text/text_example.json"
-        log_destination = parent_dir / "log/plotter.log"
+    # define in and out directories
+    data_dir = resources.files("plotter") / "data"
+    info_dir = data_dir / "info"
+    destination = parent_dir / "utils"
+    destination_info = parent_dir / "utils/info"
+    text_destination = parent_dir / "text/text_example.json"
+    log_destination = parent_dir / "log/plotter.log"
 
-        # retrieve package data
-        data_files = (f for f in data_dir.iterdir() if f.name != ".DS_Store" and f.is_file())
-        info_files = (f for f in info_dir.iterdir() if f.name != ".DS_Store" and f.is_file())
+    # retrieve package data
+    data_files = (f for f in data_dir.iterdir() if f.name != ".DS_Store" and f.is_file())
+    info_files = (f for f in info_dir.iterdir() if f.name != ".DS_Store" and f.is_file())
 
-        # copy files to plotter/utils/
-        for f in data_files:
-            f_destination = destination / f.name
+    # copy files to plotter/utils/, without overwriting any the user may have customized
+    for f in data_files:
+        f_destination = destination / f.name
+        if not f_destination.exists():
             f_destination.write_bytes(f.read_bytes())
 
-        # copy files to plotter/utils/info/
-        for f in info_files:
-            f_destination = destination_info / f.name
+    # copy files to plotter/utils/info/, same rule
+    for f in info_files:
+        f_destination = destination_info / f.name
+        if not f_destination.exists():
             f_destination.write_bytes(f.read_bytes())
 
-        # generate text_example.json from the drawable registry
+    # generate text_example.json from the drawable registry, unless already present
+    if not text_destination.exists():
         text_destination.write_text(dumps(PlotText.get_empty_json(), indent=2))
 
-        # create log file
-        log_destination.touch(exist_ok=True)
+    # create log file
+    log_destination.touch(exist_ok=True)
 
     # logging
     _setup_logging(parent_dir)

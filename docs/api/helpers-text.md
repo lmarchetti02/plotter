@@ -17,24 +17,6 @@ text that has to be displayed in a subplot of a `Canvas`.
 
 ### Methods
 
-#### `getattr`
-
-```python
-__getattr__(self, name: str) -> list[str]
-```
-
-Returns the labels associated with a drawable family.
-
-
-#### `eq`
-
-```python
-__eq__(self, other: object) -> bool
-```
-
-Compares two `PlotText` objects.
-
-
 #### `to_dict`
 
 ```python
@@ -90,33 +72,6 @@ Class for storing and accessing the text to be displayed on the canvas.
 
 
 ### Methods
-
-#### `eq`
-
-```python
-__eq__(self, other: object) -> bool
-```
-
-Compares two `Text` objects.
-
-
-#### `getitem`
-
-```python
-__getitem__(self, plot_n: int) -> PlotText
-```
-
-Returns the text of the selected subplot.
-
-
-#### `iter`
-
-```python
-__iter__(self) -> Iterator[PlotText]
-```
-
-Allows to iterate over the `PlotText` objects.
-
 
 #### `read_json`
 

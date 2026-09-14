@@ -448,11 +448,11 @@ dependencies = [
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "pydantic" },
-    { name = "pytest" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "pytest" },
     { name = "ruff" },
 ]
 docs = [
@@ -462,13 +462,15 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "matplotlib" },
-    { name = "numpy" },
+    { name = "numpy", specifier = ">=2.1" },
     { name = "pydantic", specifier = ">=2.12.5" },
-    { name = "pytest", specifier = ">=9.0.2" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "ruff", specifier = ">=0.15.2" }]
+dev = [
+    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "ruff", specifier = ">=0.15.2" },
+]
 docs = [{ name = "zensical", specifier = ">=0.0.39" }]
 
 [[package]]

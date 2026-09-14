@@ -56,7 +56,7 @@ class TestReadJson:
         expected = [PlotText.get_empy_text(), PlotText.get_empy_text()]
         assert missing_file.exists()
         assert text.subplots_text == expected
-        assert missing_file.read_text() == dumps([subplot.to_dict() for subplot in expected])
+        assert missing_file.read_text() == dumps([subplot.to_dict() for subplot in expected], indent=2)
 
     @pytest.mark.parametrize(
         "payload",

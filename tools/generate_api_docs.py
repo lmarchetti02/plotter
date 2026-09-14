@@ -189,10 +189,19 @@ def format_docstring(docstring: str | None) -> str:
     return "\n".join(result).strip() + "\n"
 
 
+def is_public(name: str) -> bool:
+    """Whether `name` should appear in the generated docs (not underscore-prefixed)."""
+    return not name.startswith("_")
+
+
 def iter_documented_members(tree: ast.Module) -> list[ast.AST]:
     members: list[ast.AST] = []
     for node in tree.body:
-        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and ast.get_docstring(node):
+        if (
+            isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
+            and is_public(node.name)
+            and ast.get_docstring(node)
+        ):
             members.append(node)
     return members
 
@@ -201,7 +210,7 @@ def iter_documented_methods(node: ast.ClassDef) -> list[ast.FunctionDef | ast.As
     return [
         item
         for item in node.body
-        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and ast.get_docstring(item)
+        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and is_public(item.name) and ast.get_docstring(item)
     ]
 
 

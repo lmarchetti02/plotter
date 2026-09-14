@@ -20,19 +20,29 @@ class Hist(Drawable):
     Class for creating a 1D histogram.
 
     Attributes:
-        data (NArray1D[Any]): The array containing the data to plot.
+        data (NArray1D[Any]): The array containing the raw data to bin and plot. When
+            `nbins` is an array of bin edges (see below), `data` is instead expected to
+            already contain one pre-computed value per bin (i.e. `len(data)` must equal
+            `len(nbins) - 1`), and is drawn as-is via `matplotlib.axes.Axes.stairs`.
         nbins (int or NArray1D[Any] or "auto", optional): The number of bins of the histogram
             or the array containing the edges of the bins. Defaults to "auto".
             When `nbins` is an array of bin edges, the histogram is drawn with
-            `matplotlib.axes.Axes.stairs` instead of `matplotlib.axes.Axes.hist`.
+            `matplotlib.axes.Axes.stairs` instead of `matplotlib.axes.Axes.hist` -- in
+            that mode `density`/`cumulative` no longer apply (see below) since `data` is
+            already binned.
         density (bool, optional): If `True`, the histogram is normalized such that
-            the integral over the range is 1. Defaults to `False`.
+            the integral over the range is 1. Defaults to `False`. Only meaningful when
+            `nbins` is not an array of bin edges.
         cumulative (bool, optional): If `True`, the cumulative histogram is plotted.
-            Defaults to `False`.
+            Defaults to `False`. Only meaningful when `nbins` is not an array of bin edges.
         bin_vals (NArray1D[F64] or None): The array with the values corresponding to each bin.
             It has shape (N_bins,).
         bins (NArray1D[F64] or None): The array with the edges of each bin (flattened).
             It has shape (N_bins+1,).
+
+    Raises:
+        ValueError: If `density` or `cumulative` is `True` while `nbins` is an array of
+            bin edges, since `data` is then already binned and neither applies.
     """
 
     label_name: ClassVar[str] = "histograms"
@@ -44,6 +54,11 @@ class Hist(Drawable):
 
     bin_vals: NArray1D[F64] | None = Field(init=False, default=None)
     bins: NArray1D[F64] | None = Field(init=False, default=None)
+
+    def __post_init__(self) -> None:
+        is_pre_binned = not (isinstance(self.nbins, str) or np.isscalar(self.nbins))
+        if is_pre_binned and (self.density or self.cumulative):
+            raise ValueError("'density' and 'cumulative' don't apply when 'nbins' is an array of bin edges.")
 
     def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
@@ -192,7 +207,7 @@ class Hist2D(Drawable):
             bins=self.nbins,
             range=kwargs.get("bin_ranges", None),
             density=self.density,
-            cmap=kwargs.get("cmap", "plasma"),
+            cmap=kwargs.get("colormap", "plasma"),
             alpha=kwargs.get("alpha", 1),
             norm=normalization,
         )

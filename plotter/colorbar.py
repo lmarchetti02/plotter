@@ -326,78 +326,34 @@ def _make_colorbar_axes(
     size_frac = _parse_fraction(size)
     positions = [ax.get_position() for ax in axes]
     all_positions = [ax.get_position() for ax in all_axes]
-    x0 = min(p.x0 for p in positions)
-    y0 = min(p.y0 for p in positions)
-    x1 = max(p.x1 for p in positions)
-    y1 = max(p.y1 for p in positions)
     fig_width_in, fig_height_in = figure.get_size_inches()
 
-    if position in ("left", "right"):
-        requested_thickness = size_frac * (x1 - x0)
-        requested_shrink = requested_thickness + padding / fig_width_in
-        edge = x1 if position == "right" else x0
-        edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(p.x1 if position == "right" else p.x0, edge, abs_tol=1e-9)]
+    # "along_x" mirrors a "left"/"right" colorbar shrinking Axes along x (their own
+    # width, matching height across the group) against a "top"/"bottom" one shrinking
+    # along y (height, matching width) -- every step below picks whichever of the two
+    # matching (x, width, fig_width_in) / (y, height, fig_height_in) triples applies.
+    along_x = position in ("left", "right")
+    fig_size_in = fig_width_in if along_x else fig_height_in
 
-        existing = max(
-            (r for ax, _ in edge_axes if (r := _get_reservation(ax, position)) is not None), key=lambda r: r["shrink"], default=None
-        )
-        existing_shrink = existing["shrink"] if existing else 0.0
-        existing_thickness = existing["thickness"] if existing else 0.0
-        existing_caxes = existing["caxes"] if existing else []
-        outer_edge = existing["edge"] if existing else edge
+    if along_x:
+        group_lo = min(p.x0 for p in positions)
+        group_hi = max(p.x1 for p in positions)
+    else:
+        group_lo = min(p.y0 for p in positions)
+        group_hi = max(p.y1 for p in positions)
 
-        final_thickness = max(requested_thickness, existing_thickness)
-        final_shrink = max(requested_shrink, existing_shrink)
-        incremental = final_shrink - existing_shrink
+    requested_thickness = size_frac * (group_hi - group_lo)
+    requested_shrink = requested_thickness + padding / fig_size_in
+    edge = group_hi if position in ("right", "top") else group_lo
 
-        for ax, _ in edge_axes:
-            # a ZoomInset's Axes has a locator (from inset_axes()) that recomputes its
-            # position on every render, overriding set_position() below -- clear it first
-            ax.set_axes_locator(None)
-        margin = max((_decoration_margin(ax, figure, position, p) for ax, p in edge_axes), default=0.0)
+    def _primary_edge(p: Bbox) -> float:
+        if along_x:
+            return p.x1 if position == "right" else p.x0
+        return p.y1 if position == "top" else p.y0
 
-        siblings: list[Axes] = []
-        if incremental > 1e-9:
-            for ax, p in edge_axes:
-                new_x0 = p.x0 if position == "right" else p.x0 + incremental
-                ax.set_position([new_x0, p.y0, p.width - incremental, p.height])
+    edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(_primary_edge(p), edge, abs_tol=1e-9)]
 
-            # a fixed-aspect edge Axes (e.g. Image's default aspect="equal") may have
-            # just shrunk its height too, to keep the data square within the narrower
-            # box -- propagate that to the rest of the group so it stays visually
-            # uniform, then match the colorbar to the actual final size, not the
-            # pre-shrink one
-            edge_ax_set = {ax for ax, _ in edge_axes}
-            final_height = max(ax.get_position().height for ax in edge_ax_set)
-            _resize_others_to_match(axes, positions, edge_ax_set, final_height, position, vertical=True)
-
-            # keep the rest of the canvas's grid aligned with this now-narrower group,
-            # so a colorbar on only one row doesn't leave the others too wide
-            siblings = _realign_grid_siblings(all_axes, all_positions, axes, positions, position)
-
-        final_y0 = min(ax.get_position().y0 for ax in axes)
-        final_y1 = max(ax.get_position().y1 for ax in axes)
-
-        cax_x0 = outer_edge + margin - final_thickness if position == "right" else outer_edge - margin
-        new_cax = figure.add_axes([cax_x0, final_y0, final_thickness, final_y1 - final_y0])
-
-        if final_thickness > existing_thickness + 1e-9:
-            for old_cax in existing_caxes:
-                _grow_existing_cax(old_cax, position, final_thickness)
-        all_caxes = [*existing_caxes, new_cax]
-        for ax in [*axes, *siblings]:
-            _stamp_reservation(ax, position, outer_edge, final_shrink, final_thickness, all_caxes)
-
-        return new_cax
-
-    requested_thickness = size_frac * (y1 - y0)
-    requested_shrink = requested_thickness + padding / fig_height_in
-    edge = y1 if position == "top" else y0
-    edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(p.y1 if position == "top" else p.y0, edge, abs_tol=1e-9)]
-
-    existing = max(
-        (r for ax, _ in edge_axes if (r := _get_reservation(ax, position)) is not None), key=lambda r: r["shrink"], default=None
-    )
+    existing = max((r for ax, _ in edge_axes if (r := _get_reservation(ax, position)) is not None), key=lambda r: r["shrink"], default=None)
     existing_shrink = existing["shrink"] if existing else 0.0
     existing_thickness = existing["thickness"] if existing else 0.0
     existing_caxes = existing["caxes"] if existing else []
@@ -408,28 +364,43 @@ def _make_colorbar_axes(
     incremental = final_shrink - existing_shrink
 
     for ax, _ in edge_axes:
+        # a ZoomInset's Axes has a locator (from inset_axes()) that recomputes its
+        # position on every render, overriding set_position() below -- clear it first
         ax.set_axes_locator(None)
     margin = max((_decoration_margin(ax, figure, position, p) for ax, p in edge_axes), default=0.0)
 
-    siblings = []
+    siblings: list[Axes] = []
     if incremental > 1e-9:
         for ax, p in edge_axes:
-            new_y0 = p.y0 if position == "top" else p.y0 + incremental
-            ax.set_position([p.x0, new_y0, p.width, p.height - incremental])
+            if along_x:
+                new_x0 = p.x0 if position == "right" else p.x0 + incremental
+                ax.set_position([new_x0, p.y0, p.width - incremental, p.height])
+            else:
+                new_y0 = p.y0 if position == "top" else p.y0 + incremental
+                ax.set_position([p.x0, new_y0, p.width, p.height - incremental])
 
+        # a fixed-aspect edge Axes (e.g. Image's default aspect="equal") may have just
+        # shrunk its cross dimension too, to keep the data square within the narrower
+        # box -- propagate that to the rest of the group so it stays visually uniform,
+        # then match the colorbar to the actual final size, not the pre-shrink one
         edge_ax_set = {ax for ax, _ in edge_axes}
-        final_width = max(ax.get_position().width for ax in edge_ax_set)
-        _resize_others_to_match(axes, positions, edge_ax_set, final_width, position, vertical=False)
+        final_cross = max((ax.get_position().height if along_x else ax.get_position().width) for ax in edge_ax_set)
+        _resize_others_to_match(axes, positions, edge_ax_set, final_cross, position, vertical=along_x)
 
-        # keep the rest of the canvas's grid aligned with this now-shorter group, so a
-        # colorbar on only one column doesn't leave the others too tall
+        # keep the rest of the canvas's grid aligned with this now-shrunk group, so a
+        # colorbar on only one row/column doesn't leave the others too wide/tall
         siblings = _realign_grid_siblings(all_axes, all_positions, axes, positions, position)
 
-    final_x0 = min(ax.get_position().x0 for ax in axes)
-    final_x1 = max(ax.get_position().x1 for ax in axes)
-
-    cax_y0 = outer_edge + margin - final_thickness if position == "top" else outer_edge - margin
-    new_cax = figure.add_axes([final_x0, cax_y0, final_x1 - final_x0, final_thickness])
+    if along_x:
+        final_cross_lo = min(ax.get_position().y0 for ax in axes)
+        final_cross_hi = max(ax.get_position().y1 for ax in axes)
+        cax_x0 = outer_edge + margin - final_thickness if position == "right" else outer_edge - margin
+        new_cax = figure.add_axes([cax_x0, final_cross_lo, final_thickness, final_cross_hi - final_cross_lo])
+    else:
+        final_cross_lo = min(ax.get_position().x0 for ax in axes)
+        final_cross_hi = max(ax.get_position().x1 for ax in axes)
+        cax_y0 = outer_edge + margin - final_thickness if position == "top" else outer_edge - margin
+        new_cax = figure.add_axes([final_cross_lo, cax_y0, final_cross_hi - final_cross_lo, final_thickness])
 
     if final_thickness > existing_thickness + 1e-9:
         for old_cax in existing_caxes:

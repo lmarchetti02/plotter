@@ -54,29 +54,3 @@ Draws the image on the canvas.
 | `aspect` | str | The aspect ratio of the axes. `equal` for squared pixels, `auto` for a squared image. Defaults to "equal". |
 | `origin` | str | The placement of the \[0,0\] element of the data. `upper` for the top-left, `lower` for the bottom-left. Defaults to "upper". |
 | `limits` | list\[float\] | The limits of the x and y axes in the format `\[left, right, bottom, top\]`. Defaults to `None`. When drawing into a `ZoomInset` with `limits` left as `None`, `data` is instead expected to be the same full-resolution array shown on the source subplot: it gets automatically cropped and placed to match the panel's requested region. |
-
-
-#### `crop_to_view`
-
-```python
-_crop_to_view(data: NArray2D[Any] | NArray3D[Any], axes: Axes) -> tuple[NArray2D[Any] | NArray3D[Any], tuple[float, float, float, float]]
-```
-
-Crops image data to an Axes' current view window.
-
-Only ever slices the first two axes (rows, columns): a 3D array's channel
-axis (RGB or RGBA) is left untouched and carried through unchanged.
-
-
-**Args:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `data` | NArray2D\[Any\] \| NArray3D\[Any\] | The full-resolution image data to crop. |
-| `axes` | Axes | The Axes whose current `xlim`/`ylim` define the region to keep. |
-
-**Returns:**
-
-| Type | Description |
-| --- | --- |
-| tuple\[NArray2D\[Any\] \| NArray3D\[Any\], tuple\[float, float, float, float\]\] | The cropped data, and the `extent` (left, right, bottom, top) to draw it at so it exactly matches `axes`' current view, orientation included. |

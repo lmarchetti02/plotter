@@ -1,159 +1,5 @@
 # `plotter.canvas`
 
-## function `_oriented_limits`
-
-```python
-_oriented_limits(limits: tuple[float, float], reference: tuple[float, float]) -> tuple[float, float]
-```
-
-Orders `limits` to increase or decrease like `reference` does.
-
-Matplotlib inverts an Axes' limits (e.g. `imshow`'s default `origin="upper"`
-leaves the y-axis decreasing) to control which direction is "up" on screen;
-this keeps a newly-set pair of limits visually consistent with that.
-
-
-**Args:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `limits` | tuple\[float, float\] | The limits to order, in either direction. |
-| `reference` | tuple\[float, float\] | The existing limits whose direction to match. |
-
-**Returns:**
-
-| Type | Description |
-| --- | --- |
-| tuple\[float, float\] | `limits`, sorted to match `reference`'s direction. |
-
-
-## function `_reoriented_loc`
-
-```python
-_reoriented_loc(loc: int, x_inverted: bool, y_inverted: bool) -> int
-```
-
-Remaps a `mark_inset` corner code so it keeps pointing at the same visual corner
-when the Axes it refers to has an inverted x- and/or y-axis.
-
-`mark_inset`'s corner codes are defined in terms of an Axes' raw (x0,y0)-(x1,y1)
-limits, which only match their documented visual meaning (e.g. 1=upper right) when
-both axes increase left-to-right/bottom-to-top; an inverted axis flips that.
-
-
-**Args:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `loc` | int | The requested corner (1-4, matplotlib's convention). |
-| `x_inverted` | bool | Whether the Axes' x-axis decreases instead of increasing. |
-| `y_inverted` | bool | Whether the Axes' y-axis decreases instead of increasing. |
-
-**Returns:**
-
-| Type | Description |
-| --- | --- |
-| - | The corner code to pass to `mark_inset` to get the same visual corner. |
-
-
-## function `_draw_zoom_indicator`
-
-```python
-_draw_zoom_indicator(parent_axes: Axes, inset_axes: Axes, loc1: int, loc2: int, x_inverted: bool, y_inverted: bool, **kwargs) -> None
-```
-
-Draws a rectangle around an inset's region on its source subplot, connected to the
-inset panel by two lines.
-
-Behaves like `mpl_toolkits.axes_grid1.inset_locator.mark_inset`, except the two ends
-of each connector line can use different corner codes: `inset_axes`'s own on-screen
-box is never inverted, but the rectangle (`inset_axes.viewLim` transformed into the
-parent's data space) is, whenever `inset_axes`'s axes are — so only the rectangle's
-corner codes are remapped (via `_reoriented_loc`) to keep pointing at the same visual
-corner; `mark_inset` itself has no way to do this since it applies one corner code to
-both ends.
-
-
-**Args:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `parent_axes` | Axes | The source subplot to draw the rectangle on. |
-| `inset_axes` | Axes | The inset panel the rectangle is connected to. |
-| `loc1` | int | The corner connected by the first line (matplotlib corner codes, 1-4: upper right, upper left, lower left, lower right). |
-| `loc2` | int | The corner connected by the second line. |
-| `x_inverted` | bool | Whether `inset_axes`'s x-axis decreases instead of increasing. |
-| `y_inverted` | bool | Whether `inset_axes`'s y-axis decreases instead of increasing. |
-
-**Keyword Arguments:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `` | - | Patch properties (e.g. `ec`, `fc`) for the rectangle and connector lines. |
-
-
-## function `_configure_axes`
-
-```python
-_configure_axes(axes: Axes, text: PlotText, **kwargs) -> None
-```
-
-Applies grid, limits, scale, inversion, labels, and title to a single `Axes`.
-
-
-**Args:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `axes` | Axes | The Axes object to configure. |
-| `text` | PlotText | The title and axis labels to apply. |
-
-**Keyword Arguments:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `` | - | See `Canvas.setup`. |
-
-
-## class `_Counters`
-
-Container class to store the counters of the `Canvas`.
-
-These counters keep track of the number of objects that have
-to be drawn on each subplot. This way, each time an object
-calls its `draw` function, the label corresponding to said
-object can be retrieved and drawn.
-
-
-### Methods
-
-#### `getattr`
-
-```python
-__getattr__(self, name: str) -> list[int]
-```
-
-Returns the counters associated with a drawable family.
-
-
-#### `is_empty`
-
-```python
-is_empty(self) -> bool
-```
-
-Checks if there is any label that should be displayed.
-
-
-#### `initialize_counters`
-
-```python
-initialize_counters(cls, n_plots: int) -> '_Counters'
-```
-
-Initializes an object filled with zeros.
-
-
 ## class `ZoomInset`
 
 A single zoomed-in inset panel returned by `Canvas.add_zoom_inset`.
@@ -183,15 +29,6 @@ available on it — use `inset.axes\[0\]` directly for those.
 - `counters: _Counters`
 
 ### Methods
-
-#### `post_init`
-
-```python
-__post_init__(self) -> None
-```
-
-Initializes the blank text and zeroed counters for the panel.
-
 
 #### `setup`
 
@@ -254,33 +91,6 @@ Class for creating an empty canvas (xy-plane).
 - `_loc_legend: list[int]`
 
 ### Methods
-
-#### `post_init`
-
-```python
-__post_init__(self) -> None
-```
-
-Initializes the necessary attributes.
-
-
-#### `enter`
-
-```python
-__enter__(self)
-```
-
-Defines what happens when the user enters a 'Canvas' context.
-
-
-#### `exit`
-
-```python
-__exit__(self, exc_type, exc_val, exc_tb)
-```
-
-Defines what happens when the user exits a 'Canvas' context.
-
 
 #### `plot_indices`
 
@@ -569,32 +379,6 @@ Adds a scalebar (and, thus, removes the axis labels).
 #### `add_zoom_inset`
 
 ```python
-_add_zoom_inset(self, xlim: tuple[float, float], ylim: tuple[float, float], plot_i: int, **kwargs) -> ZoomInset
-```
-
-Adds a single zoomed-in inset panel for one subplot.
-
-See `add_zoom_inset` for the meaning of the arguments and keyword arguments.
-
-
-**Args:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `xlim` | tuple\[float, float\] | The x-axis limits of the region to zoom into. |
-| `ylim` | tuple\[float, float\] | The y-axis limits of the region to zoom into. |
-| `plot_i` | int | The index of the subplot to zoom into. |
-
-**Returns:**
-
-| Type | Description |
-| --- | --- |
-| - | The panel to draw the zoomed-in content into. |
-
-
-#### `add_zoom_inset`
-
-```python
 add_zoom_inset(self, xlim: tuple[float, float], ylim: tuple[float, float], plot_n: PlotN=0, **kwargs) -> ZoomInset | list[ZoomInset]
 ```
 
@@ -637,22 +421,3 @@ via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
 | Type | Description |
 | --- | --- |
 | ValueError | If 'plot_n' is not a valid value. |
-
-
-#### `legend`
-
-```python
-_legend(self) -> None
-```
-
-This function generates the plot legend.
-
-
-#### `save`
-
-```python
-_save(self) -> None
-```
-
-If specified by the user, this function saves
-the plot that has been generated to a file.

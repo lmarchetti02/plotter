@@ -9,12 +9,18 @@ Class for creating a 1D histogram.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `data` | NArray1D\[Any\] | The array containing the data to plot. |
-| `nbins` | int or NArray1D\[Any\] or "auto", optional | The number of bins of the histogram or the array containing the edges of the bins. Defaults to "auto". When `nbins` is an array of bin edges, the histogram is drawn with `matplotlib.axes.Axes.stairs` instead of `matplotlib.axes.Axes.hist`. |
-| `density` | bool, optional | If `True`, the histogram is normalized such that the integral over the range is 1. Defaults to `False`. |
-| `cumulative` | bool, optional | If `True`, the cumulative histogram is plotted. Defaults to `False`. |
+| `data` | NArray1D\[Any\] | The array containing the raw data to bin and plot. When `nbins` is an array of bin edges (see below), `data` is instead expected to already contain one pre-computed value per bin (i.e. `len(data)` must equal `len(nbins) - 1`), and is drawn as-is via `matplotlib.axes.Axes.stairs`. |
+| `nbins` | int or NArray1D\[Any\] or "auto", optional | The number of bins of the histogram or the array containing the edges of the bins. Defaults to "auto". When `nbins` is an array of bin edges, the histogram is drawn with `matplotlib.axes.Axes.stairs` instead of `matplotlib.axes.Axes.hist` -- in that mode `density`/`cumulative` no longer apply (see below) since `data` is already binned. |
+| `density` | bool, optional | If `True`, the histogram is normalized such that the integral over the range is 1. Defaults to `False`. Only meaningful when `nbins` is not an array of bin edges. |
+| `cumulative` | bool, optional | If `True`, the cumulative histogram is plotted. Defaults to `False`. Only meaningful when `nbins` is not an array of bin edges. |
 | `bin_vals` | NArray1D\[F64\] or None | The array with the values corresponding to each bin. It has shape (N_bins,). |
 | `bins` | NArray1D\[F64\] or None | The array with the edges of each bin (flattened). It has shape (N_bins+1,). |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `density` or `cumulative` is `True` while `nbins` is an array of bin edges, since `data` is then already binned and neither applies. |
 
 
 **Defined attributes:**
