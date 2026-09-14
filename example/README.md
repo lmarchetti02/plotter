@@ -4,7 +4,8 @@ Runnable scripts showing how to use Plotter in practice, as a companion to the
 [Quickstart](../docs/quickstart.md) and the [API reference](../docs/api/index.md).
 
 - `basic_plot.py`: the core `Canvas` / `Drawable` workflow -- `ScatterPlot`, `LinePlot`,
-  `BarChart`, and `Hist`, with titles and legend labels driven by a JSON text file.
+  `BarChart`, `RawHist`, and `BinnedHist`, with titles and legend labels driven by a JSON
+  text file.
 - `images_and_colorbars.py`: `Hist2D` and `Image`, an explicit `Colorbar` for each, and a
   zoom inset via `Canvas.add_zoom_inset`.
 

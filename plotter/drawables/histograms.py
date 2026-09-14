@@ -2,7 +2,6 @@ from logging import getLogger
 from typing import Any, ClassVar
 
 import matplotlib.colors as colors
-import numpy as np
 from matplotlib.collections import QuadMesh
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
@@ -15,34 +14,23 @@ logger = getLogger(__name__)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
-class Hist(Drawable):
+class RawHist(Drawable):
     """
-    Class for creating a 1D histogram.
+    Class for creating a 1D histogram from raw sample data.
 
     Attributes:
-        data (NArray1D[Any]): The array containing the raw data to bin and plot. When
-            `nbins` is an array of bin edges (see below), `data` is instead expected to
-            already contain one pre-computed value per bin (i.e. `len(data)` must equal
-            `len(nbins) - 1`), and is drawn as-is via `matplotlib.axes.Axes.stairs`.
-        nbins (int or NArray1D[Any] or "auto", optional): The number of bins of the histogram
-            or the array containing the edges of the bins. Defaults to "auto".
-            When `nbins` is an array of bin edges, the histogram is drawn with
-            `matplotlib.axes.Axes.stairs` instead of `matplotlib.axes.Axes.hist` -- in
-            that mode `density`/`cumulative` no longer apply (see below) since `data` is
-            already binned.
+        data (NArray1D[Any]): The array containing the raw data to bin and plot.
+        nbins (int or NArray1D[Any] or "auto", optional): The number of bins of the histogram,
+            or the array containing the edges of the bins (matplotlib's own convention for
+            `Axes.hist`'s `bins` argument). Defaults to "auto".
         density (bool, optional): If `True`, the histogram is normalized such that
-            the integral over the range is 1. Defaults to `False`. Only meaningful when
-            `nbins` is not an array of bin edges.
+            the integral over the range is 1. Defaults to `False`.
         cumulative (bool, optional): If `True`, the cumulative histogram is plotted.
-            Defaults to `False`. Only meaningful when `nbins` is not an array of bin edges.
+            Defaults to `False`.
         bin_vals (NArray1D[F64] or None): The array with the values corresponding to each bin.
             It has shape (N_bins,).
         bins (NArray1D[F64] or None): The array with the edges of each bin (flattened).
             It has shape (N_bins+1,).
-
-    Raises:
-        ValueError: If `density` or `cumulative` is `True` while `nbins` is an array of
-            bin edges, since `data` is then already binned and neither applies.
     """
 
     label_name: ClassVar[str] = "histograms"
@@ -54,11 +42,6 @@ class Hist(Drawable):
 
     bin_vals: NArray1D[F64] | None = Field(init=False, default=None)
     bins: NArray1D[F64] | None = Field(init=False, default=None)
-
-    def __post_init__(self) -> None:
-        is_pre_binned = not (isinstance(self.nbins, str) or np.isscalar(self.nbins))
-        if is_pre_binned and (self.density or self.cumulative):
-            raise ValueError("'density' and 'cumulative' don't apply when 'nbins' is an array of bin edges.")
 
     def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
@@ -85,7 +68,7 @@ class Hist(Drawable):
                 else to 1.5.
         """
 
-        logger.info("Called 'Hist.draw()'")
+        logger.info("Called 'RawHist.draw()'")
 
         n, label = self._get_label(
             canvas,
@@ -98,35 +81,98 @@ class Hist(Drawable):
 
         filled = kwargs.get("filled", True)
 
-        if isinstance(self.nbins, str) or np.isscalar(self.nbins):
-            self.bin_vals, self.bins, _ = canvas.axes[plot_n].hist(  # type: ignore
-                self.data,
-                bins=self.nbins,  # type: ignore
-                range=kwargs.get("bin_ranges", None),
-                density=self.density,
-                cumulative=self.cumulative,
-                histtype="stepfilled" if filled else "step",
-                color=kwargs.get("color", "royalblue"),
-                alpha=kwargs.get("alpha", 0.8),
-                label=label,
-                edgecolor=kwargs.get("ecolor", "cornflowerblue"),
-                lw=kwargs.get("lw", 0 if filled else 1.5),
-            )
-        else:
-            self.bin_vals = self.data  # type: ignore
-            self.bins = self.nbins  # type: ignore
-            canvas.axes[plot_n].stairs(
-                self.data,
-                self.nbins,
-                baseline=0,
-                fill=filled,
-                color=kwargs.get("color", "royalblue"),
-                alpha=kwargs.get("alpha", 0.8),
-                label=label,
-                edgecolor=kwargs.get("ecolor", "cornflowerblue"),
-                linewidth=kwargs.get("lw", 0 if filled else 1.5),
-            )
-        logger.debug(f"Hist {n} drawn")
+        self.bin_vals, self.bins, _ = canvas.axes[plot_n].hist(  # type: ignore
+            self.data,
+            bins=self.nbins,  # type: ignore
+            range=kwargs.get("bin_ranges", None),
+            density=self.density,
+            cumulative=self.cumulative,
+            histtype="stepfilled" if filled else "step",
+            color=kwargs.get("color", "royalblue"),
+            alpha=kwargs.get("alpha", 0.8),
+            label=label,
+            edgecolor=kwargs.get("ecolor", "cornflowerblue"),
+            lw=kwargs.get("lw", 0 if filled else 1.5),
+        )
+        logger.debug(f"RawHist {n} drawn")
+
+        getattr(canvas.counters, self.label_name)[plot_n] += 1
+
+
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
+class BinnedHist(Drawable):
+    """
+    Class for creating a 1D histogram from already pre-computed bin values.
+
+    Unlike `RawHist`, `bin_vals` and `bins` are the values to display directly, drawn as-is via
+    `matplotlib.axes.Axes.stairs` -- no binning of raw samples takes place.
+
+    Attributes:
+        bin_vals (NArray1D[Any]): The array with the value of each bin. It has shape (N_bins,).
+        bins (NArray1D[Any]): The array with the edges of each bin (flattened).
+            It has shape (N_bins+1,).
+
+    Raises:
+        ValueError: If `len(bin_vals)` doesn't equal `len(bins) - 1`.
+    """
+
+    label_name: ClassVar[str] = "histograms"
+
+    bin_vals: NArray1D[Any]
+    bins: NArray1D[Any]
+
+    def __post_init__(self) -> None:
+        if len(self.bin_vals) != len(self.bins) - 1:
+            raise ValueError("'bin_vals' must have exactly one fewer element than 'bins'.")
+
+    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+        """
+        Draws the histogram on the canvas.
+
+        Args:
+            canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw the histogram on.
+            plot_n (int, optional): The index of the subplot to draw on.
+                Defaults to 0.
+            label (str, optional): The label for the histogram in the legend.
+                Defaults to `None`.
+
+        Keyword Arguments:
+            color (str): The Matplotlib color of the histogram.
+                Defaults to "royalblue".
+            alpha (float): The transparency of the histogram.
+                Defaults to 0.8.
+            filled (bool): If `True`, the histogram is filled.
+                Defaults to `True`.
+            ecolor (str): The color of the histogram edges. Defaults to `"cornflowerblue"`.
+            lw (float): The width of the histogram edges. Defaults to 0 if filled is `True`,
+                else to 1.5.
+        """
+
+        logger.info("Called 'BinnedHist.draw()'")
+
+        n, label = self._get_label(
+            canvas,
+            plot_n,
+            label,
+            self.label_name,
+            logger,
+            "No label for the histogram in the json file.",
+        )
+
+        filled = kwargs.get("filled", True)
+
+        canvas.axes[plot_n].stairs(
+            self.bin_vals,
+            self.bins,
+            baseline=0,
+            fill=filled,
+            color=kwargs.get("color", "royalblue"),
+            alpha=kwargs.get("alpha", 0.8),
+            label=label,
+            edgecolor=kwargs.get("ecolor", "cornflowerblue"),
+            linewidth=kwargs.get("lw", 0 if filled else 1.5),
+        )
+        logger.debug(f"BinnedHist {n} drawn")
 
         getattr(canvas.counters, self.label_name)[plot_n] += 1
 

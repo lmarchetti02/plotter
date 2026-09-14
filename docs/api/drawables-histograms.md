@@ -1,26 +1,20 @@
 # `plotter.drawables.histograms`
 
-## class `Hist(Drawable)`
+## class `RawHist(Drawable)`
 
-Class for creating a 1D histogram.
+Class for creating a 1D histogram from raw sample data.
 
 
 **Attributes:**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `data` | NArray1D\[Any\] | The array containing the raw data to bin and plot. When `nbins` is an array of bin edges (see below), `data` is instead expected to already contain one pre-computed value per bin (i.e. `len(data)` must equal `len(nbins) - 1`), and is drawn as-is via `matplotlib.axes.Axes.stairs`. |
-| `nbins` | int or NArray1D\[Any\] or "auto", optional | The number of bins of the histogram or the array containing the edges of the bins. Defaults to "auto". When `nbins` is an array of bin edges, the histogram is drawn with `matplotlib.axes.Axes.stairs` instead of `matplotlib.axes.Axes.hist` -- in that mode `density`/`cumulative` no longer apply (see below) since `data` is already binned. |
-| `density` | bool, optional | If `True`, the histogram is normalized such that the integral over the range is 1. Defaults to `False`. Only meaningful when `nbins` is not an array of bin edges. |
-| `cumulative` | bool, optional | If `True`, the cumulative histogram is plotted. Defaults to `False`. Only meaningful when `nbins` is not an array of bin edges. |
+| `data` | NArray1D\[Any\] | The array containing the raw data to bin and plot. |
+| `nbins` | int or NArray1D\[Any\] or "auto", optional | The number of bins of the histogram, or the array containing the edges of the bins (matplotlib's own convention for `Axes.hist`'s `bins` argument). Defaults to "auto". |
+| `density` | bool, optional | If `True`, the histogram is normalized such that the integral over the range is 1. Defaults to `False`. |
+| `cumulative` | bool, optional | If `True`, the cumulative histogram is plotted. Defaults to `False`. |
 | `bin_vals` | NArray1D\[F64\] or None | The array with the values corresponding to each bin. It has shape (N_bins,). |
 | `bins` | NArray1D\[F64\] or None | The array with the edges of each bin (flattened). It has shape (N_bins+1,). |
-
-**Raises:**
-
-| Type | Description |
-| --- | --- |
-| ValueError | If `density` or `cumulative` is `True` while `nbins` is an array of bin edges, since `data` is then already binned and neither applies. |
 
 
 **Defined attributes:**
@@ -57,6 +51,64 @@ Draws the histogram on the canvas.
 | Name | Type | Description |
 | --- | --- | --- |
 | `bin_ranges` | tuple\[float,float\] | The tuple with the left and right limits of the bins. Defaults to `None`, which means (data.min(), data.max()). |
+| `color` | str | The Matplotlib color of the histogram. Defaults to "royalblue". |
+| `alpha` | float | The transparency of the histogram. Defaults to 0.8. |
+| `filled` | bool | If `True`, the histogram is filled. Defaults to `True`. |
+| `ecolor` | str | The color of the histogram edges. Defaults to `"cornflowerblue"`. |
+| `lw` | float | The width of the histogram edges. Defaults to 0 if filled is `True`, else to 1.5. |
+
+
+## class `BinnedHist(Drawable)`
+
+Class for creating a 1D histogram from already pre-computed bin values.
+
+Unlike `RawHist`, `bin_vals` and `bins` are the values to display directly, drawn as-is via
+`matplotlib.axes.Axes.stairs` -- no binning of raw samples takes place.
+
+
+**Attributes:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `bin_vals` | NArray1D\[Any\] | The array with the value of each bin. It has shape (N_bins,). |
+| `bins` | NArray1D\[Any\] | The array with the edges of each bin (flattened). It has shape (N_bins+1,). |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `len(bin_vals)` doesn't equal `len(bins) - 1`. |
+
+
+**Defined attributes:**
+
+- `label_name: ClassVar[str]`
+- `bin_vals: NArray1D[Any]`
+- `bins: NArray1D[Any]`
+
+### Methods
+
+#### `draw`
+
+```python
+draw(self, canvas: Canvas | ZoomInset, plot_n: int=0, label: str | None=None, **kwargs) -> None
+```
+
+Draws the histogram on the canvas.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) to draw the histogram on. |
+| `plot_n` | int, optional | The index of the subplot to draw on. Defaults to 0. |
+| `label` | str, optional | The label for the histogram in the legend. Defaults to `None`. |
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
 | `color` | str | The Matplotlib color of the histogram. Defaults to "royalblue". |
 | `alpha` | float | The transparency of the histogram. Defaults to 0.8. |
 | `filled` | bool | If `True`, the histogram is filled. Defaults to `True`. |

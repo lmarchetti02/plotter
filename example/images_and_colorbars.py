@@ -1,6 +1,6 @@
 """Runnable example of Hist2D/Image, explicit Colorbars, and a zoom inset.
 
-Unlike ScatterPlot/LinePlot/BarChart/Hist, `Hist2D` and `Image` don't take a
+Unlike ScatterPlot/LinePlot/BarChart/RawHist/BinnedHist, `Hist2D` and `Image` don't take a
 `label` and aren't driven by the JSON text file's label lists -- their color
 mapping is instead exposed through a `Colorbar`, drawn explicitly. This also
 shows `Canvas.add_zoom_inset`, which returns a panel that any `Drawable` can

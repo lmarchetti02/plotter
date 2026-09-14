@@ -8,8 +8,8 @@ from unittest.mock import patch
 import plotter as plt
 
 
-class TestHistDraw:
-    """Tests for `Hist.draw`."""
+class TestRawHistDraw:
+    """Tests for `RawHist.draw`."""
 
     def test_populates_bin_information_and_uses_canvas_label(self, single_text_file, show_plots) -> None:
         """A histogram draw call should store computed bins and increment the subplot counter."""
@@ -18,7 +18,7 @@ class TestHistDraw:
 
         with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
             canvas.setup()
-            hist = plt.Hist(data, nbins=15, density=True)
+            hist = plt.RawHist(data, nbins=15, density=True)
 
             hist.draw(canvas)
 
@@ -29,14 +29,18 @@ class TestHistDraw:
             assert canvas.counters.histograms[0] == 1
             assert canvas.axes[0].patches[0].get_label() == "hist"
 
-    def test_uses_stairs_for_pre_binned_input(self, single_text_file, show_plots) -> None:
-        """A histogram with explicit bin edges should draw through stairs."""
+
+class TestBinnedHistDraw:
+    """Tests for `BinnedHist.draw`."""
+
+    def test_draws_pre_binned_values_via_stairs(self, single_text_file, show_plots) -> None:
+        """A pre-binned histogram should draw through stairs, using the given values as-is."""
         bin_vals = np.array([2.0, 4.0, 3.0])
         bins = np.array([0.0, 1.0, 2.0, 3.0])
 
         with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
             canvas.setup()
-            hist = plt.Hist(bin_vals, nbins=bins)
+            hist = plt.BinnedHist(bin_vals, bins)
 
             axes_type = type(canvas.axes[0])
             with patch.object(axes_type, "hist", autospec=True) as hist_mock, patch.object(
@@ -55,6 +59,11 @@ class TestHistDraw:
             assert hist.bin_vals is bin_vals
             assert hist.bins is bins
             assert canvas.counters.histograms[0] == 1
+
+    def test_rejects_mismatched_bin_vals_and_bins_lengths(self) -> None:
+        """`bin_vals` must have exactly one fewer element than `bins`."""
+        with pytest.raises(ValueError, match="one fewer element"):
+            plt.BinnedHist(np.array([2.0, 4.0, 3.0]), np.array([0.0, 1.0, 2.0]))
 
 
 class TestHist2DDraw:

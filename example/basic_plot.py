@@ -1,8 +1,9 @@
 """Runnable example of the core Canvas / Drawable workflow.
 
-Draws a row of three subplots -- a ScatterPlot with an overlaid LinePlot fit, a
-BarChart, and a Hist -- driven by a JSON text file for the titles/axis labels/
-legend labels, mirroring how a real project would use the library.
+Draws a row of four subplots -- a ScatterPlot with an overlaid LinePlot fit, a
+BarChart, a RawHist, and a BinnedHist -- driven by a JSON text file for the
+titles/axis labels/legend labels, mirroring how a real project would use the
+library.
 
 Run from anywhere:
 
@@ -59,6 +60,12 @@ def main() -> None:
             "y_label": "density",
             "histograms": ["residuals"],
         },
+        {
+            "title": "Pre-binned histogram",
+            "x_label": "residual",
+            "y_label": "count",
+            "histograms": ["binned"],
+        },
     ]
     Path("plotter/text/basic_plot.json").write_text(dumps(text))
 
@@ -70,7 +77,10 @@ def main() -> None:
     categories = np.array([0.0, 1.0, 2.0, 3.0])
     heights = np.array([2.0, 5.0, 3.0, 4.0])
 
-    with p.Canvas("basic_plot.json", rows_cols=(1, 3), save="basic_plot.png", show=False) as canvas:
+    bin_vals = np.array([3.0, 8.0, 15.0, 9.0, 4.0])
+    bins = np.array([-3.0, -1.8, -0.6, 0.6, 1.8, 3.0])
+
+    with p.Canvas("basic_plot.json", rows_cols=(1, 4), save="basic_plot.png", show=False) as canvas:
         canvas.setup()
 
         p.ScatterPlot(x, y, yerr=1.5).draw(canvas, plot_n=0)
@@ -78,7 +88,9 @@ def main() -> None:
 
         p.BarChart(categories, heights).draw(canvas, plot_n=1)
 
-        p.Hist(residuals, nbins=12, density=True).draw(canvas, plot_n=2)
+        p.RawHist(residuals, nbins=12, density=True).draw(canvas, plot_n=2)
+
+        p.BinnedHist(bin_vals, bins).draw(canvas, plot_n=3)
 
 
 if __name__ == "__main__":

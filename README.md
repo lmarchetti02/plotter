@@ -11,7 +11,8 @@ familiar with the underlying plotting model.
 The current design revolves around:
 
 - a `Canvas` object, which owns the figure and axes and acts as a context manager;
-- drawable objects such as `ScatterPlot`, `LinePlot`, `BarChart`, `Hist`, `Hist2D`, and `Image`;
+- drawable objects such as `ScatterPlot`, `LinePlot`, `BarChart`, `RawHist`, `BinnedHist`,
+  `Hist2D`, and `Image`;
 - optional JSON text files used to populate titles, axis labels, and legend labels.
 
 ## Installation
@@ -100,7 +101,8 @@ with p.Canvas("example.json", rows_cols=(1, 2), show=False) as canvas:
 - `ScatterPlot`: scatter plots with optional x/y error bars.
 - `LinePlot`: function plots or explicit x/y line plots.
 - `BarChart`: bar charts with optional y-error bars.
-- `Hist`: one-dimensional histograms.
+- `RawHist`: one-dimensional histograms computed from raw sample data.
+- `BinnedHist`: one-dimensional histograms drawn from already pre-computed bin values.
 - `Hist2D`: two-dimensional histograms with colorbars.
 - `Image`: grayscale or RGB(A) image rendering.
 
