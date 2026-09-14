@@ -95,3 +95,16 @@ class TestDraw:
             assert_allclose(line.get_xdata(), y)  # type: ignore
             assert_allclose(line.get_ydata(), x)  # type: ignore
             assert line.get_label() == "line"
+
+    def test_alpha_defaults_to_opaque_and_is_overridable(self, single_text_file, show_plots) -> None:
+        """The line should be fully opaque unless an `alpha` kwarg is given."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([0.0, 1.0, 4.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plt.LinePlot(x, y).draw(canvas)
+            assert canvas.axes[0].lines[0].get_alpha() == 1.0
+
+            plt.LinePlot(x, y).draw(canvas, label="more line", alpha=0.3)
+            assert canvas.axes[0].lines[1].get_alpha() == pytest.approx(0.3)

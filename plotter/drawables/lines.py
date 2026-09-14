@@ -64,6 +64,7 @@ class LinePlot(Drawable):
             color (str): The Matplotlib color of the plot. Defaults to "darkgreen".
             lw (float): The line width. Defaults to 1.5.
             style (str): The line style. Defaults to `"-"`.
+            alpha (float): The opacity of the line. Defaults to 1.0.
             inverted (bool): If `True`, plots the inverse function.
                 Defaults to `False`.
         """
@@ -90,6 +91,7 @@ class LinePlot(Drawable):
             zorder=1,
             lw=kwargs.get("lw", 1.5),
             ls=kwargs.get("style", "-"),
+            alpha=kwargs.get("alpha", 1.0),
             label=label,
         )
         logger.debug(f"Plot {n} drawn")

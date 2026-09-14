@@ -48,3 +48,16 @@ class TestDraw:
             assert len(canvas.axes[0].lines) == 1
             _, labels = canvas.axes[0].get_legend_handles_labels()
             assert labels == ["data"]
+
+    def test_alpha_defaults_to_opaque_and_is_overridable(self, single_text_file, show_plots) -> None:
+        """The scatter points should be fully opaque unless an `alpha` kwarg is given."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([1.0, 1.5, 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plt.ScatterPlot(x, y).draw(canvas)
+            assert canvas.axes[0].lines[0].get_alpha() == 1.0
+
+            plt.ScatterPlot(x, y).draw(canvas, label="more data", alpha=0.4)
+            assert canvas.axes[0].lines[1].get_alpha() == pytest.approx(0.4)

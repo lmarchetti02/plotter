@@ -69,6 +69,7 @@ class ScatterPlot(Drawable):
             ms (float): The dimensions of the markers. Defaults to 4.
             err_width (float): The width of the error bars. Defaults to 1.
             ticks_size (float): The size of the ticks on the error bars. Defaults to 2.
+            alpha (float): The opacity of the points. Defaults to 1.0.
         """
 
         logger.info("Called 'ScatterPlot.draw()'")
@@ -95,6 +96,7 @@ class ScatterPlot(Drawable):
             zorder=2,  # layer
             ls="none",  # line size (none for disconnected dots)
             capsize=kwargs.get("ticks_size", 2.0),  # error bars ticks
+            alpha=kwargs.get("alpha", 1.0),
             label=label,
         )
         logger.debug(f"ScatterPlot {n} drawn")
