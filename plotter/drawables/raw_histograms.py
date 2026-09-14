@@ -1,7 +1,6 @@
 from logging import getLogger
 from typing import Any, ClassVar
 
-import matplotlib.colors as colors
 from matplotlib.collections import QuadMesh
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
@@ -9,6 +8,7 @@ from pydantic.dataclasses import dataclass
 from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
 from ..helpers import F64, NArray1D, NArray2D
+from ._normalization import resolve_log_normalization
 
 logger = getLogger(__name__)
 
@@ -159,15 +159,7 @@ class RawHist2D(Drawable):
 
         logger.info("Called 'RawHist2D.draw()'")
 
-        # get normalization
-        log = kwargs.get("log", (False, 0.0))
-        if log[0]:
-            if log[1]:
-                normalization = colors.SymLogNorm(log[1])
-            else:
-                normalization = colors.LogNorm()
-        else:
-            normalization = colors.Normalize()
+        normalization = resolve_log_normalization(kwargs.get("log", (False, 0.0)))
 
         self.bin_vals, self.xbins, self.ybins, self.mappable = canvas.axes[plot_n].hist2d(
             self.x,
