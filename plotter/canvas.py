@@ -564,6 +564,62 @@ class Canvas:
 
             self.axes[plot_i].annotate(text, xy=point, xytext=position, arrowprops=arrowprops, **text_kwargs)
 
+    def add_point(self, position: tuple[float, float], label: str | None = None, plot_n: PlotN = 0, **kwargs) -> None:
+        """
+        Draws a single point on the canvas, with an optional nearby label.
+
+        Args:
+            position (tuple[float, float]): The (x, y) position of the point, in data
+                coordinates.
+            label (str, optional): Text to draw next to the point, offset by a fixed
+                distance. Defaults to None (no label).
+            plot_n (PlotN, optional): The index or indices
+                of the subplots to draw on. Defaults to 0. Options:
+                - int: The index of a single plot (e.g., 0, 1).
+                - str: 'all' to target all plots.
+                - tuple[int, int]: A range of plots to target, from
+                    `inf` to `sup` (inclusive).
+
+        Keyword Arguments:
+            marker (str): The marker style. Defaults to 'o'.
+            color (str): The marker color. Defaults to 'black'.
+            markersize (float): The marker size. Defaults to Matplotlib's default.
+            alpha (float): The marker opacity. Defaults to 1.0.
+            label_color (str): The label text color. Defaults to 'black'.
+            label_fontsize (float): The label font size. Defaults to Matplotlib's default.
+            label_ha (str): The label's horizontal alignment. Defaults to 'left'.
+            label_va (str): The label's vertical alignment. Defaults to 'bottom'.
+
+        Raises:
+            ValueError: If 'plot_n' is not a valid value.
+        """
+        logger.info("Called 'Canvas.add_point()'")
+
+        label_kwargs = {key.removeprefix("label_"): value for key, value in kwargs.items() if key.startswith("label_")}
+
+        marker_args = {
+            "marker": kwargs.get("marker", "o"),
+            "color": kwargs.get("color", "black"),
+            "markersize": kwargs.get("markersize", None),
+            "alpha": kwargs.get("alpha", 1.0),
+            "linestyle": "none",
+        }
+        marker_args = {key: value for key, value in marker_args.items() if value is not None}
+
+        text_args = {
+            "color": label_kwargs.get("color", "black"),
+            "fontsize": label_kwargs.get("fontsize", None),
+            "ha": label_kwargs.get("ha", "left"),
+            "va": label_kwargs.get("va", "bottom"),
+        }
+        text_args = {key: value for key, value in text_args.items() if value is not None}
+
+        for plot_i in self.plot_indices(plot_n):
+            self.axes[plot_i].plot(*position, **marker_args)
+
+            if label is not None:
+                self.axes[plot_i].annotate(label, xy=position, xytext=(10, 10), textcoords="offset points", **text_args)
+
     def turn_scientific(self, axis: str, plot_n: PlotN = 0, limits: tuple[int, int] | int = (0, 0)) -> None:
         """
         Sets the ticks of an axis to scientific notation.

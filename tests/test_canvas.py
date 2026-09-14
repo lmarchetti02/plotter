@@ -326,6 +326,64 @@ class TestAddText:
             assert len(canvas.axes[2].texts) == 0
 
 
+class TestAddPoint:
+    """Tests for `Canvas.add_point`."""
+
+    def test_draws_a_single_marker(self, single_text_file: Path, show_plots) -> None:
+        """Canvas.add_point should add exactly one marker with the requested styling."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            before = len(canvas.axes[0].lines)
+
+            canvas.add_point((1.0, 2.0), plot_n=0, marker="x", color="red", markersize=12.0, alpha=0.5)
+
+            marker = canvas.axes[0].lines[-1]
+            assert len(canvas.axes[0].lines) == before + 1
+            assert marker.get_data() == pytest.approx(([1.0], [2.0]))
+            assert marker.get_marker() == "x"
+            assert marker.get_color() == "red"
+            assert marker.get_markersize() == pytest.approx(12.0)
+            assert marker.get_alpha() == pytest.approx(0.5)
+            assert marker.get_linestyle() == "None"
+
+    def test_omits_the_label_by_default(self, single_text_file: Path) -> None:
+        """Without a 'label', no text artist should be added."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup()
+            before = len(canvas.axes[0].texts)
+
+            canvas.add_point((1.0, 2.0), plot_n=0)
+
+            assert len(canvas.axes[0].texts) == before
+
+    def test_adds_an_offset_label_when_requested(self, single_text_file: Path, show_plots) -> None:
+        """A 'label' should be drawn as an annotation offset from the point, with its own styling."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            canvas.add_point(
+                (1.0, 2.0), label="P1", plot_n=0, label_color="blue", label_fontsize=14, label_ha="right", label_va="top"
+            )
+
+            annotation = canvas.axes[0].texts[-1]
+            assert annotation.get_text() == "P1"
+            assert annotation.xy == pytest.approx((1.0, 2.0))
+            assert annotation.xyann == pytest.approx((10, 10))
+            assert annotation.get_color() == "blue"
+            assert annotation.get_fontsize() == pytest.approx(14)
+            assert annotation.get_ha() == "right"
+            assert annotation.get_va() == "top"
+
+    def test_can_draw_on_every_subplot_at_once(self, workspace: Path) -> None:
+        """plot_n='all' should add the point to every subplot."""
+        with plt.Canvas("add_point_all_labels", (1, 3), show=False) as canvas:
+            canvas.setup()
+
+            canvas.add_point((1.0, 2.0), plot_n="all", color="red")
+
+            assert all(axis.lines[-1].get_color() == "red" for axis in canvas.axes)
+
+
 class TestTurnScientific:
     """Tests for `Canvas.turn_scientific`."""
 

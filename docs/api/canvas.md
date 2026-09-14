@@ -269,6 +269,43 @@ Adds a text label to the canvas.
 | ValueError | If 'plot_n' is not a valid value. |
 
 
+#### `add_point`
+
+```python
+add_point(self, position: tuple[float, float], label: str | None=None, plot_n: PlotN=0, **kwargs) -> None
+```
+
+Draws a single point on the canvas, with an optional nearby label.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `position` | tuple\[float, float\] | The (x, y) position of the point, in data coordinates. |
+| `label` | str, optional | Text to draw next to the point, offset by a fixed distance. Defaults to None (no label). |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `marker` | str | The marker style. Defaults to 'o'. |
+| `color` | str | The marker color. Defaults to 'black'. |
+| `markersize` | float | The marker size. Defaults to Matplotlib's default. |
+| `alpha` | float | The marker opacity. Defaults to 1.0. |
+| `label_color` | str | The label text color. Defaults to 'black'. |
+| `label_fontsize` | float | The label font size. Defaults to Matplotlib's default. |
+| `label_ha` | str | The label's horizontal alignment. Defaults to 'left'. |
+| `label_va` | str | The label's vertical alignment. Defaults to 'bottom'. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If 'plot_n' is not a valid value. |
+
+
 #### `turn_scientific`
 
 ```python
