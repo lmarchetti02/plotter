@@ -571,8 +571,8 @@ class Canvas:
         Args:
             position (tuple[float, float]): The (x, y) position of the point, in data
                 coordinates.
-            label (str, optional): Text to draw next to the point, offset by a fixed
-                distance. Defaults to None (no label).
+            label (str, optional): Text to draw next to the point, offset from it by
+                `label_offset`. Defaults to None (no label).
             plot_n (PlotN, optional): The index or indices
                 of the subplots to draw on. Defaults to 0. Options:
                 - int: The index of a single plot (e.g., 0, 1).
@@ -585,10 +585,15 @@ class Canvas:
             color (str): The marker color. Defaults to 'black'.
             markersize (float): The marker size. Defaults to Matplotlib's default.
             alpha (float): The marker opacity. Defaults to 1.0.
+            label_offset (tuple[float, float]): The (x, y) offset of the label from
+                the point, in points. Defaults to (10, 10).
             label_color (str): The label text color. Defaults to 'black'.
             label_fontsize (float): The label font size. Defaults to Matplotlib's default.
             label_ha (str): The label's horizontal alignment. Defaults to 'left'.
             label_va (str): The label's vertical alignment. Defaults to 'bottom'.
+            label_arrow (bool or dict): If True, draws a default arrow (`{"arrowstyle":
+                "->"}`) from the label to the point; a dict draws one styled with those
+                `Axes.annotate` arrow properties instead. Defaults to False (no arrow).
 
         Raises:
             ValueError: If 'plot_n' is not a valid value.
@@ -613,12 +618,17 @@ class Canvas:
             "va": label_kwargs.get("va", "bottom"),
         }
         text_args = {key: value for key, value in text_args.items() if value is not None}
+        label_offset = label_kwargs.get("offset", (10, 10))
+
+        arrow = label_kwargs.get("arrow", False)
+        if arrow:
+            text_args["arrowprops"] = arrow if isinstance(arrow, dict) else {"arrowstyle": "->"}
 
         for plot_i in self.plot_indices(plot_n):
             self.axes[plot_i].plot(*position, **marker_args)
 
             if label is not None:
-                self.axes[plot_i].annotate(label, xy=position, xytext=(10, 10), textcoords="offset points", **text_args)
+                self.axes[plot_i].annotate(label, xy=position, xytext=label_offset, textcoords="offset points", **text_args)
 
     def turn_scientific(self, axis: str, plot_n: PlotN = 0, limits: tuple[int, int] | int = (0, 0)) -> None:
         """

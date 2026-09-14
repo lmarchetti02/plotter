@@ -283,7 +283,7 @@ Draws a single point on the canvas, with an optional nearby label.
 | Name | Type | Description |
 | --- | --- | --- |
 | `position` | tuple\[float, float\] | The (x, y) position of the point, in data coordinates. |
-| `label` | str, optional | Text to draw next to the point, offset by a fixed distance. Defaults to None (no label). |
+| `label` | str, optional | Text to draw next to the point, offset from it by `label_offset`. Defaults to None (no label). |
 | `plot_n` | PlotN, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive). |
 
 **Keyword Arguments:**
@@ -294,10 +294,12 @@ Draws a single point on the canvas, with an optional nearby label.
 | `color` | str | The marker color. Defaults to 'black'. |
 | `markersize` | float | The marker size. Defaults to Matplotlib's default. |
 | `alpha` | float | The marker opacity. Defaults to 1.0. |
+| `label_offset` | tuple\[float, float\] | The (x, y) offset of the label from the point, in points. Defaults to (10, 10). |
 | `label_color` | str | The label text color. Defaults to 'black'. |
 | `label_fontsize` | float | The label font size. Defaults to Matplotlib's default. |
 | `label_ha` | str | The label's horizontal alignment. Defaults to 'left'. |
 | `label_va` | str | The label's vertical alignment. Defaults to 'bottom'. |
+| `label_arrow` | bool or dict | If True, draws a default arrow (`{"arrowstyle": "->"}`) from the label to the point; a dict draws one styled with those `Axes.annotate` arrow properties instead. Defaults to False (no arrow). |
 
 **Raises:**
 

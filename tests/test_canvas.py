@@ -374,6 +374,45 @@ class TestAddPoint:
             assert annotation.get_ha() == "right"
             assert annotation.get_va() == "top"
 
+    def test_can_customize_the_label_offset(self, single_text_file: Path, show_plots) -> None:
+        """label_offset should override the default (10, 10) points offset."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            canvas.add_point((1.0, 2.0), label="P1", plot_n=0, label_offset=(-20, 5))
+
+            annotation = canvas.axes[0].texts[-1]
+            assert annotation.xyann == pytest.approx((-20, 5))
+
+    def test_omits_the_arrow_by_default(self, single_text_file: Path) -> None:
+        """Without 'label_arrow', the label should have no connector arrow."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup()
+
+            canvas.add_point((1.0, 2.0), label="P1", plot_n=0)
+
+            assert canvas.axes[0].texts[-1].arrow_patch is None
+
+    def test_adds_a_default_arrow_when_requested(self, single_text_file: Path, show_plots) -> None:
+        """label_arrow=True should draw a default '->' arrow from the label to the point."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            canvas.add_point((1.0, 2.0), label="P1", plot_n=0, label_arrow=True)
+
+            assert canvas.axes[0].texts[-1].arrow_patch is not None
+
+    def test_can_customize_the_arrow_style(self, single_text_file: Path, show_plots) -> None:
+        """label_arrow accepts a dict of arrowprops to style the connector arrow."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            canvas.add_point((1.0, 2.0), label="P1", plot_n=0, label_arrow={"arrowstyle": "-|>", "color": "red"})
+
+            arrow_patch = canvas.axes[0].texts[-1].arrow_patch
+            assert arrow_patch is not None
+            assert arrow_patch.get_edgecolor()[:3] == pytest.approx((1.0, 0.0, 0.0))
+
     def test_can_draw_on_every_subplot_at_once(self, workspace: Path) -> None:
         """plot_n='all' should add the point to every subplot."""
         with plt.Canvas("add_point_all_labels", (1, 3), show=False) as canvas:
