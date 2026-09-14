@@ -59,5 +59,5 @@ Draws the scatter plot on the canvas.
 | `marker` | str | The kind of Matplotlib marker to use. Defaults to `"o"`. |
 | `ms` | float | The dimensions of the markers. Defaults to 4. |
 | `err_width` | float | The width of the error bars. Defaults to 1. |
-| `ticks_size` | float | The size of the ticks on the error bars. Defaults to 2. |
+| `err_capsize` | float | The size of the ticks on the error bars. Defaults to 2. |
 | `alpha` | float | The opacity of the points. Defaults to 1.0. |

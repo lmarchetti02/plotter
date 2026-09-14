@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from matplotlib.colors import to_rgba
 
 import plotter as plt
 
@@ -61,3 +62,22 @@ class TestDraw:
 
             plt.ScatterPlot(x, y).draw(canvas, label="more data", alpha=0.4)
             assert canvas.axes[0].lines[1].get_alpha() == pytest.approx(0.4)
+
+    def test_error_bar_styling_uses_the_same_kwarg_names_as_bar_chart(self, single_text_file, show_plots) -> None:
+        """`err_color`/`err_width`/`err_capsize` style the error bars, matching `BarChart`'s own kwargs."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([1.0, 1.5, 2.0])
+        yerr = np.array([0.1, 0.2, 0.1])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            scatter = plt.ScatterPlot(x, y, yerr=yerr)
+
+            scatter.draw(canvas, err_color="red", err_width=3.0, err_capsize=7.0)
+
+            container = canvas.axes[0].containers[0]
+            barlinecol = container.lines[2][0]
+            capline = container.lines[1][0]
+            assert to_rgba(barlinecol.get_color()[0]) == to_rgba("red")
+            assert barlinecol.get_linewidth()[0] == pytest.approx(3.0)
+            assert capline.get_markersize() == pytest.approx(14.0)  # 2 * err_capsize

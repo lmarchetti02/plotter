@@ -63,7 +63,7 @@ class RawHist(Drawable):
                 Defaults to 0.8.
             filled (bool): If `True`, the histogram is filled.
                 Defaults to `True`.
-            ecolor (str): The color of the histogram edges. Defaults to `"cornflowerblue"`.
+            edgecolor (str): The color of the histogram edges. Defaults to `"cornflowerblue"`.
             lw (float): The width of the histogram edges. Defaults to 0 if filled is `True`,
                 else to 1.5.
         """
@@ -91,7 +91,7 @@ class RawHist(Drawable):
             color=kwargs.get("color", "royalblue"),
             alpha=kwargs.get("alpha", 0.8),
             label=label,
-            edgecolor=kwargs.get("ecolor", "cornflowerblue"),
+            edgecolor=kwargs.get("edgecolor", "cornflowerblue"),
             lw=kwargs.get("lw", 0 if filled else 1.5),
         )
         logger.debug(f"RawHist {n} drawn")

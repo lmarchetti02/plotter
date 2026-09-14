@@ -7,6 +7,7 @@ from pydantic.dataclasses import dataclass
 
 from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
+from ._error_bar_style import _ErrorBarStyle
 from ..helpers import NArray1D
 
 logger = getLogger(__name__)
@@ -68,7 +69,7 @@ class ScatterPlot(Drawable):
             marker (str): The kind of Matplotlib marker to use. Defaults to `"o"`.
             ms (float): The dimensions of the markers. Defaults to 4.
             err_width (float): The width of the error bars. Defaults to 1.
-            ticks_size (float): The size of the ticks on the error bars. Defaults to 2.
+            err_capsize (float): The size of the ticks on the error bars. Defaults to 2.
             alpha (float): The opacity of the points. Defaults to 1.0.
         """
 
@@ -83,6 +84,8 @@ class ScatterPlot(Drawable):
             "No label for the scatter plot in the json file.",
         )
 
+        err_style = _ErrorBarStyle.from_kwargs(kwargs, color="black", width=1.0, capsize=2.0)
+
         canvas.axes[plot_n].errorbar(
             x=self.x,
             y=self.y,
@@ -90,12 +93,12 @@ class ScatterPlot(Drawable):
             xerr=self.xerr,
             marker=kwargs.get("marker", "o"),
             color=kwargs.get("color", "firebrick"),
-            ecolor=kwargs.get("err_color", "black"),
+            ecolor=err_style.color,
             ms=kwargs.get("ms", 4.0),
-            elinewidth=kwargs.get("err_width", 1.0),
+            elinewidth=err_style.width,
             zorder=2,  # layer
             ls="none",  # line size (none for disconnected dots)
-            capsize=kwargs.get("ticks_size", 2.0),  # error bars ticks
+            capsize=err_style.capsize,
             alpha=kwargs.get("alpha", 1.0),
             label=label,
         )

@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 from matplotlib.collections import QuadMesh
+from matplotlib.colors import to_rgba
 from unittest.mock import patch
 
 import plotter as plt
@@ -42,6 +43,19 @@ class TestBinnedHistDraw:
         """`bin_vals` must have exactly one fewer element than `bins`."""
         with pytest.raises(ValueError, match="one fewer element"):
             plt.BinnedHist(np.array([2.0, 4.0, 3.0]), np.array([0.0, 1.0, 2.0]))
+
+    def test_edge_color_uses_the_same_kwarg_name_as_bar_chart(self, single_text_file, show_plots) -> None:
+        """The histogram edge color is set via `edgecolor`, matching `BarChart`'s own kwarg."""
+        bin_vals = np.array([2.0, 4.0, 3.0])
+        bins = np.array([0.0, 1.0, 2.0, 3.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            hist = plt.BinnedHist(bin_vals, bins)
+
+            hist.draw(canvas, edgecolor="red", alpha=1.0)
+
+            assert canvas.axes[0].patches[0].get_edgecolor() == to_rgba("red")
 
 
 class TestBinnedHist2DDraw:

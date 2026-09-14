@@ -54,7 +54,8 @@ Draws the bar chart on the canvas.
 | `width` | float | The width of the bars. Defaults to 0.8. |
 | `color` | str | The Matplotlib color of the bars. Defaults to "steelblue". |
 | `alpha` | float | The transparency of the bars. Defaults to 0.9. |
-| `ecolor` | str | The color of the error bars. Defaults to "black". |
-| `capsize` | float | The size of the error bar ticks. Defaults to 3. |
+| `err_color` | str | The color of the error bars. Defaults to "black". |
+| `err_width` | float | The width of the error bars. Defaults to 1.5. |
+| `err_capsize` | float | The size of the error bar ticks. Defaults to 3. |
 | `lw` | float | The width of the bar edges. Defaults to 0. |
 | `edgecolor` | str | The color of the bar edges. Defaults to "midnightblue". |

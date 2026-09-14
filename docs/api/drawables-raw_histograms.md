@@ -54,7 +54,7 @@ Draws the histogram on the canvas.
 | `color` | str | The Matplotlib color of the histogram. Defaults to "royalblue". |
 | `alpha` | float | The transparency of the histogram. Defaults to 0.8. |
 | `filled` | bool | If `True`, the histogram is filled. Defaults to `True`. |
-| `ecolor` | str | The color of the histogram edges. Defaults to `"cornflowerblue"`. |
+| `edgecolor` | str | The color of the histogram edges. Defaults to `"cornflowerblue"`. |
 | `lw` | float | The width of the histogram edges. Defaults to 0 if filled is `True`, else to 1.5. |
 
 

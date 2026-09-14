@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 from matplotlib.collections import QuadMesh
+from matplotlib.colors import to_rgba
 
 import plotter as plt
 
@@ -27,6 +28,18 @@ class TestRawHistDraw:
             assert len(hist.bin_vals) == 15
             assert canvas.counters.histograms[0] == 1
             assert canvas.axes[0].patches[0].get_label() == "hist"
+
+    def test_edge_color_uses_the_same_kwarg_name_as_bar_chart(self, single_text_file, show_plots) -> None:
+        """The histogram edge color is set via `edgecolor`, matching `BarChart`'s own kwarg."""
+        data = np.array([1.0, 2.0, 3.0, 4.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            hist = plt.RawHist(data, nbins=2)
+
+            hist.draw(canvas, edgecolor="red", alpha=1.0)
+
+            assert canvas.axes[0].patches[0].get_edgecolor() == to_rgba("red")
 
 
 class TestRawHist2DDraw:

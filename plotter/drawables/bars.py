@@ -7,6 +7,7 @@ from pydantic.dataclasses import dataclass
 
 from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
+from ._error_bar_style import _ErrorBarStyle
 from ..helpers import NArray1D
 
 logger = getLogger(__name__)
@@ -56,8 +57,9 @@ class BarChart(Drawable):
             width (float): The width of the bars. Defaults to 0.8.
             color (str): The Matplotlib color of the bars. Defaults to "steelblue".
             alpha (float): The transparency of the bars. Defaults to 0.9.
-            ecolor (str): The color of the error bars. Defaults to "black".
-            capsize (float): The size of the error bar ticks. Defaults to 3.
+            err_color (str): The color of the error bars. Defaults to "black".
+            err_width (float): The width of the error bars. Defaults to 1.5.
+            err_capsize (float): The size of the error bar ticks. Defaults to 3.
             lw (float): The width of the bar edges. Defaults to 0.
             edgecolor (str): The color of the bar edges. Defaults to "midnightblue".
         """
@@ -73,6 +75,8 @@ class BarChart(Drawable):
             "No label for the bar chart in the json file.",
         )
 
+        err_style = _ErrorBarStyle.from_kwargs(kwargs, color="black", width=1.5, capsize=3.0)
+
         canvas.axes[plot_n].bar(
             self.x,
             self.heights,
@@ -81,8 +85,9 @@ class BarChart(Drawable):
             color=kwargs.get("color", "steelblue"),
             alpha=kwargs.get("alpha", 0.9),
             label=label,
-            ecolor=kwargs.get("ecolor", "black"),
-            capsize=kwargs.get("capsize", 3.0),
+            ecolor=err_style.color,
+            capsize=err_style.capsize,
+            error_kw={"elinewidth": err_style.width},
             linewidth=kwargs.get("lw", 0.0),
             edgecolor=kwargs.get("edgecolor", "midnightblue"),
             zorder=2,
