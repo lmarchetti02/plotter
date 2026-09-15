@@ -241,7 +241,9 @@ class TestDrawLine:
             canvas.setup()
             before = len(canvas.axes[0].lines)
 
-            canvas.draw_line(orientation, point=1.5, plot_n=0, color="red", linestyle="--", lw=2.0, alpha=0.5)
+            canvas.draw_line(
+                orientation, point=1.5, plot_n=0, color="red", linestyle="--", lw=2.0, alpha=0.5, zorder=5
+            )
 
             line = canvas.axes[0].lines[-1]
             assert len(canvas.axes[0].lines) == before + 1
@@ -249,6 +251,17 @@ class TestDrawLine:
             assert line.get_linestyle() == "--"
             assert line.get_linewidth() == pytest.approx(2.0)
             assert line.get_alpha() == pytest.approx(0.5)
+            assert line.get_zorder() == pytest.approx(5)
+
+    @pytest.mark.parametrize("orientation", ["v", "h"])
+    def test_zorder_defaults_to_two(self, single_text_file: Path, orientation: str, show_plots) -> None:
+        """Without an explicit `zorder`, the reference line should default to 2."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            canvas.draw_line(orientation, point=1.5, plot_n=0)
+
+            assert canvas.axes[0].lines[-1].get_zorder() == pytest.approx(2)
 
     def test_rejects_invalid_orientation(self, single_text_file: Path) -> None:
         """draw_line should fail loudly on an unsupported orientation."""

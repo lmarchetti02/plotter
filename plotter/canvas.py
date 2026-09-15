@@ -453,6 +453,7 @@ class Canvas:
             lw (float): The width of the line. Defaults to 0.5.
             alpha (float): The opacity of the line. Defaults to 1.0.
             label (str): The label for the line in the legend. Defaults to None.
+            zorder (float): The drawing order of the line. Defaults to 2.
 
         Raises:
             ValueError: If the orientation is not 'v' or 'h'.
@@ -470,6 +471,7 @@ class Canvas:
             "lw": kwargs.get("lw", 0.5),
             "alpha": kwargs.get("alpha", 1.0),
             "label": kwargs.get("label", None),
+            "zorder": kwargs.get("zorder", 2),
         }
 
         for plot_i in self.plot_indices(plot_n):
