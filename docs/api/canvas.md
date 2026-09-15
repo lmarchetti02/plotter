@@ -89,6 +89,7 @@ Class for creating an empty canvas (xy-plane).
 - `counters: _Counters`
 - `_n_plots: int`
 - `_loc_legend: list[int]`
+- `_ncols_legend: list[int]`
 
 ### Methods
 
@@ -154,6 +155,7 @@ Sets up the properties of the subplots.
 | `nogrid` | bool or tuple\[bool, bool\] | Controls grid removal.<br>- `bool`: Removes the grid from both axes.<br>- `tuple`: `(x, y)` to independently remove the grid from the x and/or y axis (e.g., `(True, False)` removes only the x grid). Defaults to `False`. |
 | `inverted` | tuple\[bool, bool\] | A tuple to invert the x and y axes respectively (e.g., `(True, False)`). |
 | `legend` | int | Force the position of the legend to a specified one. See 'plotter/utils/info/legend.png'. |
+| `leg_ncols` | int | The number of columns to arrange the legend entries into. Defaults to 1. |
 
 **Raises:**
 
@@ -188,6 +190,7 @@ Draws horizontal and vertical lines on the canvas.
 | `lw` | float | The width of the line. Defaults to 0.5. |
 | `alpha` | float | The opacity of the line. Defaults to 1.0. |
 | `label` | str | The label for the line in the legend. Defaults to None. |
+| `zorder` | float | The drawing order of the line. Defaults to 2. |
 
 **Raises:**
 

@@ -1,9 +1,9 @@
 """Runnable example of the core Canvas / Drawable workflow.
 
-Draws a row of four subplots -- a ScatterPlot with an overlaid LinePlot fit, a
-BarChart, a RawHist, and a BinnedHist -- driven by a JSON text file for the
-titles/axis labels/legend labels, mirroring how a real project would use the
-library.
+Draws a row of five subplots -- a ScatterPlot with an overlaid LinePlot fit, a
+BarChart, two BoxPlot groups, a RawHist, and a BinnedHist -- driven by a JSON
+text file for the titles/axis labels/legend labels, mirroring how a real
+project would use the library.
 
 Run from anywhere:
 
@@ -55,6 +55,12 @@ def main() -> None:
             "bar_charts": ["counts"],
         },
         {
+            "title": "Before vs. after treatment",
+            "x_label": "group",
+            "y_label": "value",
+            "box_plots": ["control", "treated"],
+        },
+        {
             "title": "Residual distribution",
             "x_label": "residual",
             "y_label": "density",
@@ -80,7 +86,10 @@ def main() -> None:
     bin_vals = np.array([3.0, 8.0, 15.0, 9.0, 4.0])
     bins = np.array([-3.0, -1.8, -0.6, 0.6, 1.8, 3.0])
 
-    with p.Canvas("basic_plot.json", rows_cols=(1, 4), save="basic_plot.png", show=False) as canvas:
+    control = rng.normal(loc=0.0, scale=1.0, size=40)
+    treated = rng.normal(loc=1.2, scale=0.8, size=40)
+
+    with p.Canvas("basic_plot.json", rows_cols=(1, 5), figsize=(15.0, 8.0), save="basic_plot.png", show=False) as canvas:
         canvas.setup()
 
         p.ScatterPlot(x, y, yerr=1.5).draw(canvas, plot_n=0)
@@ -88,9 +97,12 @@ def main() -> None:
 
         p.BarChart(categories, heights).draw(canvas, plot_n=1, bar_labels=True)
 
-        p.RawHist(residuals, nbins=12, density=True).draw(canvas, plot_n=2)
+        p.BoxPlot([control], positions=np.array([0.0])).draw(canvas, plot_n=2, color="steelblue", tick_labels=["control"])
+        p.BoxPlot([treated], positions=np.array([1.0])).draw(canvas, plot_n=2, color="firebrick", tick_labels=["treated"])
 
-        p.BinnedHist(bin_vals, bins).draw(canvas, plot_n=3)
+        p.RawHist(residuals, nbins=12, density=True).draw(canvas, plot_n=3)
+
+        p.BinnedHist(bin_vals, bins).draw(canvas, plot_n=4)
 
 
 if __name__ == "__main__":

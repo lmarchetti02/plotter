@@ -22,6 +22,7 @@ class TestDrawable:
             plt.ScatterPlot(x, y),
             plt.LinePlot(x, y),
             plt.BarChart(x, y),
+            plt.BoxPlot([x, y]),
             plt.RawHist(x),
             plt.BinnedHist(np.array([1.0]), np.array([0.0, 1.0])),
             plt.RawHist2D(x, y, 2),
@@ -41,5 +42,6 @@ class TestGetLabelNames:
             "scatter_plots",
             "line_plots",
             "bar_charts",
+            "box_plots",
             "histograms",
         )

@@ -22,6 +22,7 @@ PUBLIC_MODULES = [
     "plotter.drawables.scatter",
     "plotter.drawables.lines",
     "plotter.drawables.bars",
+    "plotter.drawables.boxplot",
     "plotter.drawables.raw_histograms",
     "plotter.drawables.binned_histograms",
     "plotter.drawables.images",

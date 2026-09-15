@@ -9,6 +9,7 @@ from .canvas import Canvas, ZoomInset  # noqa: F401
 from .colorbar import Colorbar  # noqa: F401
 from .drawables.bars import BarChart  # noqa: F401
 from .drawables.binned_histograms import BinnedHist, BinnedHist2D  # noqa: F401
+from .drawables.boxplot import BoxPlot  # noqa: F401
 from .drawables.drawable import Drawable  # noqa: F401
 from .drawables.images import Image  # noqa: F401
 from .drawables.lines import LinePlot  # noqa: F401

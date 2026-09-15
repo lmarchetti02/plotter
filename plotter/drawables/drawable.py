@@ -11,6 +11,7 @@ DRAWABLE_LABEL_NAMES = (
     "scatter_plots",
     "line_plots",
     "bar_charts",
+    "box_plots",
     "histograms",
 )
 
