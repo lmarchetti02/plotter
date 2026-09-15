@@ -33,7 +33,7 @@ Class for creating a bar chart.
 #### `draw`
 
 ```python
-draw(self, canvas: Canvas | ZoomInset, plot_n: int=0, label: str | None=None, **kwargs) -> None
+draw(self, canvas: Canvas | ZoomInset, plot_n: int=0, label: str | None=None, bar_labels: bool | dict[str, Any]=False, **kwargs) -> None
 ```
 
 Draws the bar chart on the canvas.
@@ -46,6 +46,7 @@ Draws the bar chart on the canvas.
 | `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) to draw the bar chart on. |
 | `plot_n` | int, optional | The index of the subplot to draw on. Defaults to 0. |
 | `label` | str, optional | The label for the bar chart in the legend. Defaults to `None`. |
+| `bar_labels` | bool \| dict\[str, Any\], optional | If truthy, writes a text label above each bar via `Axes.bar_label`. Pass `True` for the default behavior (each bar's height, formatted with matplotlib's `"%g"` format), or a dict of keyword arguments forwarded straight through to `Axes.bar_label` -- e.g. `{"labels": \[...\]}` for custom per-bar text, or `"fmt"`/`"label_type"`/`"padding"`/any `Text` styling kwarg. Defaults to `False`. |
 
 **Keyword Arguments:**
 

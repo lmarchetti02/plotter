@@ -93,3 +93,44 @@ class TestDraw:
             assert to_rgba(barlinecol.get_color()[0]) == to_rgba("red")
             assert barlinecol.get_linewidth()[0] == pytest.approx(3.0)
             assert capline.get_markersize() == pytest.approx(14.0)  # 2 * err_capsize
+
+    def test_bar_labels_defaults_to_no_text(self, single_text_file, show_plots) -> None:
+        """By default, no text is written on top of the bars."""
+        x = np.array([0.0, 1.0, 2.0])
+        heights = np.array([1.0, 3.0, 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            bars = plt.BarChart(x, heights)
+
+            bars.draw(canvas)
+
+            assert len(canvas.axes[0].texts) == 0
+
+    def test_bar_labels_true_shows_formatted_heights(self, single_text_file, show_plots) -> None:
+        """`bar_labels=True` writes each bar's height above it, using matplotlib's default format."""
+        x = np.array([0.0, 1.0, 2.0])
+        heights = np.array([1.0, 3.0, 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            bars = plt.BarChart(x, heights)
+
+            bars.draw(canvas, bar_labels=True)
+
+            texts = [text.get_text() for text in canvas.axes[0].texts]
+            assert texts == ["1", "3", "2"]
+
+    def test_bar_labels_dict_passes_through_to_bar_label(self, single_text_file, show_plots) -> None:
+        """A `bar_labels` dict is forwarded straight through to `Axes.bar_label`, e.g. for custom text."""
+        x = np.array([0.0, 1.0, 2.0])
+        heights = np.array([1.0, 3.0, 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            bars = plt.BarChart(x, heights)
+
+            bars.draw(canvas, bar_labels={"labels": ["a", "b", "c"]})
+
+            texts = [text.get_text() for text in canvas.axes[0].texts]
+            assert texts == ["a", "b", "c"]

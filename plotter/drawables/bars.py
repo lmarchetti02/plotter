@@ -42,7 +42,14 @@ class BarChart(Drawable):
         if isinstance(self.yerr, np.ndarray) and len(self.heights) != len(self.yerr):
             raise ValueError("heights and yerr-values don't have the same dimensions")
 
-    def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
+    def draw(
+        self,
+        canvas: Canvas | ZoomInset,
+        plot_n: int = 0,
+        label: str | None = None,
+        bar_labels: bool | dict[str, Any] = False,
+        **kwargs,
+    ) -> None:
         """
         Draws the bar chart on the canvas.
 
@@ -52,6 +59,12 @@ class BarChart(Drawable):
                 Defaults to 0.
             label (str, optional): The label for the bar chart in the legend.
                 Defaults to `None`.
+            bar_labels (bool | dict[str, Any], optional): If truthy, writes a text label above
+                each bar via `Axes.bar_label`. Pass `True` for the default behavior (each bar's
+                height, formatted with matplotlib's `"%g"` format), or a dict of keyword arguments
+                forwarded straight through to `Axes.bar_label` -- e.g. `{"labels": [...]}` for
+                custom per-bar text, or `"fmt"`/`"label_type"`/`"padding"`/any `Text` styling
+                kwarg. Defaults to `False`.
 
         Keyword Arguments:
             width (float): The width of the bars. Defaults to 0.8.
@@ -77,7 +90,7 @@ class BarChart(Drawable):
 
         err_style = _ErrorBarStyle.from_kwargs(kwargs, color="black", width=1.5, capsize=3.0)
 
-        canvas.axes[plot_n].bar(
+        container = canvas.axes[plot_n].bar(
             self.x,
             self.heights,
             yerr=self.yerr,
@@ -93,5 +106,8 @@ class BarChart(Drawable):
             zorder=2,
         )
         logger.debug(f"BarChart {n} drawn")
+
+        if bar_labels:
+            canvas.axes[plot_n].bar_label(container, **(bar_labels if isinstance(bar_labels, dict) else {}))
 
         getattr(canvas.counters, self.label_name)[plot_n] += 1

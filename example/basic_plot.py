@@ -86,7 +86,7 @@ def main() -> None:
         p.ScatterPlot(x, y, yerr=1.5).draw(canvas, plot_n=0)
         p.LinePlot(x, model).draw(canvas, plot_n=0)
 
-        p.BarChart(categories, heights).draw(canvas, plot_n=1)
+        p.BarChart(categories, heights).draw(canvas, plot_n=1, bar_labels=True)
 
         p.RawHist(residuals, nbins=12, density=True).draw(canvas, plot_n=2)
 
