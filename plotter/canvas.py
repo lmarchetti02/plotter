@@ -1,6 +1,6 @@
 from logging import getLogger
 from pathlib import Path
-from warnings import catch_warnings, simplefilter
+from warnings import catch_warnings, filterwarnings, simplefilter
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -41,6 +41,31 @@ def _oriented_limits(limits: tuple[float, float], reference: tuple[float, float]
 # 4=lower right), as (is_right, is_upper) flags and back
 _LOC_CORNERS = {1: (True, True), 2: (False, True), 3: (False, False), 4: (True, False)}
 _CORNERS_LOC = {corner: loc for loc, corner in _LOC_CORNERS.items()}
+
+_COLORBAR_TOUCHED_ATTR = "_plotter_colorbar_touched"
+
+
+def _mark_colorbar_touched(figure: Figure) -> None:
+    """
+    Marks `figure` as having a Colorbar-repositioned Axes, so `Canvas._auto_layout` skips it.
+
+    Args:
+        figure (Figure): The Figure a `Colorbar` has just manually repositioned Axes on.
+    """
+    setattr(figure, _COLORBAR_TOUCHED_ATTR, True)
+
+
+def _is_colorbar_touched(figure: Figure) -> bool:
+    """
+    Checks whether any `Colorbar` has manually repositioned Axes on `figure`.
+
+    Args:
+        figure (Figure): The Figure to check.
+
+    Returns:
+        bool: True if a `Colorbar` has drawn on `figure`.
+    """
+    return getattr(figure, _COLORBAR_TOUCHED_ATTR, False)
 
 
 def _reoriented_loc(loc: int, x_inverted: bool, y_inverted: bool) -> int:
@@ -332,6 +357,7 @@ class Canvas:
             return
 
         self._legend()  # draw legend if it exists
+        self._auto_layout()  # one-shot spacing pass to avoid title/label overlap
         self._save()  # save plot to disk
         logger.info("Plot(s) finished")
 
@@ -934,6 +960,29 @@ class Canvas:
                     logger.debug(f"Legend added to subplot {i}.")
                 except UserWarning:
                     logger.warning(f"Subplot {i} has an empty legend.")
+
+    def _auto_layout(self) -> None:
+        """
+        Runs a one-shot spacing pass to avoid title/axis-label overlap between subplots.
+
+        Skipped whenever a `Colorbar` has manually repositioned Axes on this figure --
+        `tight_layout()` recomputes every subplot's position from the gridspec uniformly,
+        which would silently undo that (the same class of bug `set_layout_engine("none")`
+        already guards against for a persistent layout engine).
+        """
+        logger.info("Called 'Canvas._auto_layout()'")
+
+        if _is_colorbar_touched(self.figure):
+            logger.debug("Skipping auto-layout: a Colorbar has repositioned Axes on this figure.")
+            return
+
+        with catch_warnings():
+            # a ZoomInset panel's Axes have no subplotspec, so tight_layout() always warns
+            # about them even though it correctly leaves them untouched
+            filterwarnings("ignore", message="This figure includes Axes that are not compatible with tight_layout", category=UserWarning)
+            self.figure.tight_layout()
+
+        self.figure.set_layout_engine("none")
 
     def _save(self) -> None:
         """

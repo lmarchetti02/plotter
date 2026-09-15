@@ -9,7 +9,7 @@ from matplotlib.transforms import Bbox
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
-from .canvas import Canvas, ZoomInset
+from .canvas import Canvas, ZoomInset, _mark_colorbar_touched
 from .drawables.binned_histograms import BinnedHist2D
 from .drawables.images import Image
 from .drawables.raw_histograms import RawHist2D
@@ -500,5 +500,6 @@ class Colorbar:
 
         orientation = "vertical" if position in ("left", "right") else "horizontal"
         cax = _make_colorbar_axes(canvas.figure, axes, canvas.axes, position, size, padding)
+        _mark_colorbar_touched(canvas.figure)
 
         self.mpl_colorbar = canvas.figure.colorbar(self.source.mappable, cax=cax, label=label, orientation=orientation, **kwargs)

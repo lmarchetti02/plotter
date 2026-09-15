@@ -1,6 +1,7 @@
 """Tests for canvas setup and drawing helpers."""
 
 from pathlib import Path
+from unittest.mock import patch
 from warnings import warn
 
 import matplotlib
@@ -94,6 +95,55 @@ class TestCanvas:
             assert isinstance(canvas.figure.get_layout_engine(), PlaceHolderLayoutEngine)
 
 
+class TestAutoLayout:
+    """Tests for `Canvas._auto_layout`."""
+
+    def test_runs_tight_layout_once_when_no_colorbar_was_used(self, single_text_file: Path) -> None:
+        """A canvas without a Colorbar should get one automatic tight_layout() pass on exit,
+        so titles/axis labels don't overlap between subplots."""
+        canvas = plt.Canvas(str(single_text_file), show=False)
+        figure_type = type(canvas.figure)
+
+        with patch.object(figure_type, "tight_layout", autospec=True) as tight_layout_mock:
+            with canvas:
+                canvas.setup()
+
+        tight_layout_mock.assert_called_once()
+
+    def test_skips_tight_layout_when_a_colorbar_was_used(self, single_text_file: Path) -> None:
+        """tight_layout() recomputes every subplot's position from the gridspec uniformly,
+        which would undo a Colorbar's manual shrink/realignment -- it must not run at all
+        once a Colorbar has touched the canvas."""
+        canvas = plt.Canvas(str(single_text_file), show=False)
+        figure_type = type(canvas.figure)
+
+        with patch.object(figure_type, "tight_layout", autospec=True) as tight_layout_mock:
+            with canvas:
+                canvas.setup()
+                image = plt.Image(np.zeros((10, 10)))
+                image.draw(canvas)
+
+                colorbar = plt.Colorbar(source=image)
+                colorbar.draw(canvas)
+
+                shrunk_position = canvas.axes[0].get_position()
+
+        tight_layout_mock.assert_not_called()
+        assert canvas.axes[0].get_position().bounds == pytest.approx(shrunk_position.bounds)
+
+    def test_suppresses_the_incompatible_axes_warning_for_zoom_insets(
+        self, single_text_file: Path, recwarn: pytest.WarningsRecorder
+    ) -> None:
+        """tight_layout() always warns about a ZoomInset panel's Axes (no subplotspec) even
+        though it correctly leaves them untouched -- that specific warning should not reach
+        the caller."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup()
+            canvas.add_zoom_inset((0.0, 1.0), (0.0, 1.0))
+
+        assert not any("not compatible with tight_layout" in str(w.message) for w in recwarn.list)
+
+
 class TestPlotIndices:
     """Tests for `Canvas.plot_indices`."""
 
@@ -162,7 +212,7 @@ class TestSetup:
         with plt.Canvas(str(text_file), (1, 2), show=False) as canvas:
             canvas.setup(
                 plot_n=1,
-                xlim=(0.0, 5.0),
+                xlim=(1.0, 5.0),  # log-scaled below, so the lower bound must stay positive
                 ylim=(-1.0, 3.0),
                 xscale="log",
                 yscale="symlog",
@@ -172,7 +222,7 @@ class TestSetup:
             )
 
             axis = canvas.axes[1]
-            assert axis.get_xlim() == pytest.approx((5.0, 0.0))
+            assert axis.get_xlim() == pytest.approx((5.0, 1.0))
             assert axis.get_ylim() == pytest.approx((-1.0, 3.0))
             assert axis.get_xscale() == "log"
             assert axis.get_yscale() == "symlog"
