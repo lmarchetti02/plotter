@@ -52,21 +52,29 @@ Draws the group of boxes on the canvas.
 | Name | Type | Description |
 | --- | --- | --- |
 | `color` | str | The Matplotlib facecolor of the boxes, when `patch_artist` is `True`. Defaults to "steelblue". |
-| `edgecolor` | str | The color of the box edges, whiskers, and caps. Defaults to "midnightblue". |
-| `alpha` | float | The opacity of the boxes. Defaults to 0.9. |
-| `lw` | float | The width of the box edges, whiskers, caps, and median line. Defaults to 1.0. |
+| `edgecolor` | str | The color of the box edges, whiskers, and caps. Unaffected by `alpha`. Defaults to "navy". |
+| `alpha` | float | The opacity of the box fill only -- baked directly into the facecolor, so it never dims the box edges, whiskers, or caps. Defaults to 0.6. |
+| `lw` | float | The width of the box edges, whiskers, caps, median line, and mean line. Defaults to 1.0. |
 | `zorder` | float | The drawing order of the boxes. Defaults to 2. |
 | `patch_artist` | bool | If `True`, boxes are drawn as filled `Patch` artists using `color`/`edgecolor`/`alpha`/`lw`; if `False`, boxes are drawn as unfilled `Line2D` rectangles styled with `edgecolor`/`lw` only (`color`/`alpha` are ignored, since there is no fill). Defaults to `True`. |
 | `notch` | bool | If `True`, draws a notch around the median of each box. Defaults to `False`. |
 | `whis` | float or tuple\[float, float\] | The whisker reach. See `Axes.boxplot`. Defaults to 1.5. |
 | `widths` | float or NArray1D\[Any\] | The width(s) of the boxes. Defaults to Matplotlib's own computed default. |
-| `showmeans` | bool | If `True`, shows the arithmetic mean of each box. Defaults to `False`. |
-| `showfliers` | bool | If `True`, shows the outlier points beyond the whiskers. Defaults to `True`. |
+| `median_color` | str | The color of the median line. Defaults to "firebrick". |
+| `showmeans` | bool | If `True`, shows the mean of each box. Defaults to `True`. |
+| `meanline` | bool | If `True` (and `showmeans` is `True`), draws the mean as a line spanning the box instead of a marker point. Defaults to `True`. |
+| `mean_color` | str | The color of the mean line. Defaults to "orange". |
+| `showfliers` | bool | If `True`, shows the outlier points beyond the whiskers. Defaults to `False`. |
 | `tick_labels` | list\[str\] | The tick label placed under each box. Defaults to `None` (numeric tick values). |
 | `orientation` | str | `"vertical"` or `"horizontal"`. Defaults to `"vertical"`. |
-| `medianprops` | dict | Style overrides for the median line, passed straight through to `Axes.boxplot`. Defaults to a plain black line. |
+| `medianprops` | dict | Style overrides for the median line, passed straight through to `Axes.boxplot` instead of `median_color`. Defaults to a solid line colored with `median_color`. |
+| `meanprops` | dict | Style overrides for the mean line, passed straight through to `Axes.boxplot` instead of `mean_color`. Defaults to a dashed line colored with `mean_color`. |
 
 **Note:**
 
-Any other keyword argument accepted by `Axes.boxplot` (e.g. `bootstrap`,
-`capwidths`, `flierprops`, `meanprops`) is forwarded straight through.
+The first `BoxPlot` drawn on a given subplot additionally labels its median
+and mean lines "Median"/"Mean" for the legend -- later groups on the same
+subplot skip this, since every group shares the same median/mean styling and
+one legend entry is enough. Any other keyword argument accepted by
+`Axes.boxplot` (e.g. `bootstrap`, `capwidths`, `flierprops`) is forwarded
+straight through.
