@@ -280,6 +280,7 @@ class Canvas:
     # private attributes
     _n_plots: int = Field(init=False)
     _loc_legend: list[int] = Field(init=False)
+    _ncols_legend: list[int] = Field(init=False)
 
     def __post_init__(self) -> None:
         """Initializes the necessary attributes."""
@@ -312,6 +313,7 @@ class Canvas:
 
         # legend
         self._loc_legend = [0 for _ in range(self._n_plots)]
+        self._ncols_legend = [1 for _ in range(self._n_plots)]
 
     def __enter__(self):
         """Defines what happens when the user enters a 'Canvas' context."""
@@ -419,6 +421,8 @@ class Canvas:
               respectively (e.g., `(True, False)`).
             legend (int): Force the position of the legend to a specified one.
                 See 'plotter/utils/info/legend.png'.
+            leg_ncols (int): The number of columns to arrange the legend entries into.
+                Defaults to 1.
 
         Raises:
             ValueError: If 'plot_n' is not a valid value.
@@ -430,6 +434,7 @@ class Canvas:
 
             # legend
             self._loc_legend[plot_i] = kwargs.get("legend", 0)
+            self._ncols_legend[plot_i] = kwargs.get("leg_ncols", 1)
 
     def draw_line(self, orientation: str, point: float = 0.0, plot_n: PlotN = 0, **kwargs) -> None:
         """
@@ -924,7 +929,7 @@ class Canvas:
             for i in range(self._n_plots):
                 try:
                     if not self.counters.is_empty():
-                        self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1)
+                        self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1, ncols=self._ncols_legend[i])
 
                     logger.debug(f"Legend added to subplot {i}.")
                 except UserWarning:

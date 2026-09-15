@@ -168,6 +168,7 @@ class TestSetup:
                 yscale="symlog",
                 inverted=(True, False),
                 legend=3,
+                leg_ncols=2,
             )
 
             axis = canvas.axes[1]
@@ -179,6 +180,14 @@ class TestSetup:
             assert axis.get_ylabel() == "$ y $"
             assert axis.get_title() == "Test 2"
             assert canvas._loc_legend[1] == 3
+            assert canvas._ncols_legend[1] == 2
+
+    def test_leg_ncols_defaults_to_one(self, text_file: Path) -> None:
+        """Without an explicit 'leg_ncols', the legend should default to a single column."""
+        with plt.Canvas(str(text_file), (1, 2), show=False) as canvas:
+            canvas.setup(plot_n=1, legend=3)
+
+            assert canvas._ncols_legend[1] == 1
 
     def test_applies_to_all_subplots_by_default(self, text_file: Path) -> None:
         """The default plot_n='all' should configure every subplot."""
