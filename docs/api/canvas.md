@@ -47,7 +47,7 @@ Sets up the properties of the panel's `Axes`.
 | `ylim` | tuple\[float, float\] | The limits for the y-axis. |
 | `xscale` | str | The scale for the x-axis ('linear', 'log', 'symlog'). |
 | `yscale` | str | The scale for the y-axis ('linear', 'log', 'symlog'). |
-| `nogrid` | bool | If True, removes the grid from the plot. |
+| `nogrid` | bool or tuple\[bool, bool\] | Controls grid removal.<br>- `bool`: Removes the grid from both axes.<br>- `tuple`: `(x, y)` to independently remove the grid from the x and/or y axis (e.g., `(True, False)` removes only the x grid). Defaults to `False`. |
 | `inverted` | tuple\[bool, bool\] | A tuple to invert the x and y axes respectively (e.g., `(True, False)`). |
 
 
@@ -151,7 +151,7 @@ Sets up the properties of the subplots.
 | `ylim` | tuple\[float, float\] | The limits for the y-axis. |
 | `xscale` | str | The scale for the x-axis ('linear', 'log', 'symlog'). |
 | `yscale` | str | The scale for the y-axis ('linear', 'log', 'symlog'). |
-| `nogrid` | bool | If True, removes the grid from the plot. |
+| `nogrid` | bool or tuple\[bool, bool\] | Controls grid removal.<br>- `bool`: Removes the grid from both axes.<br>- `tuple`: `(x, y)` to independently remove the grid from the x and/or y axis (e.g., `(True, False)` removes only the x grid). Defaults to `False`. |
 | `inverted` | tuple\[bool, bool\] | A tuple to invert the x and y axes respectively (e.g., `(True, False)`). |
 | `legend` | int | Force the position of the legend to a specified one. See 'plotter/utils/info/legend.png'. |
 

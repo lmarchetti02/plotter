@@ -117,8 +117,11 @@ def _configure_axes(axes: Axes, text: PlotText, **kwargs) -> None:
     """
     # grid
     no_grid = kwargs.get("nogrid", False)
-    if not no_grid:
-        axes.grid(color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
+    no_grid_x, no_grid_y = no_grid if isinstance(no_grid, tuple) else (no_grid, no_grid)
+    if not no_grid_x:
+        axes.grid(axis="x", color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
+    if not no_grid_y:
+        axes.grid(axis="y", color="darkgray", alpha=0.5, linestyle="dashed", lw=0.5)
 
     # axis limits
     x_min, x_max = kwargs.get("xlim", (None, None))
@@ -224,7 +227,11 @@ class ZoomInset:
             ylim (tuple[float, float]): The limits for the y-axis.
             xscale (str): The scale for the x-axis ('linear', 'log', 'symlog').
             yscale (str): The scale for the y-axis ('linear', 'log', 'symlog').
-            nogrid (bool): If True, removes the grid from the plot.
+            nogrid (bool or tuple[bool, bool]): Controls grid removal.
+                - `bool`: Removes the grid from both axes.
+                - `tuple`: `(x, y)` to independently remove the grid from the
+                    x and/or y axis (e.g., `(True, False)` removes only the x grid).
+                Defaults to `False`.
             inverted (tuple[bool, bool]): A tuple to invert the x and y axes
               respectively (e.g., `(True, False)`).
         """
@@ -403,7 +410,11 @@ class Canvas:
             ylim (tuple[float, float]): The limits for the y-axis.
             xscale (str): The scale for the x-axis ('linear', 'log', 'symlog').
             yscale (str): The scale for the y-axis ('linear', 'log', 'symlog').
-            nogrid (bool): If True, removes the grid from the plot.
+            nogrid (bool or tuple[bool, bool]): Controls grid removal.
+                - `bool`: Removes the grid from both axes.
+                - `tuple`: `(x, y)` to independently remove the grid from the
+                    x and/or y axis (e.g., `(True, False)` removes only the x grid).
+                Defaults to `False`.
             inverted (tuple[bool, bool]): A tuple to invert the x and y axes
               respectively (e.g., `(True, False)`).
             legend (int): Force the position of the legend to a specified one.

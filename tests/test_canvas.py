@@ -197,6 +197,39 @@ class TestSetup:
             assert canvas.axes[1].get_xlim() == pytest.approx((0.0, 5.0))
             assert canvas.axes[2].get_xlim() != pytest.approx((0.0, 5.0))
 
+    def test_grid_is_shown_by_default(self, single_text_file: Path) -> None:
+        """With no 'nogrid' kwarg, both axes should show a grid."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup()
+
+            axis = canvas.axes[0]
+            assert all(line.get_visible() for line in axis.get_xgridlines())
+            assert all(line.get_visible() for line in axis.get_ygridlines())
+
+    def test_nogrid_bool_removes_grid_from_both_axes(self, single_text_file: Path) -> None:
+        """A bool 'nogrid=True' should remove the grid from both axes."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup(nogrid=True)
+
+            axis = canvas.axes[0]
+            assert not any(line.get_visible() for line in axis.get_xgridlines())
+            assert not any(line.get_visible() for line in axis.get_ygridlines())
+
+    @pytest.mark.parametrize(
+        ("nogrid", "x_visible", "y_visible"),
+        [((True, False), False, True), ((False, True), True, False)],
+    )
+    def test_nogrid_tuple_removes_grid_from_one_axis(
+        self, single_text_file: Path, nogrid: tuple[bool, bool], x_visible: bool, y_visible: bool
+    ) -> None:
+        """A `tuple[bool, bool]` 'nogrid' should independently control the x and y grid."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup(nogrid=nogrid)
+
+            axis = canvas.axes[0]
+            assert all(line.get_visible() == x_visible for line in axis.get_xgridlines())
+            assert all(line.get_visible() == y_visible for line in axis.get_ygridlines())
+
 
 class TestDrawLine:
     """Tests for `Canvas.draw_line`."""
