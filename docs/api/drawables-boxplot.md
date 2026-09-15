@@ -11,7 +11,7 @@ Class for creating a group of box-and-whisker plots.
 | --- | --- | --- |
 | `data` | list\[NArray1D\[Any\]\] | One array of raw samples per box. |
 | `positions` | NArray1D\[Any\] or None, optional | The x-position of each box. Defaults to `None`, which lets Matplotlib place the boxes at `1, 2, ..., N`. |
-| `bxp` | dict\[str, list\[Any\]\] or None | The dictionary of Matplotlib artists (keys: `"boxes"`, `"medians"`, `"whiskers"`, `"caps"`, `"fliers"`, `"means"`) returned by `Axes.boxplot`, populated after `draw()` runs, for further per-artist styling. |
+| `bxp` | dict\[str, list\[Any\]\] or None | The dictionary of Matplotlib artists (keys: `"boxes"`, `"medians"`, `"whiskers"`, `"caps"`, `"fliers"`, `"means"`) returned by `Axes.boxplot`, populated after `draw()` runs, for further per-artist styling. When `patch_artist` is `True`, also carries a `"box_edges"` key: one extra, edge-only `Patch` per box, layered in front of the median/mean lines (see `draw`'s `zorder` keyword argument). |
 
 **Raises:**
 
@@ -55,7 +55,7 @@ Draws the group of boxes on the canvas.
 | `edgecolor` | str | The color of the box edges, whiskers, and caps. Unaffected by `alpha`. Defaults to "navy". |
 | `alpha` | float | The opacity of the box fill only -- baked directly into the facecolor, so it never dims the box edges, whiskers, or caps. Defaults to 0.6. |
 | `lw` | float | The width of the box edges, whiskers, caps, median line, and mean line. Defaults to 1.0. |
-| `zorder` | float | The drawing order of the boxes. Defaults to 2. |
+| `zorder` | float | The drawing order of the box edges, whiskers, and caps -- the topmost layer. The median and mean lines draw one step behind this, and the box fill two steps behind, so (from back to front) the fill sits behind the summary lines, which sit behind the box's own border. This keeps the lines fully saturated (nothing translucent drawn over them) while the border still visually "closes over" them at the box edges. Defaults to 2. |
 | `patch_artist` | bool | If `True`, boxes are drawn as filled `Patch` artists using `color`/`edgecolor`/`alpha`/`lw`; if `False`, boxes are drawn as unfilled `Line2D` rectangles styled with `edgecolor`/`lw` only (`color`/`alpha` are ignored, since there is no fill). Defaults to `True`. |
 | `notch` | bool | If `True`, draws a notch around the median of each box. Defaults to `False`. |
 | `whis` | float or tuple\[float, float\] | The whisker reach. See `Axes.boxplot`. Defaults to 1.5. |
@@ -67,8 +67,8 @@ Draws the group of boxes on the canvas.
 | `showfliers` | bool | If `True`, shows the outlier points beyond the whiskers. Defaults to `False`. |
 | `tick_labels` | list\[str\] | The tick label placed under each box. Defaults to `None` (numeric tick values). |
 | `orientation` | str | `"vertical"` or `"horizontal"`. Defaults to `"vertical"`. |
-| `medianprops` | dict | Style overrides for the median line, passed straight through to `Axes.boxplot` instead of `median_color`. Defaults to a solid line colored with `median_color`. |
-| `meanprops` | dict | Style overrides for the mean line, passed straight through to `Axes.boxplot` instead of `mean_color`. Defaults to a dashed line colored with `mean_color`. |
+| `medianprops` | dict | Style overrides for the median line, passed straight through to `Axes.boxplot` instead of `median_color`/`zorder`. Defaults to a solid line colored with `median_color`, one `zorder` step behind the box. |
+| `meanprops` | dict | Style overrides for the mean line, passed straight through to `Axes.boxplot` instead of `mean_color`/`zorder`. Defaults to a dashed line colored with `mean_color`, one `zorder` step behind the box. |
 
 **Note:**
 

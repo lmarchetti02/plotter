@@ -2,6 +2,7 @@ from logging import getLogger
 from typing import Any, ClassVar
 
 from matplotlib.colors import to_rgba
+from matplotlib.patches import PathPatch
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
@@ -24,7 +25,9 @@ class BoxPlot(Drawable):
         bxp (dict[str, list[Any]] or None): The dictionary of Matplotlib artists
             (keys: `"boxes"`, `"medians"`, `"whiskers"`, `"caps"`, `"fliers"`, `"means"`)
             returned by `Axes.boxplot`, populated after `draw()` runs, for further
-            per-artist styling.
+            per-artist styling. When `patch_artist` is `True`, also carries a
+            `"box_edges"` key: one extra, edge-only `Patch` per box, layered in front of
+            the median/mean lines (see `draw`'s `zorder` keyword argument).
 
     Raises:
         ValueError: If `data` is empty.
@@ -66,7 +69,13 @@ class BoxPlot(Drawable):
                 Defaults to 0.6.
             lw (float): The width of the box edges, whiskers, caps, median line, and mean
                 line. Defaults to 1.0.
-            zorder (float): The drawing order of the boxes. Defaults to 2.
+            zorder (float): The drawing order of the box edges, whiskers, and caps -- the
+                topmost layer. The median and mean lines draw one step behind this, and
+                the box fill two steps behind, so (from back to front) the fill sits
+                behind the summary lines, which sit behind the box's own border. This
+                keeps the lines fully saturated (nothing translucent drawn over them)
+                while the border still visually "closes over" them at the box edges.
+                Defaults to 2.
             patch_artist (bool): If `True`, boxes are drawn as filled `Patch` artists using
                 `color`/`edgecolor`/`alpha`/`lw`; if `False`, boxes are drawn as unfilled
                 `Line2D` rectangles styled with `edgecolor`/`lw` only (`color`/`alpha` are
@@ -88,11 +97,11 @@ class BoxPlot(Drawable):
                 Defaults to `None` (numeric tick values).
             orientation (str): `"vertical"` or `"horizontal"`. Defaults to `"vertical"`.
             medianprops (dict): Style overrides for the median line, passed straight
-                through to `Axes.boxplot` instead of `median_color`. Defaults to a solid
-                line colored with `median_color`.
+                through to `Axes.boxplot` instead of `median_color`/`zorder`. Defaults to
+                a solid line colored with `median_color`, one `zorder` step behind the box.
             meanprops (dict): Style overrides for the mean line, passed straight through
-                to `Axes.boxplot` instead of `mean_color`. Defaults to a dashed line
-                colored with `mean_color`.
+                to `Axes.boxplot` instead of `mean_color`/`zorder`. Defaults to a dashed
+                line colored with `mean_color`, one `zorder` step behind the box.
 
         Note:
             The first `BoxPlot` drawn on a given subplot additionally labels its median
@@ -121,14 +130,18 @@ class BoxPlot(Drawable):
         lw = kwargs.get("lw", 1)
         median_color = kwargs.get("median_color", "firebrick")
         mean_color = kwargs.get("mean_color", "orange")
+        zorder = kwargs.get("zorder", 2)
 
         # Patch-artist boxes take Patch properties ("edgecolor"/"facecolor"); Line2D-style
         # boxes (patch_artist=False) only understand Line2D properties ("color") and would
         # raise on "edgecolor"/"facecolor". Baking `alpha` into the facecolor itself (rather
         # than Patch's own `alpha`, which would scale the edge color too) keeps the edge
-        # fully opaque.
+        # fully opaque. The box itself is drawn two zorder steps behind the median/mean
+        # lines -- a single Patch can't have its face at one zorder and its edge at
+        # another, so a separate edge-only copy is layered back on top of everything
+        # further down, once the real geometry is known.
         if patch_artist:
-            boxprops = {"facecolor": to_rgba(color, alpha), "edgecolor": edgecolor, "linewidth": lw}
+            boxprops = {"facecolor": to_rgba(color, alpha), "edgecolor": edgecolor, "linewidth": lw, "zorder": zorder - 2}
         else:
             boxprops = {"color": edgecolor, "linewidth": lw}
 
@@ -147,9 +160,11 @@ class BoxPlot(Drawable):
             boxprops=boxprops,
             whiskerprops={"color": edgecolor, "linewidth": lw},
             capprops={"color": edgecolor, "linewidth": lw},
-            medianprops=kwargs.get("medianprops", {"color": median_color, "linestyle": "-", "linewidth": lw}),
-            meanprops=kwargs.get("meanprops", {"color": mean_color, "linestyle": "--", "linewidth": lw}),
-            zorder=kwargs.get("zorder", 2),
+            # A lower zorder than the box itself keeps these lines tucked inside the box's
+            # fill/edge rather than drawn on top of it.
+            medianprops=kwargs.get("medianprops", {"color": median_color, "linestyle": "-", "linewidth": lw, "zorder": zorder - 1}),
+            meanprops=kwargs.get("meanprops", {"color": mean_color, "linestyle": "--", "linewidth": lw, "zorder": zorder - 1}),
+            zorder=zorder,
         )
 
         # The group's own label always goes on the box artist itself, regardless of
@@ -158,6 +173,18 @@ class BoxPlot(Drawable):
         # "Median" legend entry below.
         if label is not None:
             self.bxp["boxes"][0].set_label(label)
+
+        # The box's edge is redrawn as a separate, edge-only Patch layered on top of the
+        # median/mean lines: since the real box (fill + edge) sits behind those lines to
+        # keep them saturated, its own edge would otherwise be hidden behind them too
+        # wherever a line runs close to the box boundary.
+        self.bxp["box_edges"] = []
+        if patch_artist:
+            for box in self.bxp["boxes"]:
+                outline = PathPatch(box.get_path(), transform=box.get_transform(), facecolor="none", edgecolor=edgecolor, linewidth=lw, zorder=zorder)
+                outline.set_label("_nolegend_")
+                canvas.axes[plot_n].add_patch(outline)
+                self.bxp["box_edges"].append(outline)
 
         # Every group shares the same median/mean styling, so only the first group drawn
         # on this subplot gets a legend entry for them -- avoids duplicate "Median"/"Mean"

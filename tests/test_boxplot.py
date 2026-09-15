@@ -129,6 +129,55 @@ class TestDraw:
             assert to_rgba(mean_line.get_color()) == to_rgba("orange")
             assert mean_line.get_linestyle() == "--"
 
+    def test_median_and_mean_lines_draw_behind_the_box(self, single_text_file, show_plots) -> None:
+        """The box fill sits behind the median/mean lines, which sit behind the box's own
+        edge (redrawn as `box_edges`), so the lines stay saturated but the border still
+        closes over them at the boundary. Whiskers/caps share the edge's front zorder."""
+        data = [np.array([1.0, 2.0, 3.0, 4.0, 5.0])]
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            boxes = plt.BoxPlot(data)
+
+            boxes.draw(canvas, zorder=3)
+
+            assert boxes.bxp["boxes"][0].get_zorder() == 1
+            assert boxes.bxp["medians"][0].get_zorder() == 2
+            assert boxes.bxp["means"][0].get_zorder() == 2
+            assert boxes.bxp["box_edges"][0].get_zorder() == 3
+            assert boxes.bxp["whiskers"][0].get_zorder() == 3
+            assert boxes.bxp["caps"][0].get_zorder() == 3
+
+    def test_box_edges_mirror_the_box_geometry_and_stay_out_of_the_legend(self, single_text_file, show_plots) -> None:
+        """The edge-only overlay should trace the same box shape and never appear in the legend."""
+        data = [np.array([1.0, 2.0, 3.0, 4.0, 5.0])]
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            boxes = plt.BoxPlot(data)
+
+            boxes.draw(canvas, edgecolor="green", lw=2.0)
+
+            box_edge = boxes.bxp["box_edges"][0]
+            assert box_edge.get_window_extent().bounds == boxes.bxp["boxes"][0].get_window_extent().bounds
+            assert to_rgba(box_edge.get_edgecolor()) == to_rgba("green")
+            assert box_edge.get_linewidth() == pytest.approx(2.0)
+            assert box_edge.get_facecolor()[3] == 0.0  # fully transparent fill
+            _, labels = canvas.axes[0].get_legend_handles_labels()
+            assert "_nolegend_" not in labels
+
+    def test_patch_artist_false_has_no_box_edges_overlay(self, single_text_file, show_plots) -> None:
+        """Without a fill to protect, `patch_artist=False` shouldn't add any overlay patch."""
+        data = [np.array([1.0, 2.0, 3.0])]
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            boxes = plt.BoxPlot(data)
+
+            boxes.draw(canvas, patch_artist=False)
+
+            assert boxes.bxp["box_edges"] == []
+
     def test_median_and_mean_colors_are_overridable(self, single_text_file, show_plots) -> None:
         """`median_color`/`mean_color` should override the default line colors."""
         data = [np.array([1.0, 2.0, 3.0])]
@@ -178,4 +227,4 @@ class TestDraw:
 
             boxes.draw(canvas)
 
-            assert set(boxes.bxp.keys()) == {"boxes", "medians", "whiskers", "caps", "fliers", "means"}
+            assert set(boxes.bxp.keys()) == {"boxes", "medians", "whiskers", "caps", "fliers", "means", "box_edges"}
