@@ -21,6 +21,7 @@ PUBLIC_MODULES = [
     "plotter.drawables.drawable",
     "plotter.drawables.scatter",
     "plotter.drawables.lines",
+    "plotter.drawables.functions",
     "plotter.drawables.bars",
     "plotter.drawables.boxplot",
     "plotter.drawables.raw_histograms",
@@ -315,7 +316,7 @@ y = x**2
 with p.Canvas("example.json", rows_cols=(1, 1), show=False) as canvas:
     canvas.setup(0)
     p.ScatterPlot(x, y).draw(canvas, label="data")
-    p.LinePlot(x, lambda values: values**2).draw(canvas, label="model")
+    p.FunctionPlot(x, lambda values: values**2).draw(canvas, label="model")
 ```
 
 ## What To Read
@@ -379,7 +380,7 @@ x = np.linspace(0, 10, 100)
 
 with p.Canvas("example.json", show=False, save="example.png") as canvas:
     canvas.setup(xlim=(0, 10), ylim=(-1.2, 1.2))
-    p.LinePlot(x, np.sin).draw(canvas, color="darkgreen", label="sin(x)")
+    p.FunctionPlot(x, np.sin).draw(canvas, color="darkgreen", label="sin(x)")
     canvas.draw_line("h", point=0, linestyle="--")
 ```
 

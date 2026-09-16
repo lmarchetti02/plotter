@@ -11,8 +11,8 @@ familiar with the underlying plotting model.
 The current design revolves around:
 
 - a `Canvas` object, which owns the figure and axes and acts as a context manager;
-- drawable objects such as `ScatterPlot`, `LinePlot`, `BarChart`, `RawHist`, `BinnedHist`,
-  `RawHist2D`, `BinnedHist2D`, and `Image`;
+- drawable objects such as `ScatterPlot`, `LinePlot`, `FunctionPlot`, `BarChart`, `RawHist`,
+  `BinnedHist`, `RawHist2D`, `BinnedHist2D`, and `Image`;
 - optional JSON text files used to populate titles, axis labels, and legend labels.
 
 ## Installation
@@ -92,14 +92,15 @@ with p.Canvas("example.json", rows_cols=(1, 2), show=False) as canvas:
     canvas.setup(1)
 
     p.ScatterPlot(x, y, y_err, x_err).draw(canvas, label="data")
-    p.LinePlot(x, f, wider=(0.01, 0.01)).draw(canvas, label=r"$f(x)=x^2$")
+    p.FunctionPlot(x, f, wider=(0.01, 0.01)).draw(canvas, label=r"$f(x)=x^2$")
     p.BarChart(categories, heights).draw(canvas, plot_n=1, label="counts")
 ```
 
 ### Available Drawables
 
 - `ScatterPlot`: scatter plots with optional x/y error bars.
-- `LinePlot`: function plots or explicit x/y line plots.
+- `LinePlot`: explicit x/y line plots.
+- `FunctionPlot`: function plots over a (possibly widened/densified) domain.
 - `BarChart`: bar charts with optional y-error bars.
 - `RawHist`: one-dimensional histograms computed from raw sample data.
 - `BinnedHist`: one-dimensional histograms drawn from already pre-computed bin values.

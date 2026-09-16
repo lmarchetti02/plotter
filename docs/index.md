@@ -23,7 +23,7 @@ y = x**2
 with p.Canvas("example.json", rows_cols=(1, 1), show=False) as canvas:
     canvas.setup(0)
     p.ScatterPlot(x, y).draw(canvas, label="data")
-    p.LinePlot(x, lambda values: values**2).draw(canvas, label="model")
+    p.FunctionPlot(x, lambda values: values**2).draw(canvas, label="model")
 ```
 
 ## What To Read

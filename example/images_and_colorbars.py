@@ -1,6 +1,6 @@
 """Runnable example of RawHist2D/BinnedHist2D/Image, explicit Colorbars, and a zoom inset.
 
-Unlike ScatterPlot/LinePlot/BarChart/RawHist/BinnedHist, `RawHist2D`, `BinnedHist2D`, and
+Unlike ScatterPlot/LinePlot/FunctionPlot/BarChart/RawHist/BinnedHist, `RawHist2D`, `BinnedHist2D`, and
 `Image` don't take a `label` and aren't driven by the JSON text file's label lists -- their
 color mapping is instead exposed through a `Colorbar`, drawn explicitly. This also
 shows `Canvas.add_zoom_inset`, which returns a panel that any `Drawable` can

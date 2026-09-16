@@ -1,59 +1,31 @@
-# `plotter.drawables.lines`
+# `plotter.drawables.functions`
 
-## class `LinePlot(Drawable)`
+## class `FunctionPlot(Drawable)`
 
-Class for creating a line plot from raw (x, y) data to be drawn on a canvas.
+Class for creating a plot of a mathematical function to be drawn on a canvas.
 
 
 **Attributes:**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `x` | NArray1D\[Any\] | The values of the independent variable. |
-| `y` | NArray1D\[Any\] | The values of the dependent variable. |
-
-**Raises:**
-
-| Type | Description |
-| --- | --- |
-| ValueError | If x and y do not have the same dimensions. |
+| `x` | NArray1D\[Any\] | The domain over which the function `f` is evaluated. |
+| `f` | Callable\[\[NArray1D\[Any\]\], NArray1D\[Any\]\] | The function that defines the plot. |
+| `wider` | tuple\[float, float\], optional | The percentages (left, right) to which the domain `x` is to be widened. Defaults to `(0, 0)`. |
+| `dens` | int, optional | The density factor to be passed to `_make_wider()`. Defaults to 1. |
+| `y` | NArray1D\[Any\] or None | The values of `f` evaluated on the (possibly widened) domain, populated after `__post_init__` runs. |
 
 
 **Defined attributes:**
 
 - `label_name: ClassVar[str]`
 - `x: NArray1D[Any]`
-- `y: NArray1D[Any]`
+- `f: Callable[[NArray1D[Any]], NArray1D[Any]]`
+- `wider: tuple[float, float]`
+- `dens: int`
+- `y: NArray1D[Any] | None`
 
 ### Methods
-
-#### `from_y`
-
-```python
-from_y(cls, y: NArray1D[Any], **kwargs) -> 'LinePlot'
-```
-
-Builds a `LinePlot` from just `y`-values, using an implicit index range for `x`.
-
-
-**Args:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `y` | NArray1D\[Any\] | The values of the dependent variable. |
-
-**Keyword Arguments:**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `` | - | Any keyword argument accepted by `LinePlot`'s constructor other than `x`/`y`. |
-
-**Returns:**
-
-| Type | Description |
-| --- | --- |
-| - | A line plot with `x = numpy.arange(len(y))`. |
-
 
 #### `draw`
 

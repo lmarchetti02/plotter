@@ -14,6 +14,7 @@ nav = [
     {"Drawable" = "api/drawables-drawable.md"},
     {"Scatter" = "api/drawables-scatter.md"},
     {"Lines" = "api/drawables-lines.md"},
+    {"Functions" = "api/drawables-functions.md"},
     {"Bars" = "api/drawables-bars.md"},
     {"Histograms" = "api/drawables-histograms.md"},
     {"Images" = "api/drawables-images.md"},

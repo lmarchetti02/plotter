@@ -19,6 +19,7 @@ uv run zensical build
 - [`plotter.drawables.drawable`](drawables-drawable.md)
 - [`plotter.drawables.scatter`](drawables-scatter.md)
 - [`plotter.drawables.lines`](drawables-lines.md)
+- [`plotter.drawables.functions`](drawables-functions.md)
 - [`plotter.drawables.bars`](drawables-bars.md)
 - [`plotter.drawables.boxplot`](drawables-boxplot.md)
 - [`plotter.drawables.raw_histograms`](drawables-raw_histograms.md)

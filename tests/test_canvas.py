@@ -752,7 +752,7 @@ class TestAddZoomInset:
             canvas.setup()
 
             inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
-            plt.LinePlot(x=np.array([1.0, 1.5, 2.0]), f=np.array([0.1, 0.5, 0.9])).draw(inset)
+            plt.LinePlot(x=np.array([1.0, 1.5, 2.0]), y=np.array([0.1, 0.5, 0.9])).draw(inset)
 
             assert len(inset.axes[0].lines) == 1
 

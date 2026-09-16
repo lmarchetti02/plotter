@@ -1,6 +1,6 @@
 """Runnable example of the core Canvas / Drawable workflow.
 
-Draws a row of five subplots -- a ScatterPlot with an overlaid LinePlot fit, a
+Draws a row of five subplots -- a ScatterPlot with an overlaid FunctionPlot fit, a
 BarChart, two BoxPlot groups, a RawHist, and a BinnedHist -- driven by a JSON
 text file for the titles/axis labels/legend labels, mirroring how a real
 project would use the library.
@@ -93,7 +93,7 @@ def main() -> None:
         canvas.setup()
 
         p.ScatterPlot(x, y, yerr=1.5).draw(canvas, plot_n=0)
-        p.LinePlot(x, model).draw(canvas, plot_n=0)
+        p.FunctionPlot(x, model).draw(canvas, plot_n=0)
 
         p.BarChart(categories, heights).draw(canvas, plot_n=1, bar_labels=True)
 

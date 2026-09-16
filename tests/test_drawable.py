@@ -21,6 +21,7 @@ class TestDrawable:
         drawables = (
             plt.ScatterPlot(x, y),
             plt.LinePlot(x, y),
+            plt.FunctionPlot(x, np.sin),
             plt.BarChart(x, y),
             plt.BoxPlot([x, y]),
             plt.RawHist(x),
