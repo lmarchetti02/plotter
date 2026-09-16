@@ -176,6 +176,41 @@ def _configure_axes(axes: Axes, text: PlotText, **kwargs) -> None:
     axes.set_title(text.title, y=1)
 
 
+def _draw_line(axes: Axes, orientation: str, point: float, **kwargs) -> None:
+    """
+    Draws a single horizontal or vertical reference line on one `Axes`.
+
+    Args:
+        axes (Axes): The Axes to draw the line on.
+        orientation (str): The orientation of the line. Use 'v' for vertical
+            or 'h' for horizontal.
+        point (float): The coordinate of the line.
+
+    Keyword Arguments:
+        See `Canvas.draw_line`.
+
+    Raises:
+        ValueError: If the orientation is not 'v' or 'h'.
+    """
+    if orientation not in ("v", "h"):
+        raise ValueError("Invalid line type")
+
+    args = {
+        "x" if orientation == "v" else "y": point,
+        "color": kwargs.get("color", "black"),
+        "linestyle": kwargs.get("linestyle", "-"),
+        "lw": kwargs.get("lw", 0.5),
+        "alpha": kwargs.get("alpha", 1.0),
+        "label": kwargs.get("label", None),
+        "zorder": kwargs.get("zorder", 2),
+    }
+
+    if orientation == "v":
+        axes.axvline(**args)
+    else:
+        axes.axhline(**args)
+
+
 class _Counters:
     """
     Container class to store the counters of the `Canvas`.
@@ -218,9 +253,10 @@ class ZoomInset:
 
     Exposes the same `axes`/`counters`/`text`/`figure` surface as `Canvas`, so any
     `Drawable` can be drawn into it exactly like a real `Canvas` subplot (e.g.
-    `some_drawable.draw(inset)`). Also exposes `setup` to configure its `Axes`.
-    Other cosmetic `Canvas` helpers (`draw_line`, `draw_band`, `add_text`, ...) are not
-    available on it — use `inset.axes[0]` directly for those.
+    `some_drawable.draw(inset)`). Also exposes `setup` to configure its `Axes` and
+    `draw_line` to add reference lines to it. Other cosmetic `Canvas` helpers
+    (`draw_band`, `add_text`, ...) are not available on it — use `inset.axes[0]`
+    directly for those.
 
     Attributes:
         axes (list[Axes]): A single-element list containing the inset `Axes`.
@@ -262,6 +298,30 @@ class ZoomInset:
         """
         logger.info("Called 'ZoomInset.setup()'")
         _configure_axes(self.axes[0], self.text[0], **kwargs)
+
+    def draw_line(self, orientation: str, point: float = 0.0, **kwargs) -> None:
+        """
+        Draws a horizontal or vertical reference line on the panel.
+
+        Args:
+            orientation (str): The orientation of the line. Use 'v' for vertical
+                or 'h' for horizontal.
+            point (float, optional): The coordinate of the line. Defaults to 0.
+
+        Keyword Arguments:
+            color (str): The color of the line. Defaults to 'black'.
+            linestyle (str): The style of the line (e.g., '-', '--', '-.', ':').
+                Defaults to '-'.
+            lw (float): The width of the line. Defaults to 0.5.
+            alpha (float): The opacity of the line. Defaults to 1.0.
+            label (str): The label for the line in the legend. Defaults to None.
+            zorder (float): The drawing order of the line. Defaults to 2.
+
+        Raises:
+            ValueError: If the orientation is not 'v' or 'h'.
+        """
+        logger.info("Called 'ZoomInset.draw_line()'")
+        _draw_line(self.axes[0], orientation, point, **kwargs)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -492,24 +552,8 @@ class Canvas:
         """
         logger.info("Called 'Canvas.draw_line()'")
 
-        if orientation not in ("v", "h"):
-            raise ValueError("Invalid line type")
-
-        args = {
-            "x" if orientation == "v" else "y": point,
-            "color": kwargs.get("color", "black"),
-            "linestyle": kwargs.get("linestyle", "-"),
-            "lw": kwargs.get("lw", 0.5),
-            "alpha": kwargs.get("alpha", 1.0),
-            "label": kwargs.get("label", None),
-            "zorder": kwargs.get("zorder", 2),
-        }
-
         for plot_i in self.plot_indices(plot_n):
-            if orientation == "v":
-                self.axes[plot_i].axvline(**args)
-            else:
-                self.axes[plot_i].axhline(**args)
+            _draw_line(self.axes[plot_i], orientation, point, **kwargs)
 
     def draw_band(self, orientation: str, low: float, high: float, plot_n: PlotN = 0, **kwargs) -> None:
         """

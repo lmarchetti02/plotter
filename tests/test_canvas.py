@@ -839,3 +839,45 @@ class TestZoomInsetSetup:
             assert axis.get_ylim() == pytest.approx((-1.0, 3.0))
             assert axis.get_xscale() == "log"
             assert axis.get_yscale() == "symlog"
+
+
+class TestZoomInsetDrawLine:
+    """Tests for `ZoomInset.draw_line`."""
+
+    @pytest.mark.parametrize("orientation", ["v", "h"])
+    def test_adds_a_single_reference_line(self, single_text_file: Path, orientation: str, show_plots) -> None:
+        """ZoomInset.draw_line should add exactly one line for either supported orientation."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
+            before = len(inset.axes[0].lines)
+
+            inset.draw_line(orientation, point=1.5, color="red", linestyle="--", lw=2.0, alpha=0.5, zorder=5)
+
+            line = inset.axes[0].lines[-1]
+            assert len(inset.axes[0].lines) == before + 1
+            assert line.get_color() == "red"
+            assert line.get_linestyle() == "--"
+            assert line.get_linewidth() == pytest.approx(2.0)
+            assert line.get_alpha() == pytest.approx(0.5)
+            assert line.get_zorder() == pytest.approx(5)
+
+    @pytest.mark.parametrize("orientation", ["v", "h"])
+    def test_zorder_defaults_to_two(self, single_text_file: Path, orientation: str, show_plots) -> None:
+        """Without an explicit `zorder`, the reference line should default to 2."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
+
+            inset.draw_line(orientation, point=1.5)
+
+            assert inset.axes[0].lines[-1].get_zorder() == pytest.approx(2)
+
+    def test_rejects_invalid_orientation(self, single_text_file: Path, show_plots) -> None:
+        """draw_line should fail loudly on an unsupported orientation."""
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            inset = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0))
+
+            with pytest.raises(ValueError, match="Invalid line type"):
+                inset.draw_line("diagonal")

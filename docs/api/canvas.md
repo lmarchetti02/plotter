@@ -6,9 +6,10 @@ A single zoomed-in inset panel returned by `Canvas.add_zoom_inset`.
 
 Exposes the same `axes`/`counters`/`text`/`figure` surface as `Canvas`, so any
 `Drawable` can be drawn into it exactly like a real `Canvas` subplot (e.g.
-`some_drawable.draw(inset)`). Also exposes `setup` to configure its `Axes`.
-Other cosmetic `Canvas` helpers (`draw_line`, `draw_band`, `add_text`, ...) are not
-available on it — use `inset.axes\[0\]` directly for those.
+`some_drawable.draw(inset)`). Also exposes `setup` to configure its `Axes` and
+`draw_line` to add reference lines to it. Other cosmetic `Canvas` helpers
+(`draw_band`, `add_text`, ...) are not available on it — use `inset.axes\[0\]`
+directly for those.
 
 
 **Attributes:**
@@ -49,6 +50,40 @@ Sets up the properties of the panel's `Axes`.
 | `yscale` | str | The scale for the y-axis ('linear', 'log', 'symlog'). |
 | `nogrid` | bool or tuple\[bool, bool\] | Controls grid removal.<br>- `bool`: Removes the grid from both axes.<br>- `tuple`: `(x, y)` to independently remove the grid from the x and/or y axis (e.g., `(True, False)` removes only the x grid). Defaults to `False`. |
 | `inverted` | tuple\[bool, bool\] | A tuple to invert the x and y axes respectively (e.g., `(True, False)`). |
+
+
+#### `draw_line`
+
+```python
+draw_line(self, orientation: str, point: float=0.0, **kwargs) -> None
+```
+
+Draws a horizontal or vertical reference line on the panel.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `orientation` | str | The orientation of the line. Use 'v' for vertical or 'h' for horizontal. |
+| `point` | float, optional | The coordinate of the line. Defaults to 0. |
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `color` | str | The color of the line. Defaults to 'black'. |
+| `linestyle` | str | The style of the line (e.g., '-', '--', '-.', ':'). Defaults to '-'. |
+| `lw` | float | The width of the line. Defaults to 0.5. |
+| `alpha` | float | The opacity of the line. Defaults to 1.0. |
+| `label` | str | The label for the line in the legend. Defaults to None. |
+| `zorder` | float | The drawing order of the line. Defaults to 2. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If the orientation is not 'v' or 'h'. |
 
 
 ## class `Canvas`
