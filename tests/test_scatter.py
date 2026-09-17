@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 from matplotlib.colors import to_rgba
+from numpy.testing import assert_allclose
 
 import plotter as plt
 
@@ -29,6 +30,28 @@ class TestScatterPlot:
         """ScatterPlot should validate data and uncertainty array lengths eagerly."""
         with pytest.raises(ValueError, match=expected_message):
             plt.ScatterPlot(x, y, yerr=yerr, xerr=xerr)
+
+
+class TestFromY:
+    """Tests for `ScatterPlot.from_y`."""
+
+    def test_uses_an_implicit_index_range_for_x(self) -> None:
+        """`from_y` should fill in x with an index range matching y's shape."""
+        y = np.array([10.0, 20.0, 30.0])
+
+        scatter = plt.ScatterPlot.from_y(y)
+
+        assert_allclose(scatter.x, np.arange(len(y)))
+        assert_allclose(scatter.y, y)
+
+    def test_forwards_keyword_arguments_to_the_constructor(self) -> None:
+        """`from_y` should forward kwargs like `yerr` to `ScatterPlot`'s constructor."""
+        y = np.array([10.0, 20.0, 30.0])
+        yerr = np.array([1.0, 2.0, 1.0])
+
+        scatter = plt.ScatterPlot.from_y(y, yerr=yerr)
+
+        assert_allclose(scatter.yerr, yerr)
 
 
 class TestDraw:

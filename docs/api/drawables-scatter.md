@@ -33,6 +33,34 @@ Class for creating a scatter plot with error bars.
 
 ### Methods
 
+#### `from_y`
+
+```python
+from_y(cls, y: NArray1D[Any], **kwargs) -> 'ScatterPlot'
+```
+
+Builds a `ScatterPlot` from just `y`-values, using an implicit index range for `x`.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `y` | NArray1D\[Any\] | The array containing the y values. |
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `` | - | Any keyword argument accepted by `ScatterPlot`'s constructor other than `x`/`y`. |
+
+**Returns:**
+
+| Type | Description |
+| --- | --- |
+| - | A scatter plot with `x = numpy.arange(len(y))`. |
+
+
 #### `draw`
 
 ```python

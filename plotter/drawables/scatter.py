@@ -52,6 +52,23 @@ class ScatterPlot(Drawable):
         if isinstance(self.xerr, np.ndarray) and len(self.x) != len(self.xerr):
             raise ValueError("xy-values and xerr-values don't have the same dimensions")
 
+    @classmethod
+    def from_y(cls, y: NArray1D[Any], **kwargs) -> "ScatterPlot":
+        """
+        Builds a `ScatterPlot` from just `y`-values, using an implicit index range for `x`.
+
+        Args:
+            y (NArray1D[Any]): The array containing the y values.
+
+        Keyword Arguments:
+            Any keyword argument accepted by `ScatterPlot`'s constructor other than `x`/`y`.
+
+        Returns:
+            ScatterPlot: A scatter plot with `x = numpy.arange(len(y))`.
+        """
+
+        return cls(np.arange(len(y)), y, **kwargs)
+
     def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, label: str | None = None, **kwargs) -> None:
         """
         Draws the scatter plot on the canvas.
