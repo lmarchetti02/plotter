@@ -64,7 +64,8 @@ class Image(Drawable):
                 - `tuple`: `(True, float)` for a 'symlog' scale with a linear range of `float`.
                 This parameter is ignored if the data is RGB(A). Defaults to `False`.
             v_range (tuple[float, float]): The minimum and maximum intensity
-                values. Ignored if the data is RGB(A). Defaults to `(None, None)`.
+                values, applied regardless of `log`. Ignored if the data is RGB(A).
+                Defaults to `(None, None)`.
             aspect (str): The aspect ratio of the axes. `equal` for squared
                 pixels, `auto` for a squared image. Defaults to "equal".
             origin (str): The placement of the [0,0] element of the data.
@@ -84,9 +85,9 @@ class Image(Drawable):
         # rejects passing a Normalize instance together with vmin/vmax to imshow()
         if log:
             if isinstance(log, tuple):
-                normalization = colors.SymLogNorm(log[1])
+                normalization = colors.SymLogNorm(log[1], vmin=v_range[0], vmax=v_range[1])
             else:
-                normalization = colors.LogNorm()
+                normalization = colors.LogNorm(vmin=v_range[0], vmax=v_range[1])
         else:
             normalization = colors.Normalize(vmin=v_range[0], vmax=v_range[1])
 
