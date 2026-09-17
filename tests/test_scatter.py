@@ -104,3 +104,77 @@ class TestDraw:
             assert to_rgba(barlinecol.get_color()[0]) == to_rgba("red")
             assert barlinecol.get_linewidth()[0] == pytest.approx(3.0)
             assert capline.get_markersize() == pytest.approx(14.0)  # 2 * err_capsize
+
+    def test_no_line_by_default(self, single_text_file, show_plots) -> None:
+        """Without `line=True`, only the markers artist should be drawn."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([1.0, 1.5, 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plt.ScatterPlot(x, y).draw(canvas)
+
+            assert len(canvas.axes[0].lines) == 1
+
+    def test_draws_a_connecting_line_when_requested(self, single_text_file, show_plots) -> None:
+        """`line=True` should add a second `Line2D` connecting the points in order."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([1.0, 1.5, 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plt.ScatterPlot(x, y).draw(canvas, line=True)
+
+            assert len(canvas.axes[0].lines) == 2
+            connecting_line = canvas.axes[0].lines[1]
+            assert_allclose(connecting_line.get_xdata(), x)
+            assert_allclose(connecting_line.get_ydata(), y)
+
+    def test_line_defaults_match_line_plot_style(self, single_text_file, show_plots) -> None:
+        """The connecting line's defaults should match `LinePlot`'s own defaults."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([1.0, 1.5, 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plt.ScatterPlot(x, y).draw(canvas, line=True)
+
+            connecting_line = canvas.axes[0].lines[1]
+            assert to_rgba(connecting_line.get_color()) == to_rgba("darkgreen")
+            assert connecting_line.get_linewidth() == pytest.approx(1.5)
+            assert connecting_line.get_linestyle() == "-"
+            assert connecting_line.get_alpha() == pytest.approx(1.0)
+
+    def test_line_styling_uses_dedicated_kwargs(self, single_text_file, show_plots) -> None:
+        """`line_color`/`line_width`/`line_style`/`line_alpha` style the connecting line independently of the markers."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([1.0, 1.5, 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plt.ScatterPlot(x, y).draw(
+                canvas,
+                line=True,
+                line_color="blue",
+                line_width=3.0,
+                line_style="--",
+                line_alpha=0.5,
+            )
+
+            connecting_line = canvas.axes[0].lines[1]
+            assert to_rgba(connecting_line.get_color()) == to_rgba("blue")
+            assert connecting_line.get_linewidth() == pytest.approx(3.0)
+            assert connecting_line.get_linestyle() == "--"
+            assert connecting_line.get_alpha() == pytest.approx(0.5)
+
+    def test_line_is_excluded_from_the_legend(self, single_text_file, show_plots) -> None:
+        """The connecting line should not add its own legend entry."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([1.0, 1.5, 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plt.ScatterPlot(x, y).draw(canvas, line=True)
+
+            _, labels = canvas.axes[0].get_legend_handles_labels()
+            assert labels == ["data"]

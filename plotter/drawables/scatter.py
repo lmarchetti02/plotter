@@ -8,6 +8,7 @@ from pydantic.dataclasses import dataclass
 from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
 from ._error_bar_style import _ErrorBarStyle
+from ._line_style import _LineStyle
 from ..helpers import NArray1D
 
 logger = getLogger(__name__)
@@ -88,6 +89,12 @@ class ScatterPlot(Drawable):
             err_width (float): The width of the error bars. Defaults to 1.
             err_capsize (float): The size of the ticks on the error bars. Defaults to 2.
             alpha (float): The opacity of the points. Defaults to 1.0.
+            line (bool): If `True`, also draws a line connecting the points, in the order
+                they're given. Defaults to `False`.
+            line_color (str): The Matplotlib color of the connecting line. Defaults to "darkgreen".
+            line_width (float): The width of the connecting line. Defaults to 1.5.
+            line_style (str): The Matplotlib style of the connecting line. Defaults to `"-"`.
+            line_alpha (float): The opacity of the connecting line. Defaults to 1.0.
         """
 
         logger.info("Called 'ScatterPlot.draw()'")
@@ -119,6 +126,19 @@ class ScatterPlot(Drawable):
             alpha=kwargs.get("alpha", 1.0),
             label=label,
         )
+
+        if kwargs.get("line", False):
+            line_style = _LineStyle.from_kwargs(kwargs, color="darkgreen", width=1.5, style="-", alpha=1.0)
+            canvas.axes[plot_n].plot(
+                self.x,
+                self.y,
+                color=line_style.color,
+                lw=line_style.width,
+                ls=line_style.style,
+                alpha=line_style.alpha,
+                zorder=1,  # behind the markers (zorder=2)
+            )
+
         logger.debug(f"ScatterPlot {n} drawn")
 
         getattr(canvas.counters, self.label_name)[plot_n] += 1
