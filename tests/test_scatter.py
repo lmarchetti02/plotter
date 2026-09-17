@@ -130,8 +130,8 @@ class TestDraw:
             assert_allclose(connecting_line.get_xdata(), x)
             assert_allclose(connecting_line.get_ydata(), y)
 
-    def test_line_defaults_match_line_plot_style(self, single_text_file, show_plots) -> None:
-        """The connecting line's defaults should match `LinePlot`'s own defaults."""
+    def test_line_width_and_style_have_their_own_defaults(self, single_text_file, show_plots) -> None:
+        """The connecting line's width/style default to 1.5/"-", independent of the markers."""
         x = np.array([0.0, 1.0, 2.0])
         y = np.array([1.0, 1.5, 2.0])
 
@@ -140,10 +140,27 @@ class TestDraw:
             plt.ScatterPlot(x, y).draw(canvas, line=True)
 
             connecting_line = canvas.axes[0].lines[1]
-            assert to_rgba(connecting_line.get_color()) == to_rgba("darkgreen")
             assert connecting_line.get_linewidth() == pytest.approx(1.5)
             assert connecting_line.get_linestyle() == "-"
+
+    def test_line_color_and_alpha_default_to_the_points_style(self, single_text_file, show_plots) -> None:
+        """Without an explicit `line_color`/`line_alpha`, the line matches the points' own `color`/`alpha`."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([1.0, 1.5, 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plt.ScatterPlot(x, y).draw(canvas, line=True)
+
+            connecting_line = canvas.axes[0].lines[1]
+            assert to_rgba(connecting_line.get_color()) == to_rgba("firebrick")
             assert connecting_line.get_alpha() == pytest.approx(1.0)
+
+            plt.ScatterPlot(x, y).draw(canvas, label="more data", line=True, color="blue", alpha=0.3)
+
+            connecting_line = canvas.axes[0].lines[3]
+            assert to_rgba(connecting_line.get_color()) == to_rgba("blue")
+            assert connecting_line.get_alpha() == pytest.approx(0.3)
 
     def test_line_styling_uses_dedicated_kwargs(self, single_text_file, show_plots) -> None:
         """`line_color`/`line_width`/`line_style`/`line_alpha` style the connecting line independently of the markers."""

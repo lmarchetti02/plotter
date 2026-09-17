@@ -90,7 +90,7 @@ Draws the scatter plot on the canvas.
 | `err_capsize` | float | The size of the ticks on the error bars. Defaults to 2. |
 | `alpha` | float | The opacity of the points. Defaults to 1.0. |
 | `line` | bool | If `True`, also draws a line connecting the points, in the order they're given. Defaults to `False`. |
-| `line_color` | str | The Matplotlib color of the connecting line. Defaults to "darkgreen". |
+| `line_color` | str | The Matplotlib color of the connecting line. Defaults to the points' own `color`. |
 | `line_width` | float | The width of the connecting line. Defaults to 1.5. |
 | `line_style` | str | The Matplotlib style of the connecting line. Defaults to `"-"`. |
-| `line_alpha` | float | The opacity of the connecting line. Defaults to 1.0. |
+| `line_alpha` | float | The opacity of the connecting line. Defaults to the points' own `alpha`. |

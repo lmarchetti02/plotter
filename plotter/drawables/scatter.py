@@ -91,10 +91,12 @@ class ScatterPlot(Drawable):
             alpha (float): The opacity of the points. Defaults to 1.0.
             line (bool): If `True`, also draws a line connecting the points, in the order
                 they're given. Defaults to `False`.
-            line_color (str): The Matplotlib color of the connecting line. Defaults to "darkgreen".
+            line_color (str): The Matplotlib color of the connecting line. Defaults to the
+                points' own `color`.
             line_width (float): The width of the connecting line. Defaults to 1.5.
             line_style (str): The Matplotlib style of the connecting line. Defaults to `"-"`.
-            line_alpha (float): The opacity of the connecting line. Defaults to 1.0.
+            line_alpha (float): The opacity of the connecting line. Defaults to the points'
+                own `alpha`.
         """
 
         logger.info("Called 'ScatterPlot.draw()'")
@@ -109,6 +111,8 @@ class ScatterPlot(Drawable):
         )
 
         err_style = _ErrorBarStyle.from_kwargs(kwargs, color="black", width=1.0, capsize=2.0)
+        marker_color = kwargs.get("color", "firebrick")
+        marker_alpha = kwargs.get("alpha", 1.0)
 
         canvas.axes[plot_n].errorbar(
             x=self.x,
@@ -116,19 +120,19 @@ class ScatterPlot(Drawable):
             yerr=self.yerr,
             xerr=self.xerr,
             marker=kwargs.get("marker", "o"),
-            color=kwargs.get("color", "firebrick"),
+            color=marker_color,
             ecolor=err_style.color,
             ms=kwargs.get("ms", 4.0),
             elinewidth=err_style.width,
             zorder=2,  # layer
             ls="none",  # line size (none for disconnected dots)
             capsize=err_style.capsize,
-            alpha=kwargs.get("alpha", 1.0),
+            alpha=marker_alpha,
             label=label,
         )
 
         if kwargs.get("line", False):
-            line_style = _LineStyle.from_kwargs(kwargs, color="darkgreen", width=1.5, style="-", alpha=1.0)
+            line_style = _LineStyle.from_kwargs(kwargs, color=marker_color, width=1.5, style="-", alpha=marker_alpha)
             canvas.axes[plot_n].plot(
                 self.x,
                 self.y,
