@@ -41,7 +41,7 @@ own footprint, so it never overlaps a neighboring subplot outside the target.
 | Name | Type | Description |
 | --- | --- | --- |
 | `canvas` | Canvas \| ZoomInset | The canvas (or zoom-inset panel) to draw the colorbar on. |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to attach the colorbar to. At most one of `plot_n`, `row`, `col` may be given; defaults to `0` when none are. See `Canvas.plot_indices`. |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to attach the colorbar to. At most one of `plot_n`, `row`, `col` may be given; defaults to `0` when none are. See `Canvas.plot_indices`. A `list\[int\]` must resolve to consecutive indices -- the colorbar's placement geometry has no meaning for a gapped target. |
 | `row` | int, optional | A row of the `canvas`'s grid to share the colorbar across. Not supported when `canvas` is a `ZoomInset`. |
 | `col` | int, optional | A column of the `canvas`'s grid to share the colorbar across. Not supported when `canvas` is a `ZoomInset`. |
 | `label` | str, optional | The colorbar's label. Defaults to `None`. |
@@ -63,3 +63,4 @@ own footprint, so it never overlaps a neighboring subplot outside the target.
 | ValueError | If `position` is not one of "left", "right", "top", "bottom". |
 | ValueError | If more than one of `plot_n`, `row`, `col` is given. |
 | ValueError | If `row`/`col` is given for a `ZoomInset`. |
+| ValueError | If `plot_n` is a list that does not resolve to consecutive indices. |

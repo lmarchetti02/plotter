@@ -119,6 +119,17 @@ class TestDraw:
             with pytest.raises(ValueError, match="Exactly one of"):
                 colorbar.draw(canvas, row=0, col=0)
 
+    def test_rejects_non_consecutive_plot_n(self, workspace, show_plots) -> None:
+        """A colorbar's placement geometry has no meaning for a gapped subplot selection."""
+        with plt.Canvas("colorbar_non_consecutive_labels", (1, 3), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            image = make_image()
+            image.draw(canvas, plot_n=0)
+
+            colorbar = plt.Colorbar(source=image)
+            with pytest.raises(ValueError, match="consecutive"):
+                colorbar.draw(canvas, plot_n=[0, 2])
+
     def test_works_with_a_zoom_inset(self, single_text_file, show_plots) -> None:
         """A Colorbar should be attachable to a ZoomInset's single Axes."""
         with plt.Canvas(str(single_text_file), show=show_plots) as canvas:

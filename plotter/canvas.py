@@ -443,6 +443,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
             row (int, optional): A 0-based row index in the `rows_cols` grid;
                 resolves to every subplot in that row.
             col (int, optional): A 0-based column index in the `rows_cols` grid;
@@ -455,6 +457,7 @@ class Canvas:
             ValueError: If zero, or more than one, of 'plot_n', 'row', 'col' is given.
             ValueError: If 'row' or 'col' is out of range for `rows_cols`.
             ValueError: If 'plot_n' is not a valid value.
+            ValueError: If 'plot_n' is a list containing duplicate indices.
         """
         n_rows, n_cols = self.rows_cols
         if sum(value is not None for value in (plot_n, row, col)) != 1:
@@ -469,6 +472,11 @@ class Canvas:
             if not 0 <= col < n_cols:
                 raise ValueError(f"'col' must be between 0 and {n_cols - 1}.")
             return list(range(col, self._n_plots, n_cols))
+
+        if isinstance(plot_n, list):
+            if len(set(plot_n)) != len(plot_n):
+                raise ValueError(f"'{plot_n}' contains duplicate indices.")
+            return sorted(plot_n)
 
         if isinstance(plot_n, int):
             limits = (plot_n, plot_n + 1)
@@ -492,6 +500,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
 
         Keyword Arguments:
             xlim (tuple[float, float]): The limits for the x-axis.
@@ -536,6 +546,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
 
         Keyword Arguments:
             color (str): The color of the line. Defaults to 'black'.
@@ -571,6 +583,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
 
         Keyword Arguments:
             color (str): The color of the band. Defaults to 'black'.
@@ -619,6 +633,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
             point (tuple[float, float] | None, optional): A point to annotate.
                 When provided, an arrow is drawn from the text to this point.
 
@@ -667,6 +683,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
 
         Keyword Arguments:
             marker (str): The marker style. Defaults to 'o'.
@@ -730,6 +748,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
             limits (tuple[int, int] or int, optional): Controls the scientific
                 notation.
                 - `(m, n)`: Scientific notation is used for numbers outside
@@ -770,6 +790,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
 
         Raises:
             ValueError: If the axis is not 'x' or 'y'.
@@ -799,6 +821,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
 
         Raises:
             ValueError: If the axis is not 'x', 'y', or 'both'.
@@ -825,6 +849,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
 
         Keyword Arguments:
             location (str, tuple[float, float]): Where to put the scalebar.
@@ -953,6 +979,8 @@ class Canvas:
                 - str: 'all' to target all plots.
                 - tuple[int, int]: A range of plots to target, from
                     `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
 
         Keyword Arguments:
             location (str): Where to place the inset panel. Defaults to "upper right".

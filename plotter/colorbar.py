@@ -453,6 +453,8 @@ class Colorbar:
             plot_n (PlotN, optional): The index or indices of the
                 subplots to attach the colorbar to. At most one of `plot_n`, `row`, `col`
                 may be given; defaults to `0` when none are. See `Canvas.plot_indices`.
+                A `list[int]` must resolve to consecutive indices -- the colorbar's
+                placement geometry has no meaning for a gapped target.
             row (int, optional): A row of the `canvas`'s grid to share the colorbar
                 across. Not supported when `canvas` is a `ZoomInset`.
             col (int, optional): A column of the `canvas`'s grid to share the colorbar
@@ -476,6 +478,7 @@ class Colorbar:
             ValueError: If `position` is not one of "left", "right", "top", "bottom".
             ValueError: If more than one of `plot_n`, `row`, `col` is given.
             ValueError: If `row`/`col` is given for a `ZoomInset`.
+            ValueError: If `plot_n` is a list that does not resolve to consecutive indices.
         """
         logger.info("Called 'Colorbar.draw()'")
 
@@ -496,7 +499,10 @@ class Colorbar:
         else:
             if plot_n is None and row is None and col is None:
                 plot_n = 0
-            axes = [canvas.axes[i] for i in canvas.plot_indices(plot_n, row=row, col=col)]
+            indices = canvas.plot_indices(plot_n, row=row, col=col)
+            if isinstance(plot_n, list) and indices and indices != list(range(indices[0], indices[-1] + 1)):
+                raise ValueError(f"'{plot_n}' must resolve to consecutive subplot indices for a colorbar.")
+            axes = [canvas.axes[i] for i in indices]
 
         orientation = "vertical" if position in ("left", "right") else "horizontal"
         cax = _make_colorbar_axes(canvas.figure, axes, canvas.axes, position, size, padding)

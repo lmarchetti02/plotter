@@ -154,12 +154,22 @@ class TestPlotIndices:
             ("all", [0, 1, 2]),
             ((0, 1), [0, 1]),
             ((1, 2), [1, 2]),
+            ([0, 2], [0, 2]),
+            ([2, 0], [0, 2]),
         ],
     )
-    def test_resolves_to_the_expected_subplot_indices(self, workspace: Path, plot_n: int | tuple[int, int] | str, expected: list[int]) -> None:
+    def test_resolves_to_the_expected_subplot_indices(
+        self, workspace: Path, plot_n: int | tuple[int, int] | list[int] | str, expected: list[int]
+    ) -> None:
         """Each supported 'plot_n' form should resolve to its documented indices."""
         with plt.Canvas("plot_indices_labels", (1, 3), show=False) as canvas:
             assert canvas.plot_indices(plot_n) == expected
+
+    def test_rejects_duplicate_indices_in_a_list(self, workspace: Path) -> None:
+        """A list 'plot_n' with repeated indices almost certainly signals a mistake."""
+        with plt.Canvas("plot_indices_labels_duplicate", (1, 3), show=False) as canvas:
+            with pytest.raises(ValueError, match="duplicate"):
+                canvas.plot_indices([0, 1, 0])
 
     def test_rejects_an_invalid_value(self, workspace: Path) -> None:
         """An unsupported 'plot_n' value should fail loudly."""
