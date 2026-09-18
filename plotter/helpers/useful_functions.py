@@ -57,7 +57,7 @@ def stack_bottoms(heights: list[NArray1D[Any]]) -> list[NArray1D[Any]]:
     """
     logger.info("Called 'stack_bottoms' function.")
 
-    if not heights:
+    if len(heights) == 0:
         raise ValueError("heights must contain at least one series")
 
     if len({len(series) for series in heights}) > 1:
