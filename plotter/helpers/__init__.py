@@ -1,4 +1,4 @@
 from .constants import F64, NArray1D, NArray2D, NArray3D, PlotN  # noqa: F401
 from .initialization import setup_workspace  # noqa: F401
 from .text import PlotText, Text  # noqa: F401
-from .useful_functions import get_colors  # noqa: F401
+from .useful_functions import get_colors, stack_bottoms  # noqa: F401

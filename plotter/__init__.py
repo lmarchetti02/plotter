@@ -16,4 +16,4 @@ from .drawables.images import Image  # noqa: F401
 from .drawables.lines import LinePlot  # noqa: F401
 from .drawables.raw_histograms import RawHist, RawHist2D  # noqa: F401
 from .drawables.scatter import ScatterPlot  # noqa: F401
-from .helpers import get_colors, setup_workspace  # noqa: F401
+from .helpers import get_colors, setup_workspace, stack_bottoms  # noqa: F401

@@ -75,6 +75,42 @@ class TestDraw:
             assert patch.get_width() == pytest.approx(0.4)  # type: ignore
             assert patch.get_linewidth() == pytest.approx(1.5)
 
+    def test_bottom_offsets_the_bars(self, single_text_file, show_plots) -> None:
+        """`bottom` should be forwarded to `Axes.bar`, offsetting each bar's base."""
+        x = np.array([0.0, 1.0])
+        heights = np.array([2.0, 4.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            bars = plt.BarChart(x, heights)
+
+            bars.draw(canvas, bottom=1.5)
+
+            for patch in canvas.axes[0].patches:
+                assert patch.get_y() == pytest.approx(1.5)  # type: ignore
+
+    def test_stacking_two_bar_charts_on_the_same_subplot(self, single_text_file, show_plots) -> None:
+        """Drawing a second `BarChart` with `bottom` set to the first's heights should stack them."""
+        x = np.array([0.0, 1.0, 2.0])
+        bottom_heights = np.array([1.0, 3.0, 2.0])
+        top_heights = np.array([2.0, 1.0, 4.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+
+            plt.BarChart(x, bottom_heights).draw(canvas, label="bottom series")
+            plt.BarChart(x, top_heights).draw(canvas, bottom=bottom_heights, label="top series")
+
+            assert canvas.counters.bar_charts[0] == 2
+
+            bottom_patches = canvas.axes[0].patches[:3]
+            top_patches = canvas.axes[0].patches[3:]
+            for bottom_patch, top_patch in zip(bottom_patches, top_patches):
+                assert top_patch.get_y() == pytest.approx(bottom_patch.get_height())  # type: ignore
+
+            _, labels = canvas.axes[0].get_legend_handles_labels()
+            assert labels == ["bottom series", "top series"]
+
     def test_error_bar_styling_uses_the_same_kwarg_names_as_scatter_plot(self, single_text_file, show_plots) -> None:
         """`err_color`/`err_width`/`err_capsize` style the error bars, matching `ScatterPlot`'s own kwargs."""
         x = np.array([0.0, 1.0, 2.0])

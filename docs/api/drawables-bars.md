@@ -52,6 +52,7 @@ Draws the bar chart on the canvas.
 
 | Name | Type | Description |
 | --- | --- | --- |
+| `bottom` | float \| NArray1D\[Any\] | The y-coordinate(s) of each bar's base. Pass the previous series' (cumulative) heights to stack bar charts on top of each other -- see `plotter.helpers.useful_functions.stack_bottoms` for computing this across more than two series. Defaults to 0. |
 | `width` | float | The width of the bars. Defaults to 0.8. |
 | `color` | str | The Matplotlib color of the bars. Defaults to "steelblue". |
 | `alpha` | float | The transparency of the bars. Defaults to 0.9. |

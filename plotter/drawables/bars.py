@@ -67,6 +67,10 @@ class BarChart(Drawable):
                 kwarg. Defaults to `False`.
 
         Keyword Arguments:
+            bottom (float | NArray1D[Any]): The y-coordinate(s) of each bar's base.
+                Pass the previous series' (cumulative) heights to stack bar charts on
+                top of each other -- see `plotter.helpers.useful_functions.stack_bottoms`
+                for computing this across more than two series. Defaults to 0.
             width (float): The width of the bars. Defaults to 0.8.
             color (str): The Matplotlib color of the bars. Defaults to "steelblue".
             alpha (float): The transparency of the bars. Defaults to 0.9.
@@ -94,6 +98,7 @@ class BarChart(Drawable):
             self.x,
             self.heights,
             yerr=self.yerr,
+            bottom=kwargs.get("bottom", 0),
             width=kwargs.get("width", 0.8),
             color=kwargs.get("color", "steelblue"),
             alpha=kwargs.get("alpha", 0.9),
