@@ -73,6 +73,15 @@ Class for storing and accessing the text to be displayed on the canvas.
 
 ### Methods
 
+#### `set_empty`
+
+```python
+set_empty(self) -> None
+```
+
+Fills every subplot with blank title, axis labels, and label lists.
+
+
 #### `read_json`
 
 ```python

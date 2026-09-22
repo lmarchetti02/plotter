@@ -23,6 +23,17 @@ class TestGetEmpyText:
             assert getattr(empty_text, name) == [""]
 
 
+class TestSetEmpty:
+    """Tests for `Text.set_empty`."""
+
+    def test_fills_every_subplot_with_blank_text(self) -> None:
+        """Every subplot should get its own blank placeholder, with no file involved."""
+        text = Text(3)
+        text.set_empty()
+
+        assert text.subplots_text == [PlotText.get_empy_text() for _ in range(3)]
+
+
 class TestReadJson:
     """Tests for `Text.read_json`."""
 

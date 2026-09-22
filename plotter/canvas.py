@@ -276,7 +276,7 @@ class ZoomInset:
         """Initializes the blank text and zeroed counters for the panel."""
         self.figure = self.axes[0].figure  # type: ignore
         self.text = Text(1)
-        self.text.subplots_text = [PlotText.get_empy_text()]
+        self.text.set_empty()
         self.counters = _Counters.initialize_counters(1)
 
     def setup(self, **kwargs) -> None:
@@ -330,8 +330,10 @@ class Canvas:
     Class for creating an empty canvas (xy-plane).
 
     Attributes:
-        text_file (str): The name of the JSON file containing the text to be
-            added to the plot.
+        text_file (str, optional): The name of the JSON file containing the text to be
+            added to the plot. Defaults to None, in which case no JSON file is read or
+            created and every subplot starts with blank text -- use `set_title` to give
+            the subplots a title.
         rows_cols (tuple[int, int], optional): A tuple with the number of rows
             and columns of subplots. Defaults to (1, 1).
         figsize (tuple[float, float], optional): A tuple containing the dimensions of
@@ -340,6 +342,8 @@ class Canvas:
             Defaults to 150.
         save (str, optional): The name of the file to save the plot to. The
             plots are stored in 'plotter/img/'. Defaults to an empty string.
+        suptitle (str, optional): The title of the figure as a whole, displayed above
+            the subplots' own titles. Defaults to an empty string, which adds no title.
         figure (Figure): The matplotlib Figure object.
         axes (list[Axes]): A list with the matplotlib Axes object corresponding
             to each subplot.
@@ -349,12 +353,13 @@ class Canvas:
     """
 
     # args
-    text_file: str
+    text_file: str | None = None
     rows_cols: tuple[int, int] = (1, 1)
     figsize: tuple[float, float] = (12.0, 8.0)
     dpi: int = 150
     save: str = ""
     show: bool = True
+    suptitle: str = ""
 
     # public attributes
     figure: Figure = Field(init=False)
@@ -394,7 +399,14 @@ class Canvas:
 
         # plot text
         self.text = Text(self._n_plots)
-        self.text.read_json(self.text_file)
+        if not self.text_file:
+            self.text.set_empty()
+        else:
+            self.text.read_json(self.text_file)
+
+        # figure title
+        if self.suptitle:
+            self.figure.suptitle(self.suptitle)
 
         # legend
         self._loc_legend = [0 for _ in range(self._n_plots)]
@@ -531,6 +543,35 @@ class Canvas:
             # legend
             self._loc_legend[plot_i] = kwargs.get("legend", 0)
             self._ncols_legend[plot_i] = kwargs.get("leg_ncols", 1)
+
+    def set_title(self, title: str, plot_n: PlotN = 0) -> None:
+        """
+        Sets the title of one or more subplots.
+
+        Overrides the title coming from the JSON text file, if any, and is applied
+        right away, so it works both before and after `setup`. This is meant for a
+        canvas that needs no text beyond a title (e.g. one holding only `Image`
+        objects), which can then be built without a `text_file` at all.
+
+        Args:
+            title (str): The title to display.
+            plot_n (PlotN, optional): The index or indices
+                of the subplots to title. Defaults to 0. Options:
+                - int: The index of a single plot (e.g., 0, 1).
+                - str: 'all' to target all plots.
+                - tuple[int, int]: A range of plots to target, from
+                    `inf` to `sup` (inclusive).
+                - list[int]: An explicit, non-consecutive set of plot indices to
+                    target (e.g. [0, 2]).
+
+        Raises:
+            ValueError: If 'plot_n' is not a valid value.
+        """
+        logger.info("Called 'Canvas.set_title()'")
+
+        for plot_i in self.plot_indices(plot_n):
+            self.text[plot_i].title = title
+            self.axes[plot_i].set_title(title, y=1)
 
     def draw_line(self, orientation: str, point: float = 0.0, plot_n: PlotN = 0, **kwargs) -> None:
         """

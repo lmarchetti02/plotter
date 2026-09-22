@@ -103,6 +103,10 @@ class Text:
         """Allows to iterate over the `PlotText` objects."""
         return iter(self.subplots_text)
 
+    def set_empty(self) -> None:
+        """Fills every subplot with blank title, axis labels, and label lists."""
+        self.subplots_text = [PlotText.get_empy_text() for _ in range(self.n_plots)]
+
     def read_json(self, text_file: str) -> None:
         """
         Parses data from the JSON file and stores it in the class attributes.
@@ -133,9 +137,9 @@ class Text:
         except FileNotFoundError as _:
             logger.warning(f"JSON file not found. Creating {file_path}.")
 
-            self.subplots_text = [PlotText.get_empy_text() for _ in range(self.n_plots)]
+            self.set_empty()
             file_path.write_text(dumps([text.to_dict() for text in self.subplots_text], indent=2))
 
         except (JSONDecodeError, TypeError) as _:
             logger.warning(f"Could not parse JSON file {file_path}. Canvas will not display any text.")
-            self.subplots_text = [PlotText.get_empy_text() for _ in range(self.n_plots)]
+            self.set_empty()

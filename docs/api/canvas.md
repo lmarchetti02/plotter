@@ -95,11 +95,12 @@ Class for creating an empty canvas (xy-plane).
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `text_file` | str | The name of the JSON file containing the text to be added to the plot. |
+| `text_file` | str, optional | The name of the JSON file containing the text to be added to the plot. Defaults to None, in which case no JSON file is read or created and every subplot starts with blank text -- use `set_title` to give the subplots a title. |
 | `rows_cols` | tuple\[int, int\], optional | A tuple with the number of rows and columns of subplots. Defaults to (1, 1). |
 | `figsize` | tuple\[float, float\], optional | A tuple containing the dimensions of the canvas (width, height). Defaults to (12, 8). |
 | `dpi` | int, optional | The number of dots per inch (DPI) of the image. Defaults to 150. |
 | `save` | str, optional | The name of the file to save the plot to. The plots are stored in 'plotter/img/'. Defaults to an empty string. |
+| `suptitle` | str, optional | The title of the figure as a whole, displayed above the subplots' own titles. Defaults to an empty string, which adds no title. |
 | `figure` | Figure | The matplotlib Figure object. |
 | `axes` | list\[Axes\] | A list with the matplotlib Axes object corresponding to each subplot. |
 
@@ -112,12 +113,13 @@ Class for creating an empty canvas (xy-plane).
 
 **Defined attributes:**
 
-- `text_file: str`
+- `text_file: str | None`
 - `rows_cols: tuple[int, int]`
 - `figsize: tuple[float, float]`
 - `dpi: int`
 - `save: str`
 - `show: bool`
+- `suptitle: str`
 - `figure: Figure`
 - `axes: list[Axes]`
 - `text: Text`
@@ -192,6 +194,34 @@ Sets up the properties of the subplots.
 | `inverted` | tuple\[bool, bool\] | A tuple to invert the x and y axes respectively (e.g., `(True, False)`). |
 | `legend` | int | Force the position of the legend to a specified one. See 'plotter/utils/info/legend.png'. |
 | `leg_ncols` | int | The number of columns to arrange the legend entries into. Defaults to 1. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If 'plot_n' is not a valid value. |
+
+
+#### `set_title`
+
+```python
+set_title(self, title: str, plot_n: PlotN=0) -> None
+```
+
+Sets the title of one or more subplots.
+
+Overrides the title coming from the JSON text file, if any, and is applied
+right away, so it works both before and after `setup`. This is meant for a
+canvas that needs no text beyond a title (e.g. one holding only `Image`
+objects), which can then be built without a `text_file` at all.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `title` | str | The title to display. |
+| `plot_n` | PlotN, optional | The index or indices of the subplots to title. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
 
 **Raises:**
 

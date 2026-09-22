@@ -84,6 +84,51 @@ class TestCanvas:
         with pytest.raises(ValueError, match="must be at least 1"):
             plt.Canvas(str(single_text_file), rows_cols=rows_cols, show=False)
 
+    @pytest.mark.parametrize("text_file", [None, ""])
+    def test_starts_with_blank_text_when_no_text_file_is_given(self, workspace: Path, text_file: str | None) -> None:
+        """A canvas built without a text file should get blank text for every subplot, and --
+        the point of the feature -- must not create a JSON file just to hold that blankness."""
+        text_dir = workspace / "plotter" / "text"
+        files_before = set(text_dir.iterdir())
+
+        with plt.Canvas(text_file, rows_cols=(1, 2), show=False) as canvas:
+            canvas.setup()
+
+            for axis in canvas.axes:
+                assert axis.get_title() == ""
+                assert axis.get_xlabel() == ""
+                assert axis.get_ylabel() == ""
+
+        assert set(text_dir.iterdir()) == files_before
+
+    def test_adds_no_suptitle_by_default(self, workspace: Path) -> None:
+        """Without an explicit suptitle, no figure-level title artist should be added at all."""
+        with plt.Canvas(show=False) as canvas:
+            canvas.setup()
+
+            assert canvas.figure.get_suptitle() == ""
+
+    def test_sets_the_figure_suptitle(self, workspace: Path) -> None:
+        """The suptitle should sit on the figure, independently of the subplots' own titles."""
+        with plt.Canvas(rows_cols=(1, 2), suptitle="Run 42", show=False) as canvas:
+            canvas.setup()
+
+            assert canvas.figure.get_suptitle() == "Run 42"
+            assert all(axis.get_title() == "" for axis in canvas.axes)
+
+    def test_auto_layout_leaves_room_for_the_suptitle(self, workspace: Path) -> None:
+        """`_auto_layout`'s tight_layout() pass reserves vertical space for a suptitle, which is
+        what lets `__post_init__` set it naively without any further layout handling."""
+        with plt.Canvas(show=False) as plain_canvas:
+            plain_canvas.setup()
+        plain_top = plain_canvas.axes[0].get_position().y1
+
+        with plt.Canvas(suptitle="A very tall suptitle", show=False) as titled_canvas:
+            titled_canvas.setup()
+        titled_top = titled_canvas.axes[0].get_position().y1
+
+        assert titled_top < plain_top
+
     def test_disables_any_active_layout_engine(self, single_text_file: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """A layout engine (auto-enabled by plt.subplots() whenever the caller's own
         rcParams -- unrelated to plotter's own style -- has figure.autolayout or
@@ -298,6 +343,53 @@ class TestSetup:
             axis = canvas.axes[0]
             assert all(line.get_visible() == x_visible for line in axis.get_xgridlines())
             assert all(line.get_visible() == y_visible for line in axis.get_ygridlines())
+
+
+class TestSetTitle:
+    """Tests for `Canvas.set_title`."""
+
+    def test_titles_a_single_subplot_by_default(self, workspace: Path) -> None:
+        """set_title should target only the first subplot unless told otherwise."""
+        with plt.Canvas(rows_cols=(1, 2), show=False) as canvas:
+            canvas.setup()
+            canvas.set_title("Detector frame")
+
+            assert canvas.axes[0].get_title() == "Detector frame"
+            assert canvas.axes[1].get_title() == ""
+
+    def test_survives_a_later_setup_call(self, workspace: Path) -> None:
+        """setup() re-applies every title from `canvas.text`, so set_title must write there and
+        not only onto the Axes -- otherwise calling it before setup() would silently do nothing."""
+        with plt.Canvas(show=False) as canvas:
+            canvas.set_title("Detector frame")
+            canvas.setup()
+
+            assert canvas.axes[0].get_title() == "Detector frame"
+
+    def test_overrides_the_title_from_the_text_file(self, single_text_file: Path) -> None:
+        """An explicit title should win over the one loaded from the JSON text file."""
+        with plt.Canvas(str(single_text_file), show=False) as canvas:
+            canvas.setup()
+            assert canvas.axes[0].get_title() == "Test 1"
+
+            canvas.set_title("Overridden")
+
+            assert canvas.axes[0].get_title() == "Overridden"
+            assert canvas.text[0].title == "Overridden"
+
+    def test_can_title_every_subplot_at_once(self, workspace: Path) -> None:
+        """'all' should stamp the same title onto every subplot."""
+        with plt.Canvas(rows_cols=(1, 2), show=False) as canvas:
+            canvas.setup()
+            canvas.set_title("Shared", plot_n="all")
+
+            assert all(axis.get_title() == "Shared" for axis in canvas.axes)
+
+    def test_rejects_an_invalid_plot_n(self, workspace: Path) -> None:
+        """An unusable 'plot_n' should fail loudly rather than silently titling nothing."""
+        with plt.Canvas(show=False) as canvas:
+            with pytest.raises(ValueError, match="not a valid value"):
+                canvas.set_title("Detector frame", plot_n="first")  # type: ignore
 
 
 class TestDrawLine:
