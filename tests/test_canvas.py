@@ -1,5 +1,6 @@
 """Tests for canvas setup and drawing helpers."""
 
+from json import dumps
 from pathlib import Path
 from unittest.mock import patch
 from warnings import warn
@@ -12,6 +13,9 @@ from matplotlib.layout_engine import PlaceHolderLayoutEngine
 from matplotlib.offsetbox import AnchoredOffsetbox
 
 import plotter as plt
+
+# two subplots stacked on the left, one spanning the full height on the right
+STACKED_LEFT_SPANNING_RIGHT = [[0, 2], [1, 2]]
 
 
 class TestReorientedLoc:
@@ -130,7 +134,7 @@ class TestCanvas:
         assert titled_top < plain_top
 
     def test_disables_any_active_layout_engine(self, single_text_file: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """A layout engine (auto-enabled by plt.subplots() whenever the caller's own
+        """A layout engine (auto-enabled by plt.figure() whenever the caller's own
         rcParams -- unrelated to plotter's own style -- has figure.autolayout or
         figure.constrained_layout.use set) would silently re-run on every render and
         undo Colorbar's manual axes repositioning; Canvas must disable it regardless."""
@@ -138,6 +142,144 @@ class TestCanvas:
 
         with plt.Canvas(str(single_text_file), show=False) as canvas:
             assert isinstance(canvas.figure.get_layout_engine(), PlaceHolderLayoutEngine)
+
+    def test_layout_creates_one_axes_per_distinct_subplot(self, workspace: Path) -> None:
+        """A repeated index in 'layout' is one subplot spanning several cells, not several subplots."""
+        with plt.Canvas(layout=STACKED_LEFT_SPANNING_RIGHT, show=False) as canvas:
+            assert len(canvas.axes) == 3
+            spanning_spec = canvas.axes[2].get_subplotspec()
+            assert spanning_spec.rowspan == range(0, 2)
+            assert spanning_spec.colspan == range(1, 2)
+
+    def test_spanning_subplot_covers_both_rows(self, workspace: Path) -> None:
+        """The spanning subplot should extend from the bottom of the lower row to the top of the upper one."""
+        with plt.Canvas(layout=STACKED_LEFT_SPANNING_RIGHT, show=False) as canvas:
+            top, bottom, spanning = (axis.get_position() for axis in canvas.axes)
+
+            assert spanning.y0 == pytest.approx(bottom.y0)
+            assert spanning.y1 == pytest.approx(top.y1)
+
+    def test_empty_cells_create_no_axes(self, workspace: Path) -> None:
+        """A `None` cell should leave that area of the figure blank."""
+        with plt.Canvas(layout=[[0, 1], [2, None]], show=False) as canvas:
+            assert len(canvas.axes) == 3
+            assert len(canvas.figure.axes) == 3
+
+    def test_rows_cols_is_derived_from_layout(self, workspace: Path) -> None:
+        """With a 'layout', 'rows_cols' should reflect the shape of the mosaic."""
+        with plt.Canvas(layout=[[0, 1, 1], [2, 3, 4]], show=False) as canvas:
+            assert canvas.rows_cols == (2, 3)
+
+    def test_defaults_to_a_single_subplot(self, workspace: Path) -> None:
+        """Neither 'rows_cols' nor 'layout' should still mean a single (1, 1) subplot."""
+        with plt.Canvas(show=False) as canvas:
+            assert canvas.rows_cols == (1, 1)
+            assert len(canvas.axes) == 1
+
+    def test_rejects_both_rows_cols_and_layout(self, workspace: Path) -> None:
+        """'rows_cols' and 'layout' describe the same thing, so giving both is ambiguous."""
+        with pytest.raises(ValueError, match="Only one of 'rows_cols' and 'layout'"):
+            plt.Canvas(rows_cols=(2, 2), layout=STACKED_LEFT_SPANNING_RIGHT, show=False)
+
+    def test_rejects_an_empty_layout(self, workspace: Path) -> None:
+        """A layout with no rows has nothing to draw on."""
+        with pytest.raises(ValueError, match="at least one row"):
+            plt.Canvas(layout=[], show=False)
+
+    def test_rejects_a_ragged_layout(self, workspace: Path) -> None:
+        """Every row of the mosaic must have the same number of cells."""
+        with pytest.raises(ValueError, match="same number of cells"):
+            plt.Canvas(layout=[[0, 1], [2]], show=False)
+
+    def test_rejects_a_layout_without_subplots(self, workspace: Path) -> None:
+        """A mosaic made only of empty cells has nothing to draw on."""
+        with pytest.raises(ValueError, match="at least one subplot"):
+            plt.Canvas(layout=[[None, None]], show=False)
+
+    def test_rejects_non_consecutive_subplot_numbers(self, workspace: Path) -> None:
+        """The indices in 'layout' are the `plot_n`s, so a gap would leave an unreachable index."""
+        with pytest.raises(ValueError, match="numbered consecutively from 0"):
+            plt.Canvas(layout=[[0, 2]], show=False)
+
+    def test_rejects_a_non_rectangular_subplot(self, workspace: Path) -> None:
+        """An L-shaped subplot can't be drawn; matplotlib's own error should reach the caller."""
+        with pytest.raises(ValueError, match="non-rectangular"):
+            plt.Canvas(layout=[[0, 1], [1, 1]], show=False)
+
+    def test_width_and_height_ratios_are_applied(self, workspace: Path) -> None:
+        """'width_ratios'/'height_ratios' should set the relative size of the columns/rows."""
+        with plt.Canvas(layout=STACKED_LEFT_SPANNING_RIGHT, width_ratios=(1.0, 3.0), height_ratios=(1.0, 2.0), show=False) as canvas:
+            top, bottom, spanning = (axis.get_position() for axis in canvas.axes)
+
+            assert spanning.width / top.width == pytest.approx(3.0)
+            assert bottom.height / top.height == pytest.approx(2.0)
+
+    def test_reads_one_text_entry_per_distinct_subplot(self, workspace: Path) -> None:
+        """The JSON file of a layout needs one entry per subplot, not one per cell."""
+        text = [{"title": title, "x_label": "", "y_label": ""} for title in ("Top", "Bottom", "Spanning")]
+        (workspace / "plotter/text/layout_labels.json").write_text(dumps(text))
+
+        with plt.Canvas("layout_labels", layout=STACKED_LEFT_SPANNING_RIGHT, show=False) as canvas:
+            canvas.setup()
+
+            assert [axis.get_title() for axis in canvas.axes] == ["Top", "Bottom", "Spanning"]
+
+
+class TestAxisSharing:
+    """Tests for `Canvas`'s `sharex`/`sharey`."""
+
+    def test_shares_nothing_by_default(self, workspace: Path) -> None:
+        """Without 'sharex'/'sharey', each subplot keeps independent limits."""
+        with plt.Canvas(rows_cols=(2, 1), show=False) as canvas:
+            canvas.axes[0].set_xlim(0.0, 5.0)
+
+            assert canvas.axes[1].get_xlim() != pytest.approx((0.0, 5.0))
+
+    def test_sharing_all_links_the_limits_of_every_subplot(self, workspace: Path) -> None:
+        """With `sharex=True`, setting one subplot's x-limits should move every other one's too."""
+        with plt.Canvas(rows_cols=(2, 2), sharex=True, show=False) as canvas:
+            canvas.axes[0].set_xlim(0.0, 5.0)
+
+            assert all(axis.get_xlim() == pytest.approx((0.0, 5.0)) for axis in canvas.axes)
+            assert canvas.axes[1].get_ylim() == pytest.approx(canvas.axes[3].get_ylim())
+
+    def test_sharing_by_col_groups_the_subplots_starting_in_each_column(self, workspace: Path) -> None:
+        """On [[0, 2], [1, 2]], 'col' should link the two stacked subplots, and leave the spanning one alone."""
+        with plt.Canvas(layout=STACKED_LEFT_SPANNING_RIGHT, sharex="col", show=False) as canvas:
+            top, bottom, spanning = canvas.axes
+            shared = top.get_shared_x_axes()
+
+            assert shared.joined(top, bottom)
+            assert not shared.joined(top, spanning)
+
+    def test_sharing_by_row_groups_the_subplots_starting_in_each_row(self, workspace: Path) -> None:
+        """On [[0, 2], [1, 2]], the spanning subplot starts in row 0, so it only shares with subplot 0."""
+        with plt.Canvas(layout=STACKED_LEFT_SPANNING_RIGHT, sharey="row", show=False) as canvas:
+            top, bottom, spanning = canvas.axes
+            shared = top.get_shared_y_axes()
+
+            assert shared.joined(top, spanning)
+            assert not shared.joined(bottom, spanning)
+
+    def test_hides_x_tick_labels_of_subplots_with_a_sharing_subplot_below(self, workspace: Path) -> None:
+        """Only the bottom row of a shared x-axis should keep its tick labels."""
+        with plt.Canvas(rows_cols=(2, 2), sharex=True, show=False) as canvas:
+            assert [axis.xaxis.get_tick_params()["labelbottom"] for axis in canvas.axes] == [False, False, True, True]
+
+    def test_hides_y_tick_labels_of_subplots_with_a_sharing_subplot_to_the_left(self, workspace: Path) -> None:
+        """Only the leftmost column of a shared y-axis should keep its tick labels."""
+        with plt.Canvas(rows_cols=(1, 2), sharey=True, show=False) as canvas:
+            assert [axis.yaxis.get_tick_params()["labelleft"] for axis in canvas.axes] == [True, False]
+
+    def test_keeps_x_tick_labels_when_only_an_empty_cell_is_below(self, workspace: Path) -> None:
+        """A subplot above an empty cell is the bottom of its column, so it keeps its tick labels."""
+        with plt.Canvas(layout=[[0, 1], [2, None]], sharex=True, show=False) as canvas:
+            assert [axis.xaxis.get_tick_params()["labelbottom"] for axis in canvas.axes] == [False, True, True]
+
+    def test_keeps_x_tick_labels_of_side_by_side_subplots(self, workspace: Path) -> None:
+        """Sharing x across a row puts no subplot below another, so every one keeps its tick labels."""
+        with plt.Canvas(rows_cols=(1, 2), sharex="row", show=False) as canvas:
+            assert all(axis.xaxis.get_tick_params()["labelbottom"] for axis in canvas.axes)
 
 
 class TestAutoLayout:
@@ -238,6 +380,28 @@ class TestPlotIndices:
         """'row'/'col' should resolve against the (row-major flattened) `rows_cols` grid."""
         with plt.Canvas("plot_indices_row_col_labels", (2, 3), show=False) as canvas:
             assert canvas.plot_indices(row=row, col=col) == expected
+
+    @pytest.mark.parametrize(
+        "row, col, expected",
+        [
+            (0, None, [0, 2]),
+            (1, None, [1, 2]),
+            (None, 0, [0, 1]),
+            (None, 1, [2]),
+        ],
+    )
+    def test_row_and_col_include_every_subplot_spanning_them(
+        self, workspace: Path, row: int | None, col: int | None, expected: list[int]
+    ) -> None:
+        """On a layout, a subplot spanning several rows/columns belongs to each of them."""
+        with plt.Canvas(layout=STACKED_LEFT_SPANNING_RIGHT, show=False) as canvas:
+            assert canvas.plot_indices(row=row, col=col) == expected
+
+    def test_row_and_col_skip_empty_cells(self, workspace: Path) -> None:
+        """An empty cell of a layout contributes no subplot to its row/column."""
+        with plt.Canvas(layout=[[0, 1], [2, None]], show=False) as canvas:
+            assert canvas.plot_indices(row=1) == [2]
+            assert canvas.plot_indices(col=1) == [1]
 
     def test_rejects_more_than_one_of_plot_n_row_col(self, workspace: Path) -> None:
         """Ambiguous targeting (more than one of 'plot_n'/'row'/'col') should fail loudly."""
@@ -343,6 +507,22 @@ class TestSetup:
             axis = canvas.axes[0]
             assert all(line.get_visible() == x_visible for line in axis.get_xgridlines())
             assert all(line.get_visible() == y_visible for line in axis.get_ygridlines())
+
+    def test_inverts_a_shared_axis_only_once(self, workspace: Path) -> None:
+        """Inverting toggles every subplot sharing the axis, so configuring each of them in one
+        call must not flip the shared axis back and forth."""
+        with plt.Canvas(rows_cols=(2, 1), sharex=True, show=False) as canvas:
+            canvas.setup(inverted=(True, False))
+
+            assert all(axis.xaxis_inverted() for axis in canvas.axes)
+            assert not any(axis.yaxis_inverted() for axis in canvas.axes)
+
+    def test_inverts_each_unshared_axis(self, workspace: Path) -> None:
+        """Subplots in different sharing groups should each still be inverted."""
+        with plt.Canvas(rows_cols=(2, 2), sharey="row", show=False) as canvas:
+            canvas.setup(inverted=(False, True))
+
+            assert all(axis.yaxis_inverted() for axis in canvas.axes)
 
 
 class TestSetTitle:

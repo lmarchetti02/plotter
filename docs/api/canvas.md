@@ -96,11 +96,16 @@ Class for creating an empty canvas (xy-plane).
 | Name | Type | Description |
 | --- | --- | --- |
 | `text_file` | str, optional | The name of the JSON file containing the text to be added to the plot. Defaults to None, in which case no JSON file is read or created and every subplot starts with blank text -- use `set_title` to give the subplots a title. |
-| `rows_cols` | tuple\[int, int\], optional | A tuple with the number of rows and columns of subplots. Defaults to (1, 1). |
+| `rows_cols` | tuple\[int, int\], optional | A tuple with the number of rows and columns of a regular grid of subplots, numbered row-major. Mutually exclusive with `layout`. Defaults to None, which means (1, 1) unless `layout` is given, in which case it is set to the shape of `layout`. |
 | `figsize` | tuple\[float, float\], optional | A tuple containing the dimensions of the canvas (width, height). Defaults to (12, 8). |
 | `dpi` | int, optional | The number of dots per inch (DPI) of the image. Defaults to 150. |
 | `save` | str, optional | The name of the file to save the plot to. The plots are stored in 'plotter/img/'. Defaults to an empty string. |
 | `suptitle` | str, optional | The title of the figure as a whole, displayed above the subplots' own titles. Defaults to an empty string, which adds no title. |
+| `layout` | Layout, optional | A non-grid arrangement of subplots, as a mosaic of `plot_n` indices (one per cell, row-major): repeating an index makes that subplot span every cell it appears in, and `None` leaves a cell empty. E.g. `\[\[0, 2\], \[1, 2\]\]` stacks subplots 0 and 1 on the left, with subplot 2 spanning the full height on the right. The text file needs one entry per distinct subplot. Mutually exclusive with `rows_cols`. Defaults to None. |
+| `width_ratios` | tuple\[float, ...\], optional | The relative widths of the columns, one per column. Defaults to None (equal widths). |
+| `height_ratios` | tuple\[float, ...\], optional | The relative heights of the rows, one per row. Defaults to None (equal heights). |
+| `sharex` | bool \| str, optional | Which subplots share their x-axis (limits, scale, and ticks): False for none, True for all of them, "row"/"col" for those whose span starts in the same row/column. The x tick labels of a sharing subplot with another one of its group below it are hidden. Defaults to False. |
+| `sharey` | bool \| str, optional | Same as `sharex`, for the y-axis; the y tick labels are hidden when another subplot of the group is to the left. Defaults to False. |
 | `figure` | Figure | The matplotlib Figure object. |
 | `axes` | list\[Axes\] | A list with the matplotlib Axes object corresponding to each subplot. |
 
@@ -108,18 +113,27 @@ Class for creating an empty canvas (xy-plane).
 
 | Type | Description |
 | --- | --- |
-| ValueError | If the number of columns and/or the number of rows is negative. |
+| ValueError | If both `rows_cols` and `layout` are given. |
+| ValueError | If the number of columns and/or the number of rows is not positive. |
+| ValueError | If `layout` is empty, ragged, contains no subplot, or its subplot indices are not numbered consecutively from 0. |
+| ValueError | If a subplot in `layout` does not span a rectangle of cells. |
+| ValueError | If `width_ratios`/`height_ratios` don't have one entry per column/row. |
 
 
 **Defined attributes:**
 
 - `text_file: str | None`
-- `rows_cols: tuple[int, int]`
+- `rows_cols: tuple[int, int] | None`
 - `figsize: tuple[float, float]`
 - `dpi: int`
 - `save: str`
 - `show: bool`
 - `suptitle: str`
+- `layout: Layout | None`
+- `width_ratios: tuple[float, ...] | None`
+- `height_ratios: tuple[float, ...] | None`
+- `sharex: Share`
+- `sharey: Share`
 - `figure: Figure`
 - `axes: list[Axes]`
 - `text: Text`
@@ -138,9 +152,11 @@ plot_indices(self, plot_n: PlotN | None=None, row: int | None=None, col: int | N
 
 Resolves 'plot_n', 'row', or 'col' into the list of subplot indices they refer to.
 
-Exactly one of 'plot_n', 'row', 'col' must be given. `axes` is flattened
-row-major, so a row is a contiguous range of indices while a column is a
-stride of `n_cols`.
+Exactly one of 'plot_n', 'row', 'col' must be given. A row/column resolves to
+every subplot whose span includes it, so a subplot spanning several rows/columns
+of a `layout` belongs to each of them. On a regular `rows_cols` grid (numbered
+row-major), a row is a contiguous range of indices while a column is a stride
+of `n_cols`.
 
 
 **Args:**
@@ -148,8 +164,8 @@ stride of `n_cols`.
 | Name | Type | Description |
 | --- | --- | --- |
 | `plot_n` | PlotN, optional | The index or indices of the subplots. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
-| `row` | int, optional | A 0-based row index in the `rows_cols` grid; resolves to every subplot in that row. |
-| `col` | int, optional | A 0-based column index in the `rows_cols` grid; resolves to every subplot in that column. |
+| `row` | int, optional | A 0-based row index in the `rows_cols` grid (or `layout`); resolves to every subplot spanning that row. |
+| `col` | int, optional | A 0-based column index in the `rows_cols` grid (or `layout`); resolves to every subplot spanning that column. |
 
 **Returns:**
 

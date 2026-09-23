@@ -8,6 +8,8 @@ Runnable scripts showing how to use Plotter in practice, as a companion to the
   JSON text file.
 - `images_and_colorbars.py`: `RawHist2D`, `BinnedHist2D`, and `Image`, an explicit `Colorbar`
   for each, and a zoom inset via `Canvas.add_zoom_inset`.
+- `custom_layout.py`: a non-grid `Canvas` layout (two stacked subplots sharing their x-axis, next
+  to one spanning the full height), via `layout=`, `width_ratios=`, and `sharex=`.
 - `stacked_bar_chart.py`: stacking several `BarChart`s on the same subplot via the `bottom`
   keyword argument, with `stack_bottoms` computing the running cumulative offsets.
 
@@ -24,6 +26,7 @@ Then run a script, from anywhere:
 ```bash
 uv run python example/basic_plot.py
 uv run python example/images_and_colorbars.py
+uv run python example/custom_layout.py
 uv run python example/stacked_bar_chart.py
 ```
 

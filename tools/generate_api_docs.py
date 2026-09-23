@@ -385,6 +385,21 @@ with p.Canvas("example.json", show=False, save="example.png") as canvas:
 ```
 
 ![Plotter example](assets/example_2.png)
+
+## Custom Layouts
+
+`rows_cols=(n_rows, n_cols)` gives a regular grid. For anything else, pass `layout=` a
+mosaic of `plot_n` indices instead: repeating an index makes that subplot span several
+cells, and `None` leaves a cell empty. The JSON file needs one entry per distinct subplot.
+`sharex`/`sharey` (`True`, `"row"`, or `"col"`) link the subplots' axes, hiding the
+redundant tick labels.
+
+```python
+# subplots 0 and 1 stacked on the left, sharing x; subplot 2 spanning the right column
+with p.Canvas("layout.json", layout=[[0, 2], [1, 2]], width_ratios=(1, 1.5), sharex="col") as canvas:
+    canvas.setup()
+    ...
+```
 """,
     )
 

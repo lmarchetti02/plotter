@@ -1,5 +1,6 @@
 from logging import getLogger
 from pathlib import Path
+from typing import Literal
 from warnings import catch_warnings, filterwarnings, simplefilter
 
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
 from .drawables import Drawable
-from .helpers import PlotN, PlotText, Text
+from .helpers import Layout, PlotN, PlotText, Share, Text
 
 logger = getLogger(__name__)
 
@@ -211,6 +212,108 @@ def _draw_line(axes: Axes, orientation: str, point: float, **kwargs) -> None:
         axes.axhline(**args)
 
 
+def _grid_layout(n_rows: int, n_cols: int) -> Layout:
+    """Builds the row-major mosaic equivalent to a regular `n_rows` x `n_cols` grid."""
+    return [[row * n_cols + col for col in range(n_cols)] for row in range(n_rows)]
+
+
+def _validate_layout(layout: Layout) -> int:
+    """
+    Checks that `layout` is a well-formed subplot mosaic.
+
+    Whether each subplot's cells form a rectangle is left to matplotlib's own
+    `subplot_mosaic`, which already raises a descriptive `ValueError` for it.
+
+    Args:
+        layout (Layout): The mosaic to check.
+
+    Raises:
+        ValueError: If `layout` has no rows or an empty row.
+        ValueError: If the rows of `layout` have different lengths.
+        ValueError: If `layout` contains no subplot at all.
+        ValueError: If the subplot indices are not exactly 0, 1, ..., N-1.
+
+    Returns:
+        int: The number of distinct subplots in `layout`.
+    """
+    if not layout or not all(layout):
+        raise ValueError("'layout' must contain at least one row, and no empty rows.")
+    if len({len(row) for row in layout}) != 1:
+        raise ValueError("Every row of 'layout' must have the same number of cells.")
+
+    indices = {cell for row in layout for cell in row if cell is not None}
+    if not indices:
+        raise ValueError("'layout' must contain at least one subplot.")
+    if indices != set(range(len(indices))):
+        raise ValueError(f"The subplot indices in 'layout' must be numbered consecutively from 0, got {sorted(indices)}.")
+
+    return len(indices)
+
+
+def _spans_overlap(a: range, b: range) -> bool:
+    """Checks whether two row/column spans of a subplot mosaic share at least one cell."""
+    return max(a.start, b.start) < min(a.stop, b.stop)
+
+
+def _share_groups(axes: list[Axes], share: Share) -> list[list[Axes]]:
+    """
+    Groups `axes` into the sets that share an axis, following `Canvas`'s `sharex`/`sharey`.
+
+    Args:
+        axes (list[Axes]): Every subplot of the canvas, in `plot_n` order.
+        share (Share): False (no sharing), True (a single group with every subplot),
+            "row" or "col" (one group per row/column, keyed by where each subplot's
+            span starts).
+
+    Returns:
+        list[list[Axes]]: The groups, each in `plot_n` order.
+    """
+    if share is False:
+        return []
+    if share is True:
+        return [axes]
+
+    groups: dict[int, list[Axes]] = {}
+    for ax in axes:
+        spec = ax.get_subplotspec()
+        start = spec.rowspan.start if share == "row" else spec.colspan.start
+        groups.setdefault(start, []).append(ax)
+    return list(groups.values())
+
+
+def _share_axes(axes: list[Axes], which: Literal["x", "y"], share: Share) -> None:
+    """
+    Links the x or y axis of the subplots per `share`, hiding the redundant tick labels.
+
+    Within a group, a subplot's x tick labels are hidden when another subplot of the group
+    sits below it (overlapping columns), and its y tick labels when another one sits to its
+    left (overlapping rows) -- so only the outer subplots keep them, like `plt.subplots`
+    does. Axis labels are left untouched.
+
+    Args:
+        axes (list[Axes]): Every subplot of the canvas, in `plot_n` order.
+        which (str): The axis to share, "x" or "y".
+        share (Share): See `_share_groups`.
+    """
+    for group in _share_groups(axes, share):
+        leader, *others = group
+        for ax in others:
+            getattr(ax, f"share{which}")(leader)
+
+        for ax in group:
+            spec = ax.get_subplotspec()
+            for other in group:
+                other_spec = other.get_subplotspec()
+                if which == "x":
+                    covered = other_spec.rowspan.start >= spec.rowspan.stop and _spans_overlap(other_spec.colspan, spec.colspan)
+                else:
+                    covered = other_spec.colspan.stop <= spec.colspan.start and _spans_overlap(other_spec.rowspan, spec.rowspan)
+                if covered:
+                    ax.tick_params(axis=which, which="both", **{"labelbottom" if which == "x" else "labelleft": False})
+                    getattr(ax, f"{which}axis").offsetText.set_visible(False)
+                    break
+
+
 class _Counters:
     """
     Container class to store the counters of the `Canvas`.
@@ -335,7 +438,9 @@ class Canvas:
             created and every subplot starts with blank text -- use `set_title` to give
             the subplots a title.
         rows_cols (tuple[int, int], optional): A tuple with the number of rows
-            and columns of subplots. Defaults to (1, 1).
+            and columns of a regular grid of subplots, numbered row-major. Mutually
+            exclusive with `layout`. Defaults to None, which means (1, 1) unless
+            `layout` is given, in which case it is set to the shape of `layout`.
         figsize (tuple[float, float], optional): A tuple containing the dimensions of
             the canvas (width, height). Defaults to (12, 8).
         dpi (int, optional): The number of dots per inch (DPI) of the image.
@@ -344,22 +449,49 @@ class Canvas:
             plots are stored in 'plotter/img/'. Defaults to an empty string.
         suptitle (str, optional): The title of the figure as a whole, displayed above
             the subplots' own titles. Defaults to an empty string, which adds no title.
+        layout (Layout, optional): A non-grid arrangement of subplots, as a mosaic of
+            `plot_n` indices (one per cell, row-major): repeating an index makes that
+            subplot span every cell it appears in, and `None` leaves a cell empty. E.g.
+            `[[0, 2], [1, 2]]` stacks subplots 0 and 1 on the left, with subplot 2
+            spanning the full height on the right. The text file needs one entry per
+            distinct subplot. Mutually exclusive with `rows_cols`. Defaults to None.
+        width_ratios (tuple[float, ...], optional): The relative widths of the columns,
+            one per column. Defaults to None (equal widths).
+        height_ratios (tuple[float, ...], optional): The relative heights of the rows,
+            one per row. Defaults to None (equal heights).
+        sharex (bool | str, optional): Which subplots share their x-axis (limits, scale,
+            and ticks): False for none, True for all of them, "row"/"col" for those
+            whose span starts in the same row/column. The x tick labels of a sharing
+            subplot with another one of its group below it are hidden. Defaults to False.
+        sharey (bool | str, optional): Same as `sharex`, for the y-axis; the y tick
+            labels are hidden when another subplot of the group is to the left.
+            Defaults to False.
         figure (Figure): The matplotlib Figure object.
         axes (list[Axes]): A list with the matplotlib Axes object corresponding
             to each subplot.
 
     Raises:
-        ValueError: If the number of columns and/or the number of rows is negative.
+        ValueError: If both `rows_cols` and `layout` are given.
+        ValueError: If the number of columns and/or the number of rows is not positive.
+        ValueError: If `layout` is empty, ragged, contains no subplot, or its subplot
+            indices are not numbered consecutively from 0.
+        ValueError: If a subplot in `layout` does not span a rectangle of cells.
+        ValueError: If `width_ratios`/`height_ratios` don't have one entry per column/row.
     """
 
     # args
     text_file: str | None = None
-    rows_cols: tuple[int, int] = (1, 1)
+    rows_cols: tuple[int, int] | None = None
     figsize: tuple[float, float] = (12.0, 8.0)
     dpi: int = 150
     save: str = ""
     show: bool = True
     suptitle: str = ""
+    layout: Layout | None = None
+    width_ratios: tuple[float, ...] | None = None
+    height_ratios: tuple[float, ...] | None = None
+    sharex: Share = False
+    sharey: Share = False
 
     # public attributes
     figure: Figure = Field(init=False)
@@ -375,27 +507,45 @@ class Canvas:
     def __post_init__(self) -> None:
         """Initializes the necessary attributes."""
 
-        n_rows, n_cols = self.rows_cols
-        if n_rows < 1 or n_cols < 1:
-            raise ValueError("The number of rows and columns must be at least 1.")
-        self._n_plots = n_rows * n_cols
+        # resolve the arrangement of the subplots: a regular grid is just a mosaic
+        # numbered row-major, so both go through the same subplot_mosaic() call below
+        if self.layout is not None:
+            if self.rows_cols is not None:
+                raise ValueError("Only one of 'rows_cols' and 'layout' can be given.")
+            self._n_plots = _validate_layout(self.layout)
+            layout = self.layout
+            self.rows_cols = (len(layout), len(layout[0]))
+        else:
+            self.rows_cols = self.rows_cols or (1, 1)
+            n_rows, n_cols = self.rows_cols
+            if n_rows < 1 or n_cols < 1:
+                raise ValueError("The number of rows and columns must be at least 1.")
+            self._n_plots = n_rows * n_cols
+            layout = _grid_layout(n_rows, n_cols)
 
         # initialize counters
         self.counters = _Counters.initialize_counters(self._n_plots)
 
         # plot properties
-        self.figure, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=self.figsize, dpi=self.dpi)
+        self.figure = plt.figure(figsize=self.figsize, dpi=self.dpi)
+        try:
+            mosaic = self.figure.subplot_mosaic(
+                layout, width_ratios=self.width_ratios, height_ratios=self.height_ratios, empty_sentinel=None
+            )
+        except ValueError:
+            # e.g. a non-rectangular subplot, or mismatched ratios -- don't leak the empty figure
+            plt.close(self.figure)
+            raise
         # Canvas/Colorbar manage subplot positions explicitly (e.g. Colorbar.draw()'s
         # manual set_position() calls); a layout engine would silently re-run on every
-        # render and undo that. plt.subplots() enables one automatically whenever
+        # render and undo that. plt.figure() enables one automatically whenever
         # rcParams["figure.autolayout"] or ["figure.constrained_layout.use"] is True
         # (e.g. set by the user's own matplotlib config or another imported library),
         # regardless of any style plotter itself applies -- always disable it.
         self.figure.set_layout_engine("none")
-        if self._n_plots < 2:
-            self.axes = [axes]
-        else:
-            self.axes = list(axes.flatten())
+        self.axes = [mosaic[i] for i in range(self._n_plots)]
+        _share_axes(self.axes, "x", self.sharex)
+        _share_axes(self.axes, "y", self.sharey)
 
         # plot text
         self.text = Text(self._n_plots)
@@ -444,9 +594,11 @@ class Canvas:
         """
         Resolves 'plot_n', 'row', or 'col' into the list of subplot indices they refer to.
 
-        Exactly one of 'plot_n', 'row', 'col' must be given. `axes` is flattened
-        row-major, so a row is a contiguous range of indices while a column is a
-        stride of `n_cols`.
+        Exactly one of 'plot_n', 'row', 'col' must be given. A row/column resolves to
+        every subplot whose span includes it, so a subplot spanning several rows/columns
+        of a `layout` belongs to each of them. On a regular `rows_cols` grid (numbered
+        row-major), a row is a contiguous range of indices while a column is a stride
+        of `n_cols`.
 
         Args:
             plot_n (PlotN, optional): The index or indices of the
@@ -457,10 +609,10 @@ class Canvas:
                     `inf` to `sup` (inclusive).
                 - list[int]: An explicit, non-consecutive set of plot indices to
                     target (e.g. [0, 2]).
-            row (int, optional): A 0-based row index in the `rows_cols` grid;
-                resolves to every subplot in that row.
-            col (int, optional): A 0-based column index in the `rows_cols` grid;
-                resolves to every subplot in that column.
+            row (int, optional): A 0-based row index in the `rows_cols` grid (or
+                `layout`); resolves to every subplot spanning that row.
+            col (int, optional): A 0-based column index in the `rows_cols` grid (or
+                `layout`); resolves to every subplot spanning that column.
 
         Returns:
             list[int]: The resolved, ordered subplot indices.
@@ -478,12 +630,12 @@ class Canvas:
         if row is not None:
             if not 0 <= row < n_rows:
                 raise ValueError(f"'row' must be between 0 and {n_rows - 1}.")
-            return list(range(row * n_cols, (row + 1) * n_cols))
+            return [i for i, axes in enumerate(self.axes) if row in axes.get_subplotspec().rowspan]
 
         if col is not None:
             if not 0 <= col < n_cols:
                 raise ValueError(f"'col' must be between 0 and {n_cols - 1}.")
-            return list(range(col, self._n_plots, n_cols))
+            return [i for i, axes in enumerate(self.axes) if col in axes.get_subplotspec().colspan]
 
         if isinstance(plot_n, list):
             if len(set(plot_n)) != len(plot_n):
@@ -537,8 +689,18 @@ class Canvas:
         """
         logger.info("Called 'Canvas.setup()'")
 
+        invert_x, invert_y = kwargs.pop("inverted", (False, False))
+        configured: list[Axes] = []
         for plot_i in self.plot_indices(plot_n):
-            _configure_axes(self.axes[plot_i], self.text[plot_i], **kwargs)
+            axes = self.axes[plot_i]
+            # inverting toggles the axis of every subplot sharing it, so a shared group
+            # must only be inverted once per call, or it flips back
+            inverted = (
+                invert_x and not any(axes.get_shared_x_axes().joined(axes, other) for other in configured),
+                invert_y and not any(axes.get_shared_y_axes().joined(axes, other) for other in configured),
+            )
+            _configure_axes(axes, self.text[plot_i], inverted=inverted, **kwargs)
+            configured.append(axes)
 
             # legend
             self._loc_legend[plot_i] = kwargs.get("legend", 0)

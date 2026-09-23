@@ -278,6 +278,68 @@ def _realign_grid_siblings(
     return siblings
 
 
+def _edges(p: Bbox, position: _Position) -> tuple[float, float]:
+    """Returns a position box's (colorbar-side, opposite) edges along `position`'s axis."""
+    if position == "right":
+        return p.x1, p.x0
+    if position == "left":
+        return p.x0, p.x1
+    if position == "top":
+        return p.y1, p.y0
+    return p.y0, p.y1
+
+
+def _shrink_from_edge(ax: Axes, p: Bbox, position: _Position, amount: float) -> None:
+    """Shrinks `ax` (originally at `p`) by `amount` on its `position` side, keeping the opposite side fixed."""
+    if position == "right":
+        ax.set_position([p.x0, p.y0, p.width - amount, p.height])
+    elif position == "left":
+        ax.set_position([p.x0 + amount, p.y0, p.width - amount, p.height])
+    elif position == "top":
+        ax.set_position([p.x0, p.y0, p.width, p.height - amount])
+    else:
+        ax.set_position([p.x0, p.y0 + amount, p.width, p.height - amount])
+
+
+def _shrink_spanning_edge_sharers(
+    all_axes: list[Axes], all_positions: list[Bbox], edge_positions: list[Bbox], position: _Position, amount: float
+) -> list[Axes]:
+    """
+    Shrinks every Axes that ends on the same colorbar-side edge as the (just shrunk) edge
+    Axes but spans a different column/row, so that outer edge of the canvas stays flush.
+
+    E.g. for `Canvas(layout=[[0, 1], [2, 2]])` and a "right" colorbar on subplot 1,
+    subplot 2 (spanning both columns) would otherwise stick out past subplot 1's new
+    right edge. Axes sharing an edge Axes' exact column/row (same edges on both sides)
+    are skipped -- `_realign_grid_siblings` already matches those -- so this is a no-op
+    on a regular `rows_cols` grid, where that's the only way to share an edge.
+
+    Args:
+        all_axes (list[Axes]): Every Axes in the canvas.
+        all_positions (list[Bbox]): `all_axes`' original position boxes, in the same order.
+        edge_positions (list[Bbox]): The edge Axes' original position boxes.
+        position (str): The colorbar's position, as passed to `_make_colorbar_axes`.
+        amount (float): How much the edge Axes were shrunk by, in figure-fraction units.
+
+    Returns:
+        list[Axes]: The Axes shrunk, so the caller can stamp them with the margin reservation.
+    """
+    edge = _edges(edge_positions[0], position)[0]
+    edge_opposites = [_edges(p, position)[1] for p in edge_positions]
+
+    shrunk: list[Axes] = []
+    for ax, p in zip(all_axes, all_positions):
+        primary, opposite = _edges(p, position)
+        if not isclose(primary, edge, abs_tol=1e-9):
+            continue
+        if any(isclose(opposite, edge_opposite, abs_tol=1e-9) for edge_opposite in edge_opposites):
+            continue
+        ax.set_axes_locator(None)
+        _shrink_from_edge(ax, p, position, amount)
+        shrunk.append(ax)
+    return shrunk
+
+
 def _make_colorbar_axes(
     figure: Figure, axes: list[Axes], all_axes: list[Axes], position: _Position, size: str | float, padding: float
 ) -> Axes:
@@ -296,7 +358,9 @@ def _make_colorbar_axes(
     fixed-aspect edge Axes had to shrink further than just the requested thickness.
     The rest of the canvas's grid is then realigned to match too, via
     `_realign_grid_siblings`, so a colorbar on only one row/column doesn't leave it
-    narrower/shorter than the rest of the grid.
+    narrower/shorter than the rest of the grid. On a non-grid `Canvas.layout`, any
+    Axes spanning past the target but ending on the same outer edge is shrunk along
+    with it, via `_shrink_spanning_edge_sharers`, so that edge stays flush.
 
     If the edge Axes already carries a margin reservation on this side (stamped by an
     earlier `Colorbar` targeting a sibling row/column that shares it, via
@@ -347,12 +411,7 @@ def _make_colorbar_axes(
     requested_shrink = requested_thickness + padding / fig_size_in
     edge = group_hi if position in ("right", "top") else group_lo
 
-    def _primary_edge(p: Bbox) -> float:
-        if along_x:
-            return p.x1 if position == "right" else p.x0
-        return p.y1 if position == "top" else p.y0
-
-    edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(_primary_edge(p), edge, abs_tol=1e-9)]
+    edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(_edges(p, position)[0], edge, abs_tol=1e-9)]
 
     existing = max((r for ax, _ in edge_axes if (r := _get_reservation(ax, position)) is not None), key=lambda r: r["shrink"], default=None)
     existing_shrink = existing["shrink"] if existing else 0.0
@@ -373,12 +432,7 @@ def _make_colorbar_axes(
     siblings: list[Axes] = []
     if incremental > 1e-9:
         for ax, p in edge_axes:
-            if along_x:
-                new_x0 = p.x0 if position == "right" else p.x0 + incremental
-                ax.set_position([new_x0, p.y0, p.width - incremental, p.height])
-            else:
-                new_y0 = p.y0 if position == "top" else p.y0 + incremental
-                ax.set_position([p.x0, new_y0, p.width, p.height - incremental])
+            _shrink_from_edge(ax, p, position, incremental)
 
         # a fixed-aspect edge Axes (e.g. Image's default aspect="equal") may have just
         # shrunk its cross dimension too, to keep the data square within the narrower
@@ -391,6 +445,11 @@ def _make_colorbar_axes(
         # keep the rest of the canvas's grid aligned with this now-shrunk group, so a
         # colorbar on only one row/column doesn't leave the others too wide/tall
         siblings = _realign_grid_siblings(all_axes, all_positions, axes, positions, position)
+
+        # a subplot of a non-grid layout spanning past the target, but ending on the
+        # same outer edge, would otherwise stick out past the target's new edge
+        edge_positions = [p for _, p in edge_axes]
+        siblings += _shrink_spanning_edge_sharers(all_axes, all_positions, edge_positions, position, incremental)
 
     if along_x:
         final_cross_lo = min(ax.get_position().y0 for ax in axes)
@@ -455,10 +514,12 @@ class Colorbar:
                 may be given; defaults to `0` when none are. See `Canvas.plot_indices`.
                 A `list[int]` must resolve to consecutive indices -- the colorbar's
                 placement geometry has no meaning for a gapped target.
-            row (int, optional): A row of the `canvas`'s grid to share the colorbar
-                across. Not supported when `canvas` is a `ZoomInset`.
-            col (int, optional): A column of the `canvas`'s grid to share the colorbar
-                across. Not supported when `canvas` is a `ZoomInset`.
+            row (int, optional): A row of the `canvas`'s grid (or layout) to share the
+                colorbar across, i.e. every subplot spanning it. Not supported when
+                `canvas` is a `ZoomInset`.
+            col (int, optional): A column of the `canvas`'s grid (or layout) to share
+                the colorbar across, i.e. every subplot spanning it. Not supported when
+                `canvas` is a `ZoomInset`.
             label (str, optional): The colorbar's label. Defaults to `None`.
 
         Keyword Arguments:

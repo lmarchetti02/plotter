@@ -543,3 +543,125 @@ class TestSharedMarginReuse:
             cax1 = colorbar_col1.mpl_colorbar.ax.get_position()
             assert cax0.y0 == pytest.approx(cax1.y0)
             assert cax0.y1 == pytest.approx(cax1.y1)
+
+
+class TestNonGridLayouts:
+    """Tests for `Colorbar.draw` on a `Canvas` with a non-grid `layout`."""
+
+    def test_colorbar_on_a_spanning_subplot_matches_its_full_height(self, workspace, show_plots) -> None:
+        """A colorbar on the subplot spanning both rows should span that full height,
+        without touching the stacked subplots in the other column."""
+        with plt.Canvas(layout=[[0, 2], [1, 2]], figsize=(10.0, 6.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            hists = [make_hist2d() for _ in range(3)]
+            for i, hist in enumerate(hists):
+                hist.draw(canvas, plot_n=i)
+
+            original0 = canvas.axes[0].get_position()
+            original1 = canvas.axes[1].get_position()
+
+            colorbar = plt.Colorbar(source=hists[2])
+            colorbar.draw(canvas, plot_n=2)
+
+            spanning = canvas.axes[2].get_position()
+            cax = colorbar.mpl_colorbar.ax.get_position()
+            assert cax.y0 == pytest.approx(spanning.y0)
+            assert cax.y1 == pytest.approx(spanning.y1)
+            assert canvas.axes[0].get_position().bounds == pytest.approx(original0.bounds)
+            assert canvas.axes[1].get_position().bounds == pytest.approx(original1.bounds)
+
+    def test_subplot_spanning_past_the_target_stays_flush_with_it(self, workspace, show_plots) -> None:
+        """On [[0, 1], [2, 2]], a 'right' colorbar on subplot 1 shrinks it, so subplot 2
+        (spanning both columns, ending on the same right edge) must shrink too instead
+        of sticking out past it."""
+        with plt.Canvas(layout=[[0, 1], [2, 2]], figsize=(10.0, 6.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            hists = [make_hist2d() for _ in range(3)]
+            for i, hist in enumerate(hists):
+                hist.draw(canvas, plot_n=i)
+
+            original0 = canvas.axes[0].get_position()
+            original2 = canvas.axes[2].get_position()
+
+            colorbar = plt.Colorbar(source=hists[1])
+            colorbar.draw(canvas, plot_n=1)
+
+            assert canvas.axes[2].get_position().x1 < original2.x1
+            assert canvas.axes[2].get_position().x1 == pytest.approx(canvas.axes[1].get_position().x1)
+            assert canvas.axes[2].get_position().x0 == pytest.approx(original2.x0)
+            assert canvas.axes[0].get_position().bounds == pytest.approx(original0.bounds)
+
+    def test_subplot_narrower_than_a_spanning_target_stays_flush_with_it(self, workspace, show_plots) -> None:
+        """The same, the other way around: a 'right' colorbar on the spanning subplot 2
+        shrinks subplot 1 above it, which ends on the same right edge."""
+        with plt.Canvas(layout=[[0, 1], [2, 2]], figsize=(10.0, 6.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            hists = [make_hist2d() for _ in range(3)]
+            for i, hist in enumerate(hists):
+                hist.draw(canvas, plot_n=i)
+
+            original0 = canvas.axes[0].get_position()
+
+            colorbar = plt.Colorbar(source=hists[2])
+            colorbar.draw(canvas, plot_n=2)
+
+            assert canvas.axes[1].get_position().x1 == pytest.approx(canvas.axes[2].get_position().x1)
+            assert canvas.axes[0].get_position().bounds == pytest.approx(original0.bounds)
+
+    def test_second_colorbar_reuses_the_margin_of_a_spanning_subplot(self, workspace, show_plots) -> None:
+        """A subplot shrunk for a spanning subplot's colorbar shares that margin, so a
+        thinner colorbar of its own must not shrink the canvas a second time."""
+        with plt.Canvas(layout=[[0, 1], [2, 2]], figsize=(10.0, 6.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            hists = [make_hist2d() for _ in range(3)]
+            for i, hist in enumerate(hists):
+                hist.draw(canvas, plot_n=i)
+
+            # "5%" of the spanning subplot's width is thicker than 5% of subplot 1's, so
+            # the second colorbar fits entirely within the margin the first one reserved
+            plt.Colorbar(source=hists[2]).draw(canvas, plot_n=2)
+            after_first = [axis.get_position().bounds for axis in canvas.axes]
+
+            plt.Colorbar(source=hists[1]).draw(canvas, plot_n=1)
+            after_second = [axis.get_position().bounds for axis in canvas.axes]
+
+            for first, second in zip(after_first, after_second):
+                assert second == pytest.approx(first)
+
+    def test_col_targets_only_the_subplots_spanning_it(self, workspace, show_plots) -> None:
+        """On [[0, 2], [1, 2]], 'col=1' is just the spanning subplot."""
+        with plt.Canvas(layout=[[0, 2], [1, 2]], figsize=(10.0, 6.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            hists = [make_hist2d() for _ in range(3)]
+            for i, hist in enumerate(hists):
+                hist.draw(canvas, plot_n=i)
+
+            original = [axis.get_position() for axis in canvas.axes]
+
+            colorbar = plt.Colorbar(source=hists[2])
+            colorbar.draw(canvas, col=1)
+
+            assert canvas.axes[2].get_position().width < original[2].width
+            assert canvas.axes[0].get_position().bounds == pytest.approx(original[0].bounds)
+            assert canvas.axes[1].get_position().bounds == pytest.approx(original[1].bounds)
+
+    def test_geometry_is_stable_across_repeated_renders(self, workspace, show_plots) -> None:
+        """An aspect="equal" spanning subplot shrunk for a colorbar must keep its box and
+        limits through later renders (e.g. a save followed by a show)."""
+        with plt.Canvas(layout=[[0, 2], [1, 2]], figsize=(10.0, 6.0), show=show_plots) as canvas:
+            canvas.setup(plot_n="all")
+            images = [make_image() for _ in range(3)]
+            for i, image in enumerate(images):
+                image.draw(canvas, plot_n=i)
+
+            plt.Colorbar(source=images[2]).draw(canvas, plot_n=2)
+
+            after_draw = canvas.axes[2].get_position().bounds
+            xlim_after_draw = canvas.axes[2].get_xlim()
+            ylim_after_draw = canvas.axes[2].get_ylim()
+
+            for _ in range(3):
+                canvas.figure.canvas.draw()
+                assert canvas.axes[2].get_position().bounds == pytest.approx(after_draw)
+                assert canvas.axes[2].get_xlim() == pytest.approx(xlim_after_draw)
+                assert canvas.axes[2].get_ylim() == pytest.approx(ylim_after_draw)
