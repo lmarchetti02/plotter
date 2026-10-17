@@ -1,5 +1,9 @@
 from dataclasses import dataclass
 
+import numpy as np
+
+from ..helpers import ErrorBars
+
 
 @dataclass(kw_only=True)
 class _ErrorBarStyle:
@@ -38,3 +42,17 @@ class _ErrorBarStyle:
             width=kwargs.get("err_width", width),
             capsize=kwargs.get("err_capsize", capsize),
         )
+
+
+def _errors_match(err: ErrorBars | None, n_points: int) -> bool:
+    """Whether `err` is a scalar/`None`, or an array of shape (N,) or (N, 2) with N = `n_points`."""
+    if not isinstance(err, np.ndarray):
+        return True
+    return err.shape in ((n_points,), (n_points, 2))
+
+
+def _to_mpl_errors(err: ErrorBars | None) -> ErrorBars | None:
+    """Transposes (N, 2) asymmetric errors into the (2, N) layout matplotlib expects; anything else passes through."""
+    if isinstance(err, np.ndarray) and err.ndim == 2:
+        return err.T
+    return err

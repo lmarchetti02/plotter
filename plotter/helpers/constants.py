@@ -1,4 +1,4 @@
-from typing import Annotated, Literal, TypeVar
+from typing import Annotated, Any, Literal, TypeVar
 
 from numpy import float64, generic
 from numpy.typing import NDArray
@@ -9,6 +9,11 @@ NArray2D = Annotated[NDArray[DType], Literal[2]]
 NArray3D = Annotated[NDArray[DType], Literal[3]]
 
 F64 = float64
+
+# Error bars, as accepted by `ScatterPlot`'s `xerr`/`yerr` and `BarChart`'s `yerr`: one value
+# shared by every point (float), one symmetric error per point (shape (N,)), or one asymmetric
+# (low, high) pair of error sizes per point (shape (N, 2)), each extending below/above the point.
+ErrorBars = float | NArray1D[Any] | NArray2D[Any]
 
 # A single subplot index (e.g. 0), 'all', an inclusive (inf, sup) range of indices, or
 # an explicit, possibly non-consecutive list of indices (e.g. [0, 2]), as accepted by

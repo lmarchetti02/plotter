@@ -17,6 +17,8 @@ class TestScatterPlot:
             (np.array([0.0, 1.0]), np.array([1.0]), None, None, "x-values and y-values don't have the same dimensions"),
             (np.array([0.0, 1.0]), np.array([1.0, 2.0]), np.array([0.1]), None, "xy-values and xerr-values don't have the same dimensions"),
             (np.array([0.0, 1.0]), np.array([1.0, 2.0]), None, np.array([0.1]), "xy-values and yerr-values don't have the same dimensions"),
+            (np.array([0.0, 1.0]), np.array([1.0, 2.0]), np.ones((2, 3)), None, "xy-values and xerr-values don't have the same dimensions"),
+            (np.array([0.0, 1.0]), np.array([1.0, 2.0]), None, np.ones((3, 2)), "xy-values and yerr-values don't have the same dimensions"),
         ],
     )
     def test_rejects_mismatched_input_shapes(
@@ -30,6 +32,18 @@ class TestScatterPlot:
         """ScatterPlot should validate data and uncertainty array lengths eagerly."""
         with pytest.raises(ValueError, match=expected_message):
             plt.ScatterPlot(x, y, yerr=yerr, xerr=xerr)
+
+
+    def test_accepts_asymmetric_errors(self) -> None:
+        """(N, 2) arrays of (low, high) errors should pass validation for both axes."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([1.0, 1.5, 2.0])
+        err = np.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]])
+
+        scatter = plt.ScatterPlot(x, y, xerr=err, yerr=err)
+
+        assert_allclose(scatter.xerr, err)
+        assert_allclose(scatter.yerr, err)
 
 
 class TestFromY:
@@ -104,6 +118,25 @@ class TestDraw:
             assert to_rgba(barlinecol.get_color()[0]) == to_rgba("red")
             assert barlinecol.get_linewidth()[0] == pytest.approx(3.0)
             assert capline.get_markersize() == pytest.approx(14.0)  # 2 * err_capsize
+
+    @pytest.mark.parametrize("n_points", [2, 3])  # 2: a (2, 2) array must still be read as (N, 2), not matplotlib's (2, N)
+    def test_asymmetric_errors_extend_low_below_and_high_above_each_point(self, single_text_file, show_plots, n_points: int) -> None:
+        """Each (low, high) pair should draw an error bar from `value - low` to `value + high`, on both axes."""
+        x = np.arange(n_points, dtype=float)
+        y = np.arange(n_points, dtype=float) + 10.0
+        xerr = np.column_stack([np.full(n_points, 0.1), np.full(n_points, 0.3)])
+        yerr = np.column_stack([np.arange(1, n_points + 1), np.arange(1, n_points + 1) * 2.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plt.ScatterPlot(x, y, xerr=xerr, yerr=yerr).draw(canvas)
+
+            # errorbar() draws the x bars first, then the y bars
+            x_bars, y_bars = canvas.axes[0].containers[0].lines[2]
+            for segment, xi, yi, (low, high) in zip(x_bars.get_segments(), x, y, xerr):
+                assert_allclose(segment, [[xi - low, yi], [xi + high, yi]])
+            for segment, xi, yi, (low, high) in zip(y_bars.get_segments(), x, y, yerr):
+                assert_allclose(segment, [[xi, yi - low], [xi, yi + high]])
 
     def test_no_line_by_default(self, single_text_file, show_plots) -> None:
         """Without `line=True`, only the markers artist should be drawn."""

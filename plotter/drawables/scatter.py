@@ -7,9 +7,9 @@ from pydantic.dataclasses import dataclass
 
 from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
-from ._error_bar_style import _ErrorBarStyle
+from ._error_bar_style import _ErrorBarStyle, _errors_match, _to_mpl_errors
 from ._line_style import _LineStyle
-from ..helpers import NArray1D
+from ..helpers import ErrorBars, NArray1D
 
 logger = getLogger(__name__)
 
@@ -22,23 +22,25 @@ class ScatterPlot(Drawable):
     Attributes:
         x (NArray1D[Any]): The array containing the x values.
         y (NArray1D[Any]): The array containing the y values.
-        xerr (NArray1D[Any] or float, optional): The array containing the errors of the x values.
-            If a float is passed, all the errors are assumed identical.
-        yerr (NArray1D[Any] or float, optional): The array containing the errors of the y values.
-            If a float is passed, all the errors are assumed identical.
+        xerr (ErrorBars, optional): The errors of the x values: a float (identical for every
+            point), an array of shape (N,) (symmetric, one per point), or an array of shape (N, 2)
+            (asymmetric, one (left, right) pair of error sizes per point).
+        yerr (ErrorBars, optional): The errors of the y values: a float (identical for every
+            point), an array of shape (N,) (symmetric, one per point), or an array of shape (N, 2)
+            (asymmetric, one (low, high) pair of error sizes per point).
 
     Raises:
         ValueError: If x and y values do not have the same dimensions.
-        ValueError: If y error values do not have the same dimensions as the y values.
-        ValueError: If x error values do not have the same dimensions as the x values.
+        ValueError: If y error values are not of shape (N,) or (N, 2), with N the number of points.
+        ValueError: If x error values are not of shape (N,) or (N, 2), with N the number of points.
     """
 
     label_name: ClassVar[str] = "scatter_plots"
 
     x: NArray1D[Any]
     y: NArray1D[Any]
-    yerr: NArray1D[Any] | float | None = Field(default=None, kw_only=True)
-    xerr: NArray1D[Any] | float | None = Field(default=None, kw_only=True)
+    yerr: ErrorBars | None = Field(default=None, kw_only=True)
+    xerr: ErrorBars | None = Field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         # xy values
@@ -46,12 +48,12 @@ class ScatterPlot(Drawable):
             raise ValueError("x-values and y-values don't have the same dimensions")
 
         # y errors
-        if isinstance(self.yerr, np.ndarray) and len(self.y) != len(self.yerr):
-            raise ValueError("xy-values and yerr-values don't have the same dimensions")
+        if not _errors_match(self.yerr, len(self.y)):
+            raise ValueError("xy-values and yerr-values don't have the same dimensions (expected shape (N,) or (N, 2))")
 
         # x errors
-        if isinstance(self.xerr, np.ndarray) and len(self.x) != len(self.xerr):
-            raise ValueError("xy-values and xerr-values don't have the same dimensions")
+        if not _errors_match(self.xerr, len(self.x)):
+            raise ValueError("xy-values and xerr-values don't have the same dimensions (expected shape (N,) or (N, 2))")
 
     @classmethod
     def from_y(cls, y: NArray1D[Any], **kwargs) -> "ScatterPlot":
@@ -117,8 +119,8 @@ class ScatterPlot(Drawable):
         canvas.axes[plot_n].errorbar(
             x=self.x,
             y=self.y,
-            yerr=self.yerr,
-            xerr=self.xerr,
+            yerr=_to_mpl_errors(self.yerr),
+            xerr=_to_mpl_errors(self.xerr),
             marker=kwargs.get("marker", "o"),
             color=marker_color,
             ecolor=err_style.color,

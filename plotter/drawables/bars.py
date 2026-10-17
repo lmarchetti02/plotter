@@ -1,14 +1,13 @@
 from logging import getLogger
 from typing import Any, ClassVar
 
-import numpy as np
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
 from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
-from ._error_bar_style import _ErrorBarStyle
-from ..helpers import NArray1D
+from ._error_bar_style import _ErrorBarStyle, _errors_match, _to_mpl_errors
+from ..helpers import ErrorBars, NArray1D
 
 logger = getLogger(__name__)
 
@@ -21,26 +20,27 @@ class BarChart(Drawable):
     Attributes:
         x (NArray1D[Any]): The array containing the x positions of the bars.
         heights (NArray1D[Any]): The array containing the heights of the bars.
-        yerr (NArray1D[Any] | float | None, optional): The uncertainty on the
-            bar heights. If a float is passed, all the errors are assumed identical.
+        yerr (ErrorBars | None, optional): The uncertainty on the bar heights: a float
+            (identical for every bar), an array of shape (N,) (symmetric, one per bar), or an
+            array of shape (N, 2) (asymmetric, one (low, high) pair of error sizes per bar).
 
     Raises:
         ValueError: If x and heights do not have the same dimensions.
-        ValueError: If yerr as an array does not have the same dimensions as heights.
+        ValueError: If yerr as an array is not of shape (N,) or (N, 2), with N the number of bars.
     """
 
     label_name: ClassVar[str] = "bar_charts"
 
     x: NArray1D[Any]
     heights: NArray1D[Any]
-    yerr: NArray1D[Any] | float | None = None
+    yerr: ErrorBars | None = None
 
     def __post_init__(self) -> None:
         if len(self.x) != len(self.heights):
             raise ValueError("x-values and heights must have the same dimensions")
 
-        if isinstance(self.yerr, np.ndarray) and len(self.heights) != len(self.yerr):
-            raise ValueError("heights and yerr-values don't have the same dimensions")
+        if not _errors_match(self.yerr, len(self.heights)):
+            raise ValueError("heights and yerr-values don't have the same dimensions (expected shape (N,) or (N, 2))")
 
     def draw(
         self,
@@ -97,7 +97,7 @@ class BarChart(Drawable):
         container = canvas.axes[plot_n].bar(
             self.x,
             self.heights,
-            yerr=self.yerr,
+            yerr=_to_mpl_errors(self.yerr),
             bottom=kwargs.get("bottom", 0),
             width=kwargs.get("width", 0.8),
             color=kwargs.get("color", "steelblue"),

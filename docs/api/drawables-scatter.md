@@ -11,16 +11,16 @@ Class for creating a scatter plot with error bars.
 | --- | --- | --- |
 | `x` | NArray1D\[Any\] | The array containing the x values. |
 | `y` | NArray1D\[Any\] | The array containing the y values. |
-| `xerr` | NArray1D\[Any\] or float, optional | The array containing the errors of the x values. If a float is passed, all the errors are assumed identical. |
-| `yerr` | NArray1D\[Any\] or float, optional | The array containing the errors of the y values. If a float is passed, all the errors are assumed identical. |
+| `xerr` | ErrorBars, optional | The errors of the x values: a float (identical for every point), an array of shape (N,) (symmetric, one per point), or an array of shape (N, 2) (asymmetric, one (left, right) pair of error sizes per point). |
+| `yerr` | ErrorBars, optional | The errors of the y values: a float (identical for every point), an array of shape (N,) (symmetric, one per point), or an array of shape (N, 2) (asymmetric, one (low, high) pair of error sizes per point). |
 
 **Raises:**
 
 | Type | Description |
 | --- | --- |
 | ValueError | If x and y values do not have the same dimensions. |
-| ValueError | If y error values do not have the same dimensions as the y values. |
-| ValueError | If x error values do not have the same dimensions as the x values. |
+| ValueError | If y error values are not of shape (N,) or (N, 2), with N the number of points. |
+| ValueError | If x error values are not of shape (N,) or (N, 2), with N the number of points. |
 
 
 **Defined attributes:**
@@ -28,8 +28,8 @@ Class for creating a scatter plot with error bars.
 - `label_name: ClassVar[str]`
 - `x: NArray1D[Any]`
 - `y: NArray1D[Any]`
-- `yerr: NArray1D[Any] | float | None`
-- `xerr: NArray1D[Any] | float | None`
+- `yerr: ErrorBars | None`
+- `xerr: ErrorBars | None`
 
 ### Methods
 

@@ -11,14 +11,14 @@ Class for creating a bar chart.
 | --- | --- | --- |
 | `x` | NArray1D\[Any\] | The array containing the x positions of the bars. |
 | `heights` | NArray1D\[Any\] | The array containing the heights of the bars. |
-| `yerr` | NArray1D\[Any\] \| float \| None, optional | The uncertainty on the bar heights. If a float is passed, all the errors are assumed identical. |
+| `yerr` | ErrorBars \| None, optional | The uncertainty on the bar heights: a float (identical for every bar), an array of shape (N,) (symmetric, one per bar), or an array of shape (N, 2) (asymmetric, one (low, high) pair of error sizes per bar). |
 
 **Raises:**
 
 | Type | Description |
 | --- | --- |
 | ValueError | If x and heights do not have the same dimensions. |
-| ValueError | If yerr as an array does not have the same dimensions as heights. |
+| ValueError | If yerr as an array is not of shape (N,) or (N, 2), with N the number of bars. |
 
 
 **Defined attributes:**
@@ -26,7 +26,7 @@ Class for creating a bar chart.
 - `label_name: ClassVar[str]`
 - `x: NArray1D[Any]`
 - `heights: NArray1D[Any]`
-- `yerr: NArray1D[Any] | float | None`
+- `yerr: ErrorBars | None`
 
 ### Methods
 

@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 from matplotlib.colors import to_rgba
+from numpy.testing import assert_allclose
 
 import plotter as plt
 
@@ -23,6 +24,12 @@ class TestBarChart:
                 np.array([0.0, 1.0]),
                 np.array([1.0, 2.0]),
                 np.array([0.1]),
+                "heights and yerr-values don't have the same dimensions",
+            ),
+            (
+                np.array([0.0, 1.0]),
+                np.array([1.0, 2.0]),
+                np.ones((2, 3)),
                 "heights and yerr-values don't have the same dimensions",
             ),
         ],
@@ -129,6 +136,20 @@ class TestDraw:
             assert to_rgba(barlinecol.get_color()[0]) == to_rgba("red")
             assert barlinecol.get_linewidth()[0] == pytest.approx(3.0)
             assert capline.get_markersize() == pytest.approx(14.0)  # 2 * err_capsize
+
+    def test_asymmetric_errors_extend_low_below_and_high_above_each_bar(self, single_text_file, show_plots) -> None:
+        """Each (low, high) pair should draw an error bar from `height - low` to `height + high`."""
+        x = np.array([0.0, 1.0, 2.0])
+        heights = np.array([1.0, 3.0, 2.0])
+        yerr = np.array([[0.1, 0.5], [0.2, 0.6], [0.3, 0.7]])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plt.BarChart(x, heights, yerr=yerr).draw(canvas)
+
+            y_bars = canvas.axes[0].containers[0].lines[2][0]
+            for segment, xi, height, (low, high) in zip(y_bars.get_segments(), x, heights, yerr):
+                assert_allclose(segment, [[xi, height - low], [xi, height + high]])
 
     def test_bar_labels_defaults_to_no_text(self, single_text_file, show_plots) -> None:
         """By default, no text is written on top of the bars."""
