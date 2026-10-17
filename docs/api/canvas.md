@@ -141,6 +141,7 @@ Class for creating an empty canvas (xy-plane).
 - `_n_plots: int`
 - `_loc_legend: list[int]`
 - `_ncols_legend: list[int]`
+- `_no_legend: list[bool]`
 
 ### Methods
 
@@ -210,6 +211,7 @@ Sets up the properties of the subplots.
 | `inverted` | tuple\[bool, bool\] | A tuple to invert the x and y axes respectively (e.g., `(True, False)`). |
 | `legend` | int | Force the position of the legend to a specified one. See 'plotter/utils/info/legend.png'. |
 | `leg_ncols` | int | The number of columns to arrange the legend entries into. Defaults to 1. |
+| `nolegend` | bool | Removes the legend from the subplot(s), even if they have labelled artists. Defaults to `False`. |
 
 **Raises:**
 

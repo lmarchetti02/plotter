@@ -503,6 +503,7 @@ class Canvas:
     _n_plots: int = Field(init=False)
     _loc_legend: list[int] = Field(init=False)
     _ncols_legend: list[int] = Field(init=False)
+    _no_legend: list[bool] = Field(init=False)
 
     def __post_init__(self) -> None:
         """Initializes the necessary attributes."""
@@ -561,6 +562,7 @@ class Canvas:
         # legend
         self._loc_legend = [0 for _ in range(self._n_plots)]
         self._ncols_legend = [1 for _ in range(self._n_plots)]
+        self._no_legend = [False for _ in range(self._n_plots)]
 
     def __enter__(self):
         """Defines what happens when the user enters a 'Canvas' context."""
@@ -683,6 +685,8 @@ class Canvas:
                 See 'plotter/utils/info/legend.png'.
             leg_ncols (int): The number of columns to arrange the legend entries into.
                 Defaults to 1.
+            nolegend (bool): Removes the legend from the subplot(s), even if they have
+                labelled artists. Defaults to `False`.
 
         Raises:
             ValueError: If 'plot_n' is not a valid value.
@@ -705,6 +709,7 @@ class Canvas:
             # legend
             self._loc_legend[plot_i] = kwargs.get("legend", 0)
             self._ncols_legend[plot_i] = kwargs.get("leg_ncols", 1)
+            self._no_legend[plot_i] = kwargs.get("nolegend", False)
 
     def set_title(self, title: str, plot_n: PlotN = 0) -> None:
         """
@@ -1228,6 +1233,10 @@ class Canvas:
             simplefilter("error", UserWarning)
 
             for i in range(self._n_plots):
+                if self._no_legend[i]:
+                    logger.debug(f"Legend disabled for subplot {i}.")
+                    continue
+
                 try:
                     if not self.counters.is_empty():
                         self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1, ncols=self._ncols_legend[i])

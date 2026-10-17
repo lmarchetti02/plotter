@@ -458,6 +458,26 @@ class TestSetup:
 
             assert canvas._ncols_legend[1] == 1
 
+    def test_draws_a_legend_on_every_subplot_by_default(self, text_file: Path) -> None:
+        """Without 'nolegend', every subplot with labelled artists should get a legend."""
+        with plt.Canvas(str(text_file), (1, 2), show=False) as canvas:
+            canvas.setup()
+            for plot_i in range(2):
+                plt.LinePlot(x=np.array([0.0, 1.0]), y=np.array([0.0, 1.0])).draw(canvas, plot_n=plot_i, label="line")
+
+        assert all(axes.get_legend() is not None for axes in canvas.axes)
+
+    def test_nolegend_removes_the_legend_only_from_the_targeted_subplots(self, text_file: Path) -> None:
+        """'nolegend' should skip the legend on the given subplot and leave the others alone."""
+        with plt.Canvas(str(text_file), (1, 2), show=False) as canvas:
+            canvas.setup()
+            canvas.setup(plot_n=1, nolegend=True)
+            for plot_i in range(2):
+                plt.LinePlot(x=np.array([0.0, 1.0]), y=np.array([0.0, 1.0])).draw(canvas, plot_n=plot_i, label="line")
+
+        assert canvas.axes[0].get_legend() is not None
+        assert canvas.axes[1].get_legend() is None
+
     def test_applies_to_all_subplots_by_default(self, text_file: Path) -> None:
         """The default plot_n='all' should configure every subplot."""
         with plt.Canvas(str(text_file), (1, 2), show=False) as canvas:
