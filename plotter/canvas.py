@@ -4,6 +4,7 @@ from typing import Literal
 from warnings import catch_warnings, filterwarnings, simplefilter
 
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.transforms import TransformedBbox
@@ -44,6 +45,10 @@ _LOC_CORNERS = {1: (True, True), 2: (False, True), 3: (False, False), 4: (True, 
 _CORNERS_LOC = {corner: loc for loc, corner in _LOC_CORNERS.items()}
 
 _COLORBAR_TOUCHED_ATTR = "_plotter_colorbar_touched"
+
+# gap between the suptitle and the subplots below it (in units of the font size), the
+# same default padding tight_layout() uses around the figure's edges
+_SUPTITLE_PAD = 1.08
 
 
 def _mark_colorbar_touched(figure: Figure) -> None:
@@ -582,6 +587,7 @@ class Canvas:
 
         self._legend()  # draw legend if it exists
         self._auto_layout()  # one-shot spacing pass to avoid title/label overlap
+        self._place_suptitle()  # close the gap between the suptitle and the subplots
         self._save()  # save plot to disk
         logger.info("Plot(s) finished")
 
@@ -1267,6 +1273,33 @@ class Canvas:
             self.figure.tight_layout()
 
         self.figure.set_layout_engine("none")
+
+    def _place_suptitle(self) -> None:
+        """
+        Moves the suptitle down to sit just above the subplots' topmost decorations.
+
+        `Figure.suptitle()` pins it near the top edge of the figure, which only lines up
+        with the subplots when `_auto_layout`'s tight_layout() pass has packed them right
+        below it: a fixed-aspect Axes (e.g. an `Image`) shrinks within its own box, and a
+        `Colorbar` skips that pass altogether, both leaving a large gap. The suptitle is
+        only ever moved down, never up.
+        """
+        logger.info("Called 'Canvas._place_suptitle()'")
+
+        suptitle = self.figure._suptitle  # matplotlib has no public getter for the Text artist
+        visible_axes = [ax for ax in self.figure.axes if ax.get_visible()]
+        if suptitle is None or not suptitle.get_text() or not visible_axes:
+            return
+
+        to_figure = self.figure.transFigure.inverted()
+        decorations_top = max(ax.get_tightbbox().transformed(to_figure).y1 for ax in visible_axes)
+        pad = _SUPTITLE_PAD * rcParams["font.size"] / 72 / self.figure.get_figheight()
+
+        target_bottom = decorations_top + pad
+        if target_bottom < suptitle.get_window_extent().transformed(to_figure).y0:
+            suptitle.set_y(target_bottom)
+            suptitle.set_verticalalignment("bottom")
+            logger.debug(f"Suptitle moved down to y={target_bottom:.3f}.")
 
     def _save(self) -> None:
         """

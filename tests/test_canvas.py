@@ -121,8 +121,8 @@ class TestCanvas:
             assert all(axis.get_title() == "" for axis in canvas.axes)
 
     def test_auto_layout_leaves_room_for_the_suptitle(self, workspace: Path) -> None:
-        """`_auto_layout`'s tight_layout() pass reserves vertical space for a suptitle, which is
-        what lets `__post_init__` set it naively without any further layout handling."""
+        """`_auto_layout`'s tight_layout() pass reserves vertical space for a suptitle, so the
+        subplots never overlap it; `_place_suptitle` then closes any remaining gap."""
         with plt.Canvas(show=False) as plain_canvas:
             plain_canvas.setup()
         plain_top = plain_canvas.axes[0].get_position().y1
@@ -329,6 +329,50 @@ class TestAutoLayout:
             canvas.add_zoom_inset((0.0, 1.0), (0.0, 1.0))
 
         assert not any("not compatible with tight_layout" in str(w.message) for w in recwarn.list)
+
+
+def suptitle_gap_in(canvas: plt.Canvas) -> float:
+    """Measures the vertical gap between the suptitle and the topmost Axes decoration (in inches)."""
+    figure = canvas.figure
+    suptitle_bottom = figure._suptitle.get_window_extent().y0
+    decorations_top = max(ax.get_tightbbox().y1 for ax in figure.axes)
+    return (suptitle_bottom - decorations_top) / figure.dpi
+
+
+class TestPlaceSuptitle:
+    """Tests for `Canvas._place_suptitle`."""
+
+    # tight_layout()'s default pad of 1.08 font sizes, at the style's 16pt font
+    EXPECTED_GAP_IN = 1.08 * 16 / 72
+
+    def test_sits_one_pad_above_fixed_aspect_subplots(self, workspace: Path) -> None:
+        """Square images in a wide 1x2 grid shrink vertically within their boxes, which
+        used to leave a large gap below a suptitle pinned to the top of the figure."""
+        with plt.Canvas(rows_cols=(1, 2), suptitle="Run 42", show=False) as canvas:
+            for i in range(2):
+                plt.Image(np.zeros((10, 10))).draw(canvas, plot_n=i)
+
+        assert suptitle_gap_in(canvas) == pytest.approx(self.EXPECTED_GAP_IN)
+
+    @pytest.mark.parametrize("position", ["right", "top"])
+    def test_sits_one_pad_above_subplots_with_a_colorbar(self, workspace: Path, position: str) -> None:
+        """A Colorbar skips the tight_layout() pass, which used to leave the subplots at
+        matplotlib's default top margin, far below the suptitle; a "top" colorbar must be
+        cleared too."""
+        with plt.Canvas(rows_cols=(1, 2), suptitle="Run 42", show=False) as canvas:
+            image = plt.Image(np.zeros((10, 10)))
+            image.draw(canvas)
+            plt.Colorbar(source=image).draw(canvas, position=position)
+
+        assert suptitle_gap_in(canvas) == pytest.approx(self.EXPECTED_GAP_IN)
+
+    def test_is_never_moved_up(self, workspace: Path) -> None:
+        """Subplots reaching past the suptitle's default spot must not push it off the figure."""
+        with plt.Canvas(suptitle="Run 42", show=False) as canvas:
+            canvas.figure.subplots_adjust(top=0.99)
+            canvas._auto_layout = lambda: None  # keep the manual margin above
+
+        assert canvas.figure._suptitle.get_position()[1] == pytest.approx(0.98)
 
 
 class TestPlotIndices:
