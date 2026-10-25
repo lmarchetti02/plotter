@@ -8,9 +8,11 @@ from warnings import warn
 import matplotlib
 import numpy as np
 import pytest
+from matplotlib.artist import Artist
 from matplotlib.colors import to_rgb
 from matplotlib.layout_engine import PlaceHolderLayoutEngine
 from matplotlib.offsetbox import AnchoredOffsetbox
+from matplotlib.transforms import Bbox
 
 import plotter as plt
 
@@ -634,6 +636,124 @@ class TestSetTitle:
         with plt.Canvas(show=False) as canvas:
             with pytest.raises(ValueError, match="not a valid value"):
                 canvas.set_title("Detector frame", plot_n="first")  # type: ignore
+
+
+def figure_extent(canvas: plt.Canvas, artist: Artist) -> Bbox:
+    """Returns an artist's drawn extent, decorations included (in figure-fraction units)."""
+    return artist.get_tightbbox().transformed(canvas.figure.transFigure.inverted())
+
+
+def make_titled_grid(suptitle: str = "") -> plt.Canvas:
+    """Draws a 2x4 grid of titled scatter plots with one group title over each half."""
+    x = np.linspace(0, 1, 10)
+    with plt.Canvas(rows_cols=(2, 4), suptitle=suptitle, figsize=(16, 8), show=False) as canvas:
+        for i in range(8):
+            plt.ScatterPlot(x, x).draw(canvas, plot_n=i)
+            canvas.set_title(f"Subplot {i}", plot_n=i)
+        canvas.set_group_title("Detector A", cols=(0, 1))
+        canvas.set_group_title("Detector B", cols=(2, 3))
+    return canvas
+
+
+class TestSetGroupTitle:
+    """Tests for `Canvas.set_group_title`."""
+
+    # tight_layout()'s default pad of 1.08 font sizes, at the style's 16pt font (in inches)
+    PAD_IN = 1.08 * 16 / 72
+
+    def test_centers_each_title_over_its_columns(self, workspace: Path) -> None:
+        """Each title should be centered over the combined width of its group's subplots."""
+        canvas = make_titled_grid()
+        first, second = canvas._group_titles.values()
+
+        for text, (left, right) in [(first, (0, 1)), (second, (2, 3))]:
+            group_center = (canvas.axes[left].get_position().x0 + canvas.axes[right].get_position().x1) / 2
+            assert text.get_position()[0] == pytest.approx(group_center)
+
+    def test_sits_between_the_suptitle_and_the_subplot_titles(self, workspace: Path) -> None:
+        """Group titles should clear the subplots' own titles, and the suptitle should clear
+        the group titles, each by one pad -- all within the figure."""
+        canvas = make_titled_grid(suptitle="Run 42")
+        figure_height_in = canvas.figure.get_figheight()
+        decorations_top = max(figure_extent(canvas, ax).y1 for ax in canvas.axes)
+        group_title = figure_extent(canvas, canvas._group_titles[(0, 1)])
+        suptitle = figure_extent(canvas, canvas.figure._suptitle)
+
+        assert (group_title.y0 - decorations_top) * figure_height_in == pytest.approx(self.PAD_IN)
+        assert (suptitle.y0 - group_title.y1) * figure_height_in == pytest.approx(self.PAD_IN)
+        assert suptitle.y1 <= 1
+
+    def test_fits_within_the_figure_without_a_suptitle(self, workspace: Path) -> None:
+        """tight_layout() leaves no room for a group title by itself, so the subplots must be lowered to fit it."""
+        canvas = make_titled_grid()
+
+        assert figure_extent(canvas, canvas._group_titles[(0, 1)]).y1 <= 1
+
+    def test_clears_a_top_colorbar(self, workspace: Path) -> None:
+        """A "top" Colorbar sits above its subplot, so the group title must clear it too."""
+        with plt.Canvas(rows_cols=(1, 2), show=False) as canvas:
+            image = plt.Image(np.zeros((10, 10)))
+            image.draw(canvas)
+            colorbar = plt.Colorbar(source=image)
+            colorbar.draw(canvas, position="top")
+            canvas.set_group_title("Detector A", cols=0)
+
+        colorbar_top = figure_extent(canvas, colorbar.mpl_colorbar.ax).y1
+        assert figure_extent(canvas, canvas._group_titles[(0, 0)]).y0 > colorbar_top
+
+    def test_same_columns_replace_the_title(self, workspace: Path) -> None:
+        """Setting a group title twice should leave only the latest one on the figure."""
+        with plt.Canvas(rows_cols=(1, 2), show=False) as canvas:
+            canvas.set_group_title("First", cols=0)
+            canvas.set_group_title("Second", cols=0)
+
+            assert [text.get_text() for text in canvas.figure.texts] == ["Second"]
+
+    def test_passes_keyword_arguments_to_the_text(self, workspace: Path) -> None:
+        """Extra keyword arguments should style the title like any matplotlib text."""
+        with plt.Canvas(rows_cols=(1, 2), show=False) as canvas:
+            canvas.set_group_title("Detector A", cols=0, color="red", fontsize=10)
+
+            text = canvas._group_titles[(0, 0)]
+            assert to_rgb(text.get_color()) == to_rgb("red")
+            assert text.get_fontsize() == 10
+
+    def test_ignores_a_spanning_subplot_below_the_group(self, workspace: Path) -> None:
+        """A subplot below the group spanning past its columns is out of the title's way, and
+        shouldn't stretch the group: the title stays centered over the subplot above it."""
+        with plt.Canvas(layout=[[0, 1], [2, 2]], show=False) as canvas:
+            canvas.set_group_title("Detector A", cols=0)
+
+        box = canvas.axes[0].get_position()
+        assert canvas._group_titles[(0, 0)].get_position()[0] == pytest.approx((box.x0 + box.x1) / 2)
+
+    @pytest.mark.parametrize("cols", [4, -1, (1, 0), (0, 4)])
+    def test_rejects_columns_out_of_range(self, workspace: Path, cols: int | tuple[int, int]) -> None:
+        """Columns outside the grid, or a decreasing range, can't be titled."""
+        with plt.Canvas(rows_cols=(1, 4), show=False) as canvas:
+            with pytest.raises(ValueError, match="between 0 and 3"):
+                canvas.set_group_title("Detector A", cols=cols)
+
+    def test_rejects_overlapping_groups(self, workspace: Path) -> None:
+        """Two groups sharing a column would draw their titles on top of each other."""
+        with plt.Canvas(rows_cols=(1, 4), show=False) as canvas:
+            canvas.set_group_title("Detector A", cols=(0, 1))
+
+            with pytest.raises(ValueError, match="overlaps"):
+                canvas.set_group_title("Detector B", cols=(1, 2))
+
+    def test_rejects_a_top_row_subplot_straddling_the_group(self, workspace: Path) -> None:
+        """A top-row subplot crossing the group's edge would sit right under part of its title."""
+        with plt.Canvas(layout=[[0, 0], [1, 2]], show=False) as canvas:
+            with pytest.raises(ValueError, match="both inside and outside"):
+                canvas.set_group_title("Detector A", cols=0)
+
+    def test_rejects_columns_without_a_subplot_of_their_own(self, workspace: Path) -> None:
+        """With every subplot in the columns spilling outside them, there's nothing to center over."""
+        # subplot 1 spans both columns but starts below the top row, which is empty in column 0
+        with plt.Canvas(layout=[[None, 0], [1, 1]], show=False) as canvas:
+            with pytest.raises(ValueError, match="No subplot"):
+                canvas.set_group_title("Detector A", cols=0)
 
 
 class TestDrawLine:

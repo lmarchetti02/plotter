@@ -142,6 +142,7 @@ Class for creating an empty canvas (xy-plane).
 - `_loc_legend: list[int]`
 - `_ncols_legend: list[int]`
 - `_no_legend: list[bool]`
+- `_group_titles: dict[tuple[int, int], MplText]`
 
 ### Methods
 
@@ -246,6 +247,43 @@ objects), which can then be built without a `text_file` at all.
 | Type | Description |
 | --- | --- |
 | ValueError | If 'plot_n' is not a valid value. |
+
+
+#### `set_group_title`
+
+```python
+set_group_title(self, title: str, cols: int | tuple[int, int], **kwargs) -> None
+```
+
+Sets a title shared by a group of adjacent columns, like a suptitle for part of the canvas.
+
+The title is centered above the subplots lying entirely within those columns, between
+the figure's suptitle (if any) and the subplots' own titles. Its final position is
+only settled when the canvas is exited, once the layout (e.g. any `Colorbar`) is final.
+Calling this again with the same columns replaces that group's title.
+
+
+**Args:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `title` | str | The title to display. |
+| `cols` | int \| tuple\[int, int\] | The 0-based column of the `rows_cols` grid (or `layout`) to title, or a range of columns from `first` to `last` (inclusive). |
+
+**Keyword Arguments:**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `fontsize` | float \| str | The font size of the title. Defaults to the suptitle's, `rcParams\["figure.titlesize"\]`. Any other keyword argument is passed on to `matplotlib.figure.Figure.text` (e.g. `fontweight`, `color`). |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If 'cols' is out of range for `rows_cols`, or its first column comes after its last. |
+| ValueError | If 'cols' overlaps the columns of another group title. |
+| ValueError | If a subplot in the top row spans columns both inside and outside 'cols'. |
+| ValueError | If no subplot lies entirely within 'cols'. |
 
 
 #### `draw_line`

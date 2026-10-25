@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.text import Text as MplText
 from matplotlib.transforms import TransformedBbox
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 from mpl_toolkits.axes_grid1.inset_locator import (BboxConnector, BboxPatch,
@@ -46,9 +47,10 @@ _CORNERS_LOC = {corner: loc for loc, corner in _LOC_CORNERS.items()}
 
 _COLORBAR_TOUCHED_ATTR = "_plotter_colorbar_touched"
 
-# gap between the suptitle and the subplots below it (in units of the font size), the
-# same default padding tight_layout() uses around the figure's edges
-_SUPTITLE_PAD = 1.08
+# gap between a figure-level title (suptitle or group title) and whatever sits below
+# it (in units of the font size), the same default padding tight_layout() uses around
+# the figure's edges
+_TITLE_PAD = 1.08
 
 
 def _mark_colorbar_touched(figure: Figure) -> None:
@@ -509,6 +511,7 @@ class Canvas:
     _loc_legend: list[int] = Field(init=False)
     _ncols_legend: list[int] = Field(init=False)
     _no_legend: list[bool] = Field(init=False)
+    _group_titles: dict[tuple[int, int], MplText] = Field(init=False)
 
     def __post_init__(self) -> None:
         """Initializes the necessary attributes."""
@@ -569,6 +572,9 @@ class Canvas:
         self._ncols_legend = [1 for _ in range(self._n_plots)]
         self._no_legend = [False for _ in range(self._n_plots)]
 
+        # titles over groups of columns, keyed by their (first, last) column
+        self._group_titles = {}
+
     def __enter__(self):
         """Defines what happens when the user enters a 'Canvas' context."""
         return self
@@ -587,6 +593,7 @@ class Canvas:
 
         self._legend()  # draw legend if it exists
         self._auto_layout()  # one-shot spacing pass to avoid title/label overlap
+        self._place_group_titles()  # center the group titles above their final columns
         self._place_suptitle()  # close the gap between the suptitle and the subplots
         self._save()  # save plot to disk
         logger.info("Plot(s) finished")
@@ -745,6 +752,49 @@ class Canvas:
         for plot_i in self.plot_indices(plot_n):
             self.text[plot_i].title = title
             self.axes[plot_i].set_title(title, y=1)
+
+    def set_group_title(self, title: str, cols: int | tuple[int, int], **kwargs) -> None:
+        """
+        Sets a title shared by a group of adjacent columns, like a suptitle for part of the canvas.
+
+        The title is centered above the subplots lying entirely within those columns, between
+        the figure's suptitle (if any) and the subplots' own titles. Its final position is
+        only settled when the canvas is exited, once the layout (e.g. any `Colorbar`) is final.
+        Calling this again with the same columns replaces that group's title.
+
+        Args:
+            title (str): The title to display.
+            cols (int | tuple[int, int]): The 0-based column of the `rows_cols` grid (or
+                `layout`) to title, or a range of columns from `first` to `last` (inclusive).
+
+        Keyword Arguments:
+            fontsize (float | str): The font size of the title. Defaults to the suptitle's,
+                `rcParams["figure.titlesize"]`.
+            Any other keyword argument is passed on to `matplotlib.figure.Figure.text`
+            (e.g. `fontweight`, `color`).
+
+        Raises:
+            ValueError: If 'cols' is out of range for `rows_cols`, or its first column comes after its last.
+            ValueError: If 'cols' overlaps the columns of another group title.
+            ValueError: If a subplot in the top row spans columns both inside and outside 'cols'.
+            ValueError: If no subplot lies entirely within 'cols'.
+        """
+        logger.info("Called 'Canvas.set_group_title()'")
+
+        first, last = (cols, cols) if isinstance(cols, int) else cols
+        n_cols = self.rows_cols[1]
+        if not 0 <= first <= last < n_cols:
+            raise ValueError(f"'cols' must be a column, or an increasing range of columns, between 0 and {n_cols - 1}.")
+        for other_first, other_last in self._group_titles:
+            if (other_first, other_last) != (first, last) and first <= other_last and other_first <= last:
+                raise ValueError(f"'cols' {(first, last)} overlaps the group title over columns {(other_first, other_last)}.")
+        self._group_axes((first, last))  # validate the group before creating its title
+
+        if (first, last) in self._group_titles:
+            self._group_titles[(first, last)].remove()
+        kwargs.setdefault("fontsize", rcParams["figure.titlesize"])
+        self._group_titles[(first, last)] = self.figure.text(0.5, 1.0, title, ha="center", va="bottom", **kwargs)
+        self._place_group_titles()
 
     def draw_line(self, orientation: str, point: float = 0.0, plot_n: PlotN = 0, **kwargs) -> None:
         """
@@ -1273,16 +1323,104 @@ class Canvas:
             self.figure.tight_layout()
 
         self.figure.set_layout_engine("none")
+        self._make_room_for_group_titles()
+
+    def _group_axes(self, cols: tuple[int, int]) -> list[Axes]:
+        """
+        Finds the subplots lying entirely within a group of columns.
+
+        Args:
+            cols (tuple[int, int]): The first and last column of the group (inclusive).
+
+        Raises:
+            ValueError: If a subplot in the top row spans columns both inside and outside 'cols'.
+            ValueError: If no subplot lies entirely within 'cols'.
+
+        Returns:
+            list[Axes]: The Axes of every subplot whose span lies within 'cols'.
+        """
+        group = range(cols[0], cols[1] + 1)
+        group_axes = []
+        for i, ax in enumerate(self.axes):
+            spec = ax.get_subplotspec()
+            inside = [col in group for col in spec.colspan]
+            if all(inside):
+                group_axes.append(ax)
+            # a straddling subplot lower down sits below the group's own subplots, out of the title's way
+            elif any(inside) and spec.rowspan.start == 0:
+                raise ValueError(f"Subplot {i} spans columns both inside and outside the group {cols}.")
+
+        if not group_axes:
+            raise ValueError(f"No subplot lies entirely within the columns {cols}.")
+        return group_axes
+
+    def _title_pad(self) -> float:
+        """Returns the gap left below a figure-level title (in figure-fraction units)."""
+        return _TITLE_PAD * rcParams["font.size"] / 72 / self.figure.get_figheight()
+
+    def _group_title_layout(self, cols: tuple[int, int]) -> tuple[float, float]:
+        """
+        Computes where a group title belongs, given the current position of the subplots.
+
+        Args:
+            cols (tuple[int, int]): The first and last column of the group (inclusive).
+
+        Returns:
+            tuple[float, float]: The x of the title's center and the y of its bottom (in
+                figure-fraction units): centered above the group's subplots, one pad above
+                the topmost decoration of every Axes (e.g. a "top" `Colorbar`) above them.
+        """
+        to_figure = self.figure.transFigure.inverted()
+        boxes = [ax.get_position() for ax in self._group_axes(cols)]
+        x0, x1 = min(box.x0 for box in boxes), max(box.x1 for box in boxes)
+
+        # every Axes horizontally overlapping the group -- not just its subplots -- could sit in the way
+        overlapping = [ax for ax in self.figure.axes if ax.get_visible() and ax.get_position().x0 < x1 and ax.get_position().x1 > x0]
+        decorations_top = max(ax.get_tightbbox().transformed(to_figure).y1 for ax in overlapping)
+        return (x0 + x1) / 2, decorations_top + self._title_pad()
+
+    def _place_group_titles(self) -> None:
+        """Moves every group title to its place above the group's subplots' current position."""
+        for cols, text in self._group_titles.items():
+            text.set_position(self._group_title_layout(cols))
+
+    def _make_room_for_group_titles(self) -> None:
+        """
+        Lowers the top of the subplots just enough to fit the group titles (and the suptitle
+        above them, if any) below the top edge of the figure.
+
+        Meant to run right after tight_layout(), which only reserves room for the suptitle;
+        a fixed-aspect Axes may already leave enough slack, in which case nothing changes.
+        """
+        if not self._group_titles:
+            return
+
+        to_figure = self.figure.transFigure.inverted()
+        pad = self._title_pad()
+        titles_top = max(
+            self._group_title_layout(cols)[1] + text.get_window_extent().transformed(to_figure).height
+            for cols, text in self._group_titles.items()
+        )
+        needed_top = titles_top + pad  # the figure's edge, or the suptitle above
+        suptitle = self.figure._suptitle  # matplotlib has no public getter for the Text artist
+        if suptitle is not None and suptitle.get_text():
+            needed_top += suptitle.get_window_extent().transformed(to_figure).height + pad
+
+        overflow = needed_top - 1
+        if overflow > 0:
+            self.figure.subplots_adjust(top=self.figure.subplotpars.top - overflow)
+            logger.debug(f"Subplots lowered by {overflow:.3f} to fit the group titles.")
 
     def _place_suptitle(self) -> None:
         """
-        Moves the suptitle down to sit just above the subplots' topmost decorations.
+        Moves the suptitle down to sit just above the subplots' topmost decorations and
+        group titles.
 
         `Figure.suptitle()` pins it near the top edge of the figure, which only lines up
         with the subplots when `_auto_layout`'s tight_layout() pass has packed them right
         below it: a fixed-aspect Axes (e.g. an `Image`) shrinks within its own box, and a
         `Colorbar` skips that pass altogether, both leaving a large gap. The suptitle is
-        only ever moved down, never up.
+        only ever moved down, never up -- unless that's needed to clear a group title.
         """
         logger.info("Called 'Canvas._place_suptitle()'")
 
@@ -1292,14 +1430,17 @@ class Canvas:
             return
 
         to_figure = self.figure.transFigure.inverted()
-        decorations_top = max(ax.get_tightbbox().transformed(to_figure).y1 for ax in visible_axes)
-        pad = _SUPTITLE_PAD * rcParams["font.size"] / 72 / self.figure.get_figheight()
+        obstacles = visible_axes + list(self._group_titles.values())
+        target_bottom = max(obstacle.get_tightbbox().transformed(to_figure).y1 for obstacle in obstacles) + self._title_pad()
 
-        target_bottom = decorations_top + pad
-        if target_bottom < suptitle.get_window_extent().transformed(to_figure).y0:
+        if target_bottom < suptitle.get_window_extent().transformed(to_figure).y0 or self._group_titles:
             suptitle.set_y(target_bottom)
             suptitle.set_verticalalignment("bottom")
-            logger.debug(f"Suptitle moved down to y={target_bottom:.3f}.")
+            logger.debug(f"Suptitle moved to y={target_bottom:.3f}.")
+
+        # a Colorbar skips tight_layout(), so _make_room_for_group_titles() couldn't run
+        if suptitle.get_window_extent().transformed(to_figure).y1 > 1:
+            logger.warning("The suptitle doesn't fit above the group titles and sticks out of the figure; increase its height.")
 
     def _save(self) -> None:
         """
