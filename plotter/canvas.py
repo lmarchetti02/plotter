@@ -781,8 +781,8 @@ class Canvas:
         if (first, last) in self._group_titles:
             self._group_titles[(first, last)].remove()
         kwargs.setdefault("fontsize", rcParams["figure.titlesize"])
+        # placeholder position: Canvas.__exit__ places every group title once the layout is final
         self._group_titles[(first, last)] = self.figure.text(0.5, 1.0, title, ha="center", va="bottom", **kwargs)
-        self._place_group_titles()
 
     def draw_line(self, orientation: str, point: float = 0.0, plot_n: PlotN = 0, **kwargs) -> None:
         """
