@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from matplotlib.colors import LogNorm, Normalize, SymLogNorm
 from matplotlib.image import AxesImage
 
 import plotter as plt
@@ -71,6 +72,26 @@ class TestDraw:
 
             assert image.mappable.norm.vmin == pytest.approx(2.0)
             assert image.mappable.norm.vmax == pytest.approx(8.0)
+
+    @pytest.mark.parametrize(
+        ("log", "norm_type"),
+        [(False, Normalize), ((False, 1.0), Normalize), (True, LogNorm), ((True, 0.0), LogNorm), ((True, 1.0), SymLogNorm)],
+    )
+    def test_log_selects_the_documented_normalization(
+        self, single_text_file, show_plots, log: bool | tuple[bool, float], norm_type: type[Normalize]
+    ) -> None:
+        """`log` should follow the same format as on the 2D histograms: a `(False, _)` tuple
+        stays linear (it used to give a symlog scale) and `(True, 0)` is logarithmic."""
+        img = np.linspace(0.1, 10.0, 100).reshape(10, 10)
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup(nogrid=True)
+            image = plt.Image(img)
+
+            image.draw(canvas, log=log)
+
+            assert image.mappable is not None
+            assert type(image.mappable.norm) is norm_type
 
     @pytest.mark.parametrize("channels", [None, 3, 4], ids=["grayscale", "rgb", "rgba"])
     def test_auto_crops_full_resolution_data_into_a_zoom_inset(self, single_text_file, show_plots, channels: int | None) -> None:

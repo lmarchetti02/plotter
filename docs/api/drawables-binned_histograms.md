@@ -114,4 +114,4 @@ Draws the 2D histogram on the canvas.
 | --- | --- | --- |
 | `colormap` | str | The Matplotlib colormap to use for the histogram. Defaults to "plasma". |
 | `alpha` | float | The transparency of the histogram. Defaults to 1. |
-| `log` | tuple\[bool, float\] | A tuple controlling the scale. The first element is a boolean to indicate if the scale should be logarithmic. The second element is a float for the range of linearity in case of a 'symlog' scale. Defaults to `(False, 0)`. |
+| `log` | bool or tuple\[bool, float\] | Controls the scale of the colormap.<br>- `bool`: `True` for a logarithmic scale, `False` for a linear one.<br>- `tuple`: `(False, _)` for a linear scale, `(True, 0)` for a logarithmic one, `(True, t)` for a 'symlog' scale that is linear within `(-t, t)`. Defaults to `False`. |

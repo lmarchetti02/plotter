@@ -150,15 +150,16 @@ class RawHist2D(Drawable):
             colormap (str): The Matplotlib colormap to use for the histogram.
                 Defaults to "plasma".
             alpha (float): The transparency of the histogram. Defaults to 1.
-            log (tuple[bool, float]): A tuple controlling the scale.
-                The first element is a boolean to indicate if the scale should be
-                logarithmic. The second element is a float for the range of
-                linearity in case of a 'symlog' scale. Defaults to `(False, 0)`.
+            log (bool or tuple[bool, float]): Controls the scale of the colormap.
+                - `bool`: `True` for a logarithmic scale, `False` for a linear one.
+                - `tuple`: `(False, _)` for a linear scale, `(True, 0)` for a logarithmic
+                  one, `(True, t)` for a 'symlog' scale that is linear within `(-t, t)`.
+                Defaults to `False`.
         """
 
         logger.info("Called 'RawHist2D.draw()'")
 
-        normalization = resolve_log_normalization(kwargs.get("log", (False, 0.0)))
+        normalization = resolve_log_normalization(kwargs.get("log", False))
 
         self.bin_vals, self.xbins, self.ybins, self.mappable = canvas.axes[plot_n].hist2d(
             self.x,

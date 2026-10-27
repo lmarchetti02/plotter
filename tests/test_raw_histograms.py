@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 from matplotlib.collections import QuadMesh
-from matplotlib.colors import to_rgba
+from matplotlib.colors import LogNorm, Normalize, to_rgba
 
 import plotter as plt
 
@@ -64,3 +64,19 @@ class TestRawHist2DDraw:
             assert hist.bin_vals.shape == (20, 20)
             assert isinstance(hist.mappable, QuadMesh)
             assert len(canvas.figure.axes) == 1
+
+    @pytest.mark.parametrize(("log", "norm_type"), [(True, LogNorm), (False, Normalize)])
+    def test_accepts_a_bool_log(self, single_text_file, show_plots, log: bool, norm_type: type[Normalize]) -> None:
+        """A plain bool `log`, as `Image` takes, should select the scale too (it used to raise a TypeError)."""
+        rng = np.random.default_rng(0)
+        x = rng.normal(5.0, 1.5, 1_000)
+        y = rng.normal(5.0, 2.5, 1_000)
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            hist = plt.RawHist2D(x, y, 20)
+
+            hist.draw(canvas, log=log)
+
+            assert hist.mappable is not None
+            assert type(hist.mappable.norm) is norm_type

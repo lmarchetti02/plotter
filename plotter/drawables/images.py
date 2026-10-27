@@ -1,7 +1,6 @@
 from logging import getLogger
 from typing import Any
 
-import matplotlib.colors as colors
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.image import AxesImage
@@ -11,6 +10,7 @@ from pydantic.dataclasses import dataclass
 from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
 from ..helpers import NArray2D, NArray3D
+from ._normalization import resolve_log_normalization
 
 logger = getLogger(__name__)
 
@@ -61,8 +61,9 @@ class Image(Drawable):
         Keyword Arguments:
             colormap (str): The Matplotlib colormap to use. Defaults to "gray".
             log (bool or tuple[bool, float]): Controls the scale of the colormap.
-                - `bool`: `True` for logarithmic scale.
-                - `tuple`: `(True, float)` for a 'symlog' scale with a linear range of `float`.
+                - `bool`: `True` for a logarithmic scale, `False` for a linear one.
+                - `tuple`: `(False, _)` for a linear scale, `(True, 0)` for a logarithmic
+                  one, `(True, t)` for a 'symlog' scale that is linear within `(-t, t)`.
                 This parameter is ignored if the data is RGB(A). Defaults to `False`.
             v_range (tuple[float, float]): The minimum and maximum intensity
                 values, applied regardless of `log`. Ignored if the data is RGB(A).
@@ -80,17 +81,10 @@ class Image(Drawable):
 
         logger.info("Called 'Image.draw()'")
 
-        log = kwargs.get("log", False)
         v_range = kwargs.get("v_range", (None, None))
-        # get normalization -- vmin/vmax must be set on the norm itself: matplotlib
-        # rejects passing a Normalize instance together with vmin/vmax to imshow()
-        if log:
-            if isinstance(log, tuple):
-                normalization = colors.SymLogNorm(log[1], vmin=v_range[0], vmax=v_range[1])
-            else:
-                normalization = colors.LogNorm(vmin=v_range[0], vmax=v_range[1])
-        else:
-            normalization = colors.Normalize(vmin=v_range[0], vmax=v_range[1])
+        # vmin/vmax must be set on the norm itself: matplotlib rejects passing a
+        # Normalize instance together with vmin/vmax to imshow()
+        normalization = resolve_log_normalization(kwargs.get("log", False), vmin=v_range[0], vmax=v_range[1])
 
         data = self.data
         extent = kwargs.get("limits", None)

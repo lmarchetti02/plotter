@@ -49,7 +49,7 @@ Draws the image on the canvas.
 | Name | Type | Description |
 | --- | --- | --- |
 | `colormap` | str | The Matplotlib colormap to use. Defaults to "gray". |
-| `log` | bool or tuple\[bool, float\] | Controls the scale of the colormap.<br>- `bool`: `True` for logarithmic scale.<br>- `tuple`: `(True, float)` for a 'symlog' scale with a linear range of `float`. This parameter is ignored if the data is RGB(A). Defaults to `False`. |
+| `log` | bool or tuple\[bool, float\] | Controls the scale of the colormap.<br>- `bool`: `True` for a logarithmic scale, `False` for a linear one.<br>- `tuple`: `(False, _)` for a linear scale, `(True, 0)` for a logarithmic one, `(True, t)` for a 'symlog' scale that is linear within `(-t, t)`. This parameter is ignored if the data is RGB(A). Defaults to `False`. |
 | `v_range` | tuple\[float, float\] | The minimum and maximum intensity values, applied regardless of `log`. Ignored if the data is RGB(A). Defaults to `(None, None)`. |
 | `aspect` | str | The aspect ratio of the axes. `equal` for squared pixels, `auto` for a squared image. Defaults to "equal". |
 | `origin` | str | The placement of the \[0,0\] element of the data. `upper` for the top-left, `lower` for the bottom-left. Defaults to "upper". |
