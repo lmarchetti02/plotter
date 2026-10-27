@@ -141,7 +141,7 @@ class FunctionPlot(Drawable):
 
         # find minimum distance
         distances = np.diff(data)
-        minimum_dist = np.min(np.abs(distances))
+        minimum_dist = np.min(distances)  # data is sorted, so no distance is negative
         logger.debug(f"Minimum distance: {minimum_dist}")
 
         if minimum_dist == 0:
@@ -149,7 +149,7 @@ class FunctionPlot(Drawable):
             return data
 
         # create final array
-        n_elements_to_add = np.round(np.abs(distances) / minimum_dist).astype(np.uint) * density - 1
+        n_elements_to_add = np.round(distances / minimum_dist).astype(np.uint) * density - 1
         final_size = data.size + np.sum(n_elements_to_add)
         result = np.zeros(final_size, dtype=data.dtype)
 
@@ -158,19 +158,20 @@ class FunctionPlot(Drawable):
         result[0] = data[0]
         result[insert_indices] = data[1:]
 
-        # add interpolated data to final array
-        current_index = 0
-        for i in range(len(data) - 1):
-            num_new_points = n_elements_to_add[i]
-            start = data[i]
-            stop = data[i + 1]
+        # add interpolated data to final array, every segment at once: the j-th new point
+        # (j = 1..n) between data[i] and data[i + 1] is data[i] + j * (delta / (n + 1)), with
+        # the same float dtype and operations np.linspace(data[i], data[i + 1], n + 2) uses
+        float_dtype = data.dtype if np.issubdtype(data.dtype, np.inexact) else np.dtype(np.float64)
+        n_new = n_elements_to_add.astype(np.intp)
+        segment = np.repeat(np.arange(len(data) - 1), n_new)
+        j = np.arange(1, n_new.sum() + 1) - np.repeat(np.cumsum(n_new) - n_new, n_new)
+        steps = np.subtract(data[1:], data[:-1], dtype=float_dtype) / (n_new + 1).astype(float_dtype)
+        new_points = j.astype(float_dtype) * steps[segment] + data[:-1].astype(float_dtype)[segment]
 
-            start_index = current_index + 1
-            stop_index = start_index + num_new_points
-
-            result[start_index:stop_index] = np.linspace(start, stop, num=num_new_points + 2)[1:-1]
-
-            current_index = stop_index
+        is_new = np.ones(final_size, dtype=bool)
+        is_new[0] = False
+        is_new[insert_indices] = False
+        result[is_new] = new_points
 
         logger.debug(f"Final array of size {len(result)}")
 
