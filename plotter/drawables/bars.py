@@ -87,7 +87,6 @@ class BarChart(Drawable):
             canvas,
             plot_n,
             label,
-            self.label_name,
             logger,
             "No label for the bar chart in the json file.",
         )
@@ -115,4 +114,4 @@ class BarChart(Drawable):
         if bar_labels:
             canvas.axes[plot_n].bar_label(container, **(bar_labels if isinstance(bar_labels, dict) else {}))
 
-        getattr(canvas.counters, self.label_name)[plot_n] += 1
+        self._increment_counter(canvas, plot_n)

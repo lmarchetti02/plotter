@@ -68,7 +68,6 @@ class BinnedHist(Drawable):
             canvas,
             plot_n,
             label,
-            self.label_name,
             logger,
             "No label for the histogram in the json file.",
         )
@@ -88,7 +87,7 @@ class BinnedHist(Drawable):
         )
         logger.debug(f"BinnedHist {n} drawn")
 
-        getattr(canvas.counters, self.label_name)[plot_n] += 1
+        self._increment_counter(canvas, plot_n)
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))

@@ -82,7 +82,6 @@ class LinePlot(Drawable):
             canvas,
             plot_n,
             label,
-            self.label_name,
             logger,
             "No label for the plot in the json file.",
         )
@@ -99,4 +98,4 @@ class LinePlot(Drawable):
         )
         logger.debug(f"Plot {n} drawn")
 
-        getattr(canvas.counters, self.label_name)[plot_n] += 1
+        self._increment_counter(canvas, plot_n)

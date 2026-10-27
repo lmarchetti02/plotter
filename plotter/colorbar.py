@@ -1,3 +1,4 @@
+from dataclasses import dataclass as stdlib_dataclass
 from logging import getLogger
 from math import isclose
 from typing import Literal
@@ -21,32 +22,16 @@ _Position = Literal["left", "right", "top", "bottom"]
 
 _RESERVATIONS_ATTR = "_plotter_colorbar_reservations"
 
+# tolerance when comparing Axes positions/sizes (in figure-fraction units)
+_TOL = 1e-9
 
-def _get_reservation(ax: Axes, position: _Position) -> dict | None:
+
+@stdlib_dataclass(frozen=True)
+class _Reservation:
     """
-    Returns the colorbar margin reservation stamped on `ax` for `position`, if any.
+    A colorbar margin reserved on one side of a group of Axes.
 
-    Args:
-        ax (Axes): The Axes to check.
-        position (str): Which side's reservation to look up.
-
-    Returns:
-        dict or None: `{"edge", "shrink", "thickness", "caxes"}` (see
-            `_stamp_reservation`) if `ax` was previously touched by a `Colorbar`
-            reserving space on that side; `None` otherwise.
-    """
-    return getattr(ax, _RESERVATIONS_ATTR, {}).get(position)
-
-
-def _stamp_reservation(ax: Axes, position: _Position, edge: float, shrink: float, thickness: float, caxes: list[Axes]) -> None:
-    """
-    Records a colorbar margin reservation on `ax`, so a later `Colorbar` targeting a
-    sibling row/column that shares this edge can detect it via `_get_reservation` and
-    reuse (or grow) the same margin instead of carving out a second one.
-
-    Args:
-        ax (Axes): The Axes to stamp.
-        position (str): Which side the margin is on.
+    Attributes:
         edge (float): The margin's fixed outer boundary (figure-fraction; the side
             away from the grid, e.g. `cax.x1` for "right"), stable across however many
             colorbars end up sharing it.
@@ -56,11 +41,68 @@ def _stamp_reservation(ax: Axes, position: _Position, edge: float, shrink: float
         caxes (list[Axes]): Every colorbar Axes currently sharing this margin, so a
             later, larger colorbar can grow all of them to match.
     """
+
+    edge: float
+    shrink: float
+    thickness: float
+    caxes: list[Axes]
+
+
+def _close(a: float, b: float) -> bool:
+    """Checks whether two positions/sizes (figure-fraction units) are equal up to `_TOL`."""
+    return isclose(a, b, abs_tol=_TOL)
+
+
+def _is_vertical(position: _Position) -> bool:
+    """Checks whether a colorbar at `position` is vertical, i.e. on the left/right of its target."""
+    return position in ("left", "right")
+
+
+def _anchored_start(p: Bbox, position: _Position, size: float) -> float:
+    """
+    Returns the start (x0 for "left"/"right", y0 for "top"/"bottom") of a `size`-long span
+    within the box `p`, anchored on the side of `p` facing away from `position`.
+    """
+    if position == "right":
+        return p.x0
+    if position == "left":
+        return p.x1 - size
+    if position == "top":
+        return p.y0
+    return p.y1 - size
+
+
+def _get_reservation(ax: Axes, position: _Position) -> _Reservation | None:
+    """
+    Returns the colorbar margin reservation stamped on `ax` for `position`, if any.
+
+    Args:
+        ax (Axes): The Axes to check.
+        position (str): Which side's reservation to look up.
+
+    Returns:
+        _Reservation or None: The reservation (see `_stamp_reservation`) if `ax` was
+            previously touched by a `Colorbar` reserving space on that side; `None` otherwise.
+    """
+    return getattr(ax, _RESERVATIONS_ATTR, {}).get(position)
+
+
+def _stamp_reservation(ax: Axes, position: _Position, reservation: _Reservation) -> None:
+    """
+    Records a colorbar margin reservation on `ax`, so a later `Colorbar` targeting a
+    sibling row/column that shares this edge can detect it via `_get_reservation` and
+    reuse (or grow) the same margin instead of carving out a second one.
+
+    Args:
+        ax (Axes): The Axes to stamp.
+        position (str): Which side the margin is on.
+        reservation (_Reservation): The margin's current state.
+    """
     reservations = getattr(ax, _RESERVATIONS_ATTR, None)
     if reservations is None:
         reservations = {}
         setattr(ax, _RESERVATIONS_ATTR, reservations)
-    reservations[position] = {"edge": edge, "shrink": shrink, "thickness": thickness, "caxes": caxes}
+    reservations[position] = reservation
 
 
 def _grow_existing_cax(cax: Axes, position: _Position, new_thickness: float) -> None:
@@ -107,7 +149,7 @@ def _parse_fraction(value: str | float) -> float:
     return value
 
 
-def _decoration_margin(ax: Axes, figure: Figure, position: _Position, plain: Bbox) -> float:
+def _decoration_margin(ax: Axes, position: _Position, plain: Bbox) -> float:
     """
     Measures how far `ax`'s ticks/axis-label/title on the `position` side (the
     decorations matplotlib draws just outside the Axes' own box, e.g. y-tick labels
@@ -115,7 +157,6 @@ def _decoration_margin(ax: Axes, figure: Figure, position: _Position, plain: Bbo
 
     Args:
         ax (Axes): The Axes to measure.
-        figure (Figure): The parent Figure (for the figure-fraction transform).
         position (str): Which side to measure ('left', 'right', 'top', 'bottom').
         plain (Bbox): `ax`'s own position box (`ax.get_position()`), passed in to
             avoid recomputing it.
@@ -123,7 +164,7 @@ def _decoration_margin(ax: Axes, figure: Figure, position: _Position, plain: Bbo
     Returns:
         float: The margin, in figure-fraction units, never negative.
     """
-    tight = ax.get_tightbbox().transformed(figure.transFigure.inverted())
+    tight = ax.get_tightbbox().transformed(ax.figure.transFigure.inverted())
     if position == "left":
         return max(0.0, plain.x0 - tight.x0)
     if position == "right":
@@ -133,14 +174,14 @@ def _decoration_margin(ax: Axes, figure: Figure, position: _Position, plain: Bbo
     return max(0.0, plain.y0 - tight.y0)
 
 
-def _reanchor_secondary_dimension(ax: Axes, original_p: Bbox, position: _Position, vertical: bool) -> None:
+def _reanchor_secondary_dimension(ax: Axes, original_p: Bbox, position: _Position) -> None:
     """
     Re-anchors an Axes' *other* dimension after `_resize_others_to_match` matched its
     primary one, in case a fixed-aspect Axes' own aspect settling adjusted it too.
 
-    Given `vertical=True` (height was just matched), a width side effect is possible;
-    given `vertical=False` (width was just matched), a height side effect is possible.
-    Either way, matplotlib's own aspect settling centers that side effect within the
+    For a "left"/"right" `position` (height was just matched), a width side effect is
+    possible; for "top"/"bottom" (width was just matched), a height side effect is
+    possible. Either way, matplotlib's own aspect settling centers that side effect within the
     Axes' *original* span, rather than anchoring it on the same side `position`
     itself anchors on (e.g. "right": fixed x0) -- left alone, this Axes would end up
     correctly *sized* but not correctly *aligned* with a sibling elsewhere in the
@@ -152,27 +193,24 @@ def _reanchor_secondary_dimension(ax: Axes, original_p: Bbox, position: _Positio
         ax (Axes): The Axes just resized by `_resize_others_to_match`.
         original_p (Bbox): Its position box before that resize.
         position (str): The colorbar's position, as passed to `_make_colorbar_axes`.
-        vertical (bool): Matches `_resize_others_to_match`'s own `vertical` argument.
     """
     current = ax.get_position()
-    if vertical:
-        if isclose(current.width, original_p.width, abs_tol=1e-9):
+    if _is_vertical(position):
+        if _close(current.width, original_p.width):
             return
-        new_x0 = original_p.x0 if position == "right" else original_p.x1 - current.width
+        new_x0 = _anchored_start(original_p, position, current.width)
         ax.set_position([new_x0, current.y0, current.width, current.height])
     else:
-        if isclose(current.height, original_p.height, abs_tol=1e-9):
+        if _close(current.height, original_p.height):
             return
-        new_y0 = original_p.y0 if position == "top" else original_p.y1 - current.height
+        new_y0 = _anchored_start(original_p, position, current.height)
         ax.set_position([current.x0, new_y0, current.width, current.height])
 
 
-def _resize_others_to_match(
-    axes: list[Axes], positions: list[Bbox], edge_axes: set[Axes], final_size: float, position: _Position, vertical: bool
-) -> None:
+def _resize_others_to_match(axes: list[Axes], positions: list[Bbox], edge_axes: set[Axes], final_size: float, position: _Position) -> None:
     """
     Centers every group Axes not in `edge_axes` on `final_size` along the cross
-    dimension (height if `vertical`, width otherwise).
+    dimension (height for a "left"/"right" `position`, width for "top"/"bottom").
 
     A fixed-aspect edge Axes (e.g. `Image`'s default `aspect="equal"`) may end up
     shrinking that dimension too, as a side effect of `_make_colorbar_axes` shrinking
@@ -193,14 +231,13 @@ def _resize_others_to_match(
         final_size (float): The edge Axes' actual final height/width, in figure-fraction
             units, to match.
         position (str): The colorbar's position, as passed to `_make_colorbar_axes`.
-        vertical (bool): `True` to match height (for a "left"/"right" colorbar),
-            `False` to match width (for a "top"/"bottom" one).
     """
+    vertical = _is_vertical(position)
     for ax, p in zip(axes, positions):
         if ax in edge_axes:
             continue
         current = p.height if vertical else p.width
-        if isclose(current, final_size, abs_tol=1e-9):
+        if _close(current, final_size):
             continue
         ax.set_axes_locator(None)
         if vertical:
@@ -209,7 +246,7 @@ def _resize_others_to_match(
         else:
             new_x0 = p.x0 + (p.width - final_size) / 2
             ax.set_position([new_x0, p.y0, final_size, p.height])
-        _reanchor_secondary_dimension(ax, p, position, vertical)
+        _reanchor_secondary_dimension(ax, p, position)
 
 
 def _realign_grid_siblings(
@@ -246,7 +283,7 @@ def _realign_grid_siblings(
         list[Axes]: Every sibling Axes found (whether or not it needed resizing), so
             the caller can stamp them all with a margin reservation too.
     """
-    match_width = position in ("left", "right")
+    match_width = _is_vertical(position)
     target_set = set(target_axes)
     siblings: list[Axes] = []
     for target_ax, target_p in zip(target_axes, target_positions):
@@ -256,24 +293,24 @@ def _realign_grid_siblings(
             if ax in target_set:
                 continue
             same_column_or_row = (
-                isclose(p.x0, target_p.x0, abs_tol=1e-9) and isclose(p.x1, target_p.x1, abs_tol=1e-9)
+                _close(p.x0, target_p.x0) and _close(p.x1, target_p.x1)
                 if match_width
-                else isclose(p.y0, target_p.y0, abs_tol=1e-9) and isclose(p.y1, target_p.y1, abs_tol=1e-9)
+                else _close(p.y0, target_p.y0) and _close(p.y1, target_p.y1)
             )
             if not same_column_or_row:
                 continue
             siblings.append(ax)
 
             current = p.width if match_width else p.height
-            if isclose(current, final_size, abs_tol=1e-9):
+            if _close(current, final_size):
                 continue
 
             ax.set_axes_locator(None)
             if match_width:
-                new_x0 = p.x0 if position == "right" else p.x1 - final_size
+                new_x0 = _anchored_start(p, position, final_size)
                 ax.set_position([new_x0, p.y0, final_size, p.height])
             else:
-                new_y0 = p.y0 if position == "top" else p.y1 - final_size
+                new_y0 = _anchored_start(p, position, final_size)
                 ax.set_position([p.x0, new_y0, p.width, final_size])
     return siblings
 
@@ -330,9 +367,9 @@ def _shrink_spanning_edge_sharers(
     shrunk: list[Axes] = []
     for ax, p in zip(all_axes, all_positions):
         primary, opposite = _edges(p, position)
-        if not isclose(primary, edge, abs_tol=1e-9):
+        if not _close(primary, edge):
             continue
-        if any(isclose(opposite, edge_opposite, abs_tol=1e-9) for edge_opposite in edge_opposites):
+        if any(_close(opposite, edge_opposite) for edge_opposite in edge_opposites):
             continue
         ax.set_axes_locator(None)
         _shrink_from_edge(ax, p, position, amount)
@@ -397,7 +434,7 @@ def _make_colorbar_axes(
     # width, matching height across the group) against a "top"/"bottom" one shrinking
     # along y (height, matching width) -- every step below picks whichever of the two
     # matching (x, width, fig_width_in) / (y, height, fig_height_in) triples applies.
-    along_x = position in ("left", "right")
+    along_x = _is_vertical(position)
     fig_size_in = fig_width_in if along_x else fig_height_in
 
     if along_x:
@@ -411,26 +448,28 @@ def _make_colorbar_axes(
     requested_shrink = requested_thickness + padding / fig_size_in
     edge = group_hi if position in ("right", "top") else group_lo
 
-    edge_axes = [(ax, p) for ax, p in zip(axes, positions) if isclose(_edges(p, position)[0], edge, abs_tol=1e-9)]
+    edge_axes = [(ax, p) for ax, p in zip(axes, positions) if _close(_edges(p, position)[0], edge)]
 
-    existing = max((r for ax, _ in edge_axes if (r := _get_reservation(ax, position)) is not None), key=lambda r: r["shrink"], default=None)
-    existing_shrink = existing["shrink"] if existing else 0.0
-    existing_thickness = existing["thickness"] if existing else 0.0
-    existing_caxes = existing["caxes"] if existing else []
-    outer_edge = existing["edge"] if existing else edge
+    # with no margin reserved yet on this side, start from an empty one at the group's own edge
+    existing = max(
+        (r for ax, _ in edge_axes if (r := _get_reservation(ax, position)) is not None),
+        key=lambda r: r.shrink,
+        default=_Reservation(edge=edge, shrink=0.0, thickness=0.0, caxes=[]),
+    )
+    outer_edge = existing.edge
 
-    final_thickness = max(requested_thickness, existing_thickness)
-    final_shrink = max(requested_shrink, existing_shrink)
-    incremental = final_shrink - existing_shrink
+    final_thickness = max(requested_thickness, existing.thickness)
+    final_shrink = max(requested_shrink, existing.shrink)
+    incremental = final_shrink - existing.shrink
 
     for ax, _ in edge_axes:
         # a ZoomInset's Axes has a locator (from inset_axes()) that recomputes its
         # position on every render, overriding set_position() below -- clear it first
         ax.set_axes_locator(None)
-    margin = max((_decoration_margin(ax, figure, position, p) for ax, p in edge_axes), default=0.0)
+    margin = max((_decoration_margin(ax, position, p) for ax, p in edge_axes), default=0.0)
 
     siblings: list[Axes] = []
-    if incremental > 1e-9:
+    if incremental > _TOL:
         for ax, p in edge_axes:
             _shrink_from_edge(ax, p, position, incremental)
 
@@ -440,7 +479,7 @@ def _make_colorbar_axes(
         # then match the colorbar to the actual final size, not the pre-shrink one
         edge_ax_set = {ax for ax, _ in edge_axes}
         final_cross = max((ax.get_position().height if along_x else ax.get_position().width) for ax in edge_ax_set)
-        _resize_others_to_match(axes, positions, edge_ax_set, final_cross, position, vertical=along_x)
+        _resize_others_to_match(axes, positions, edge_ax_set, final_cross, position)
 
         # keep the rest of the canvas's grid aligned with this now-shrunk group, so a
         # colorbar on only one row/column doesn't leave the others too wide/tall
@@ -462,12 +501,12 @@ def _make_colorbar_axes(
         cax_y0 = outer_edge + margin - final_thickness if position == "top" else outer_edge - margin
         new_cax = figure.add_axes([final_cross_lo, cax_y0, final_cross_hi - final_cross_lo, final_thickness])
 
-    if final_thickness > existing_thickness + 1e-9:
-        for old_cax in existing_caxes:
+    if final_thickness > existing.thickness + _TOL:
+        for old_cax in existing.caxes:
             _grow_existing_cax(old_cax, position, final_thickness)
-    all_caxes = [*existing_caxes, new_cax]
+    reservation = _Reservation(edge=outer_edge, shrink=final_shrink, thickness=final_thickness, caxes=[*existing.caxes, new_cax])
     for ax in [*axes, *siblings]:
-        _stamp_reservation(ax, position, outer_edge, final_shrink, final_thickness, all_caxes)
+        _stamp_reservation(ax, position, reservation)
 
     return new_cax
 
@@ -565,7 +604,7 @@ class Colorbar:
                 raise ValueError(f"'{plot_n}' must resolve to consecutive subplot indices for a colorbar.")
             axes = [canvas.axes[i] for i in indices]
 
-        orientation = "vertical" if position in ("left", "right") else "horizontal"
+        orientation = "vertical" if _is_vertical(position) else "horizontal"
         cax = _make_colorbar_axes(canvas.figure, axes, canvas.axes, position, size, padding)
         _mark_colorbar_touched(canvas.figure)
 

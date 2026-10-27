@@ -56,11 +56,6 @@ def page_path(module: str) -> Path:
     return API / f"{short.replace('.', '-')}.md"
 
 
-def anchor(text: str) -> str:
-    clean = text.lower().replace("`", "").replace(".", "")
-    return "-".join(part for part in clean.replace("_", "-").split() if part)
-
-
 def escape_markdown(text: str) -> str:
     return text.replace("|", r"\|").replace("[", r"\[").replace("]", r"\]")
 
@@ -152,10 +147,6 @@ def signature(name: str, node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
     if node.returns is not None:
         result += f" -> {ast.unparse(node.returns)}"
     return result
-
-
-def display_name(name: str) -> str:
-    return name.strip("_") or name
 
 
 def class_bases(node: ast.ClassDef) -> str:
@@ -254,7 +245,7 @@ def render_page(page: Page) -> str:
                 for method in methods:
                     parts.extend(
                         [
-                            f"#### `{display_name(method.name)}`",
+                            f"#### `{method.name}`",
                             "",
                             "```python",
                             signature(method.name, method),

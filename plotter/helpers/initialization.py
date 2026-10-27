@@ -1,4 +1,5 @@
 from importlib import resources
+from importlib.resources.abc import Traversable
 from json import dumps, load
 from logging.config import dictConfig
 from pathlib import Path
@@ -19,10 +20,7 @@ def setup_workspace(base_path: Path | str | None = None) -> None:
             likely results in import errors later on.
     """
     # get plotter/ directory
-    if base_path is None:
-        base_path = Path.cwd()
-    elif not isinstance(base_path, Path):
-        base_path = Path(base_path or ".")
+    base_path = Path.cwd() if base_path is None else Path(base_path)
 
     parent_dir = base_path / "plotter"
     if not parent_dir.exists():
@@ -38,27 +36,12 @@ def setup_workspace(base_path: Path | str | None = None) -> None:
 
     # define in and out directories
     data_dir = resources.files("plotter") / "data"
-    info_dir = data_dir / "info"
-    destination = parent_dir / "utils"
-    destination_info = parent_dir / "utils/info"
     text_destination = parent_dir / "text/text_example.json"
     log_destination = parent_dir / "log/plotter.log"
 
-    # retrieve package data
-    data_files = (f for f in data_dir.iterdir() if f.name != ".DS_Store" and f.is_file())
-    info_files = (f for f in info_dir.iterdir() if f.name != ".DS_Store" and f.is_file())
-
-    # copy files to plotter/utils/, without overwriting any the user may have customized
-    for f in data_files:
-        f_destination = destination / f.name
-        if not f_destination.exists():
-            f_destination.write_bytes(f.read_bytes())
-
-    # copy files to plotter/utils/info/, same rule
-    for f in info_files:
-        f_destination = destination_info / f.name
-        if not f_destination.exists():
-            f_destination.write_bytes(f.read_bytes())
+    # copy package data to plotter/utils/ and plotter/utils/info/
+    _copy_missing(data_dir, parent_dir / "utils")
+    _copy_missing(data_dir / "info", parent_dir / "utils/info")
 
     # generate text_example.json from the drawable registry, unless already present
     if not text_destination.exists():
@@ -72,6 +55,23 @@ def setup_workspace(base_path: Path | str | None = None) -> None:
 
     # matplotlib style
     use(parent_dir / "utils/style.mplstyle")
+
+
+def _copy_missing(source_dir: Traversable, destination_dir: Path) -> None:
+    """
+    Copies every file of `source_dir` (but `.DS_Store`) into `destination_dir`, skipping
+    files already there, so a user's customized copies are never overwritten.
+
+    Args:
+        source_dir (Traversable): The bundled package directory to copy from.
+        destination_dir (pathlib.Path): The workspace directory to copy into.
+    """
+    for f in source_dir.iterdir():
+        if f.name == ".DS_Store" or not f.is_file():
+            continue
+        f_destination = destination_dir / f.name
+        if not f_destination.exists():
+            f_destination.write_bytes(f.read_bytes())
 
 
 def _setup_logging(plotter_dir: Path) -> None:

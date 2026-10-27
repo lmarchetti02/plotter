@@ -138,7 +138,7 @@ class Text:
             logger.warning(f"JSON file not found. Creating {file_path}.")
 
             self.set_empty()
-            file_path.write_text(dumps([text.to_dict() for text in self.subplots_text], indent=2))
+            file_path.write_text(dumps(PlotText.get_empty_json(self.n_plots), indent=2))
 
         except (JSONDecodeError, TypeError) as _:
             logger.warning(f"Could not parse JSON file {file_path}. Canvas will not display any text.")

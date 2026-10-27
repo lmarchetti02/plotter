@@ -8,7 +8,6 @@ from pydantic.dataclasses import dataclass
 from ..canvas import Canvas, ZoomInset
 from .drawable import Drawable
 from ._error_bar_style import _ErrorBarStyle, _errors_match, _to_mpl_errors
-from ._line_style import _LineStyle
 from ..helpers import ErrorBars, NArray1D
 
 logger = getLogger(__name__)
@@ -107,7 +106,6 @@ class ScatterPlot(Drawable):
             canvas,
             plot_n,
             label,
-            self.label_name,
             logger,
             "No label for the scatter plot in the json file.",
         )
@@ -134,17 +132,16 @@ class ScatterPlot(Drawable):
         )
 
         if kwargs.get("line", False):
-            line_style = _LineStyle.from_kwargs(kwargs, color=marker_color, width=1.5, style="-", alpha=marker_alpha)
             canvas.axes[plot_n].plot(
                 self.x,
                 self.y,
-                color=line_style.color,
-                lw=line_style.width,
-                ls=line_style.style,
-                alpha=line_style.alpha,
+                color=kwargs.get("line_color", marker_color),
+                lw=kwargs.get("line_width", 1.5),
+                ls=kwargs.get("line_style", "-"),
+                alpha=kwargs.get("line_alpha", marker_alpha),
                 zorder=1,  # behind the markers (zorder=2)
             )
 
         logger.debug(f"ScatterPlot {n} drawn")
 
-        getattr(canvas.counters, self.label_name)[plot_n] += 1
+        self._increment_counter(canvas, plot_n)

@@ -89,7 +89,7 @@ class FunctionPlot(Drawable):
             ValueError: If `density` is less than 1.
             ValueError: If `left` or `right` are less than 0.
         """
-        logger.info("Called 'widen_interval()'")
+        logger.info("Called 'FunctionPlot._make_wider()'")
 
         if density < 1:
             raise ValueError("The density cannot take values less than 1")
@@ -101,14 +101,13 @@ class FunctionPlot(Drawable):
         data_max = np.max(data)
         delta = data_max - data_min
 
-        wider_data = np.array(data, copy=True, dtype=np.float64)
-        if left != 0:
-            wider_data = np.insert(wider_data, 0, data_min - left * delta)
-
-        if right != 0:
-            wider_data = wider_data[::-1]
-            wider_data = np.insert(wider_data, 0, data_max + right * delta)
-            wider_data = wider_data[::-1]
+        wider_data = np.concatenate(
+            (
+                [data_min - left * delta] if left != 0 else [],
+                np.array(data, copy=True, dtype=np.float64),
+                [data_max + right * delta] if right != 0 else [],
+            )
+        )
 
         return FunctionPlot._make_denser(wider_data, density)
 
@@ -130,7 +129,7 @@ class FunctionPlot(Drawable):
         Returns:
             NArray1D[Any]: A new 1D numpy array with a higher density of elements.
         """
-        logger.info("Called 'denser()' function")
+        logger.info("Called 'FunctionPlot._make_denser()'")
 
         # trivial case
         if density == 1:

@@ -1217,6 +1217,10 @@ class Canvas:
         """This function generates the plot legend."""
         logger.info("Called 'Canvas._legend()'")
 
+        if self.counters.is_empty():
+            logger.debug("No labelled drawable on any subplot: no legend added.")
+            return
+
         with catch_warnings():
             # promote UserWarning to error, scoped to this block only, so an
             # unrelated UserWarning raised later (e.g. by savefig()) isn't affected
@@ -1228,9 +1232,7 @@ class Canvas:
                     continue
 
                 try:
-                    if not self.counters.is_empty():
-                        self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1, ncols=self._ncols_legend[i])
-
+                    self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1, ncols=self._ncols_legend[i])
                     logger.debug(f"Legend added to subplot {i}.")
                 except UserWarning:
                     logger.warning(f"Subplot {i} has an empty legend.")
@@ -1254,9 +1256,8 @@ class Canvas:
             # a ZoomInset panel's Axes have no subplotspec, so tight_layout() always warns
             # about them even though it correctly leaves them untouched
             filterwarnings("ignore", message="This figure includes Axes that are not compatible with tight_layout", category=UserWarning)
-            self.figure.tight_layout()
+            self.figure.tight_layout()  # resets the layout engine to "none" itself when done
 
-        self.figure.set_layout_engine("none")
         self._make_room_for_group_titles()
 
     def _group_axes(self, cols: tuple[int, int]) -> list[Axes]:

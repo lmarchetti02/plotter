@@ -26,16 +26,14 @@ class Drawable(ABC):
         """Returns the names of all supported drawable label groups."""
         return DRAWABLE_LABEL_NAMES
 
-    @staticmethod
-    def _get_label(canvas: "Canvas | ZoomInset", plot_n: int, label: str | None, name: str, logger: Logger, msg: str) -> tuple[int, str | None]:
+    def _get_label(self, canvas: "Canvas | ZoomInset", plot_n: int, label: str | None, logger: Logger, msg: str) -> tuple[int, str | None]:
         """
-        Retrieves the label associated with the drawable.
+        Retrieves the label of the drawable from its `label_name` family.
 
         Args:
             canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) the drawable is attached to.
             plot_n (int): The index of the subplot.
             label (str | None): An explicit user-provided label.
-            name (str): The name of the drawable.
             logger (Logger): The logger to use for warnings.
             msg (str): The warning to emit when no label can be found.
 
@@ -43,14 +41,18 @@ class Drawable(ABC):
             tuple[int, str | None]: The current drawable index and the resolved label.
         """
 
-        n = getattr(canvas.counters, name)[plot_n]
+        n = getattr(canvas.counters, self.label_name)[plot_n]
         try:
-            resolved_label = label if label else getattr(canvas.text[plot_n], name)[n]
+            resolved_label = label if label else getattr(canvas.text[plot_n], self.label_name)[n]
         except IndexError as _:
             resolved_label = None
             logger.warning(msg)
 
         return n, resolved_label
+
+    def _increment_counter(self, canvas: "Canvas | ZoomInset", plot_n: int) -> None:
+        """Counts one more drawable of this `label_name` family as drawn on subplot `plot_n`."""
+        getattr(canvas.counters, self.label_name)[plot_n] += 1
 
     @abstractmethod
     def draw(self, canvas: "Canvas | ZoomInset", plot_n: int = 0, **kwargs) -> None:

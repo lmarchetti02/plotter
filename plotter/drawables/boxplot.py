@@ -118,7 +118,6 @@ class BoxPlot(Drawable):
             canvas,
             plot_n,
             label,
-            self.label_name,
             logger,
             "No label for the box plot in the json file.",
         )
@@ -196,4 +195,4 @@ class BoxPlot(Drawable):
 
         logger.debug(f"BoxPlot {n} drawn")
 
-        getattr(canvas.counters, self.label_name)[plot_n] += 1
+        self._increment_counter(canvas, plot_n)
