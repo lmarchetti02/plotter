@@ -45,7 +45,8 @@ class Image(Drawable):
         if self.data.ndim == 3 and self.data.shape[2] not in [3, 4]:
             raise ValueError("The third axes must contain 3 (RGB) or 4 (RGBA) values.")
 
-        if not np.all(np.isreal(self.data)):
+        # a real dtype is real by construction: only complex data needs its imaginary part checked
+        if np.iscomplexobj(self.data) and np.any(np.imag(self.data) != 0):
             raise ValueError("The image data has to be real.")
 
     def draw(self, canvas: Canvas | ZoomInset, plot_n: int = 0, **kwargs) -> None:
