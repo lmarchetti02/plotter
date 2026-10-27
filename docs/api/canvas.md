@@ -198,7 +198,7 @@ Sets up the properties of the subplots.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to configure. Defaults to 'all'. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to configure (see `Canvas.plot_indices` for the accepted forms). Defaults to 'all'. |
 
 **Keyword Arguments:**
 
@@ -240,7 +240,7 @@ objects), which can then be built without a `text_file` at all.
 | Name | Type | Description |
 | --- | --- | --- |
 | `title` | str | The title to display. |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to title. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to title (see `Canvas.plot_indices` for the accepted forms). Defaults to 0. |
 
 **Raises:**
 
@@ -301,7 +301,7 @@ Draws horizontal and vertical lines on the canvas.
 | --- | --- | --- |
 | `orientation` | str | The orientation of the line. Use 'v' for vertical or 'h' for horizontal. |
 | `point` | float, optional | The coordinate of the line. Defaults to 0. |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to draw on (see `Canvas.plot_indices` for the accepted forms). Defaults to 0. |
 
 **Keyword Arguments:**
 
@@ -338,7 +338,7 @@ Draws a shaded horizontal or vertical band on the canvas.
 | `orientation` | str | The orientation of the band. Use 'v' for a vertical band (spanning between two x-coordinates) or 'h' for a horizontal band (spanning between two y-coordinates). |
 | `low` | float | The lower edge of the band. |
 | `high` | float | The upper edge of the band. |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to draw on (see `Canvas.plot_indices` for the accepted forms). Defaults to 0. |
 
 **Keyword Arguments:**
 
@@ -373,7 +373,7 @@ Adds a text label to the canvas.
 | --- | --- | --- |
 | `text` | str | The text to display. |
 | `position` | tuple\[float, float\] | The position of the text in data coordinates. |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to draw on (see `Canvas.plot_indices` for the accepted forms). Defaults to 0. |
 | `point` | tuple\[float, float\] \| None, optional | A point to annotate. When provided, an arrow is drawn from the text to this point. |
 
 **Keyword Arguments:**
@@ -409,7 +409,7 @@ Draws a single point on the canvas, with an optional nearby label.
 | --- | --- | --- |
 | `position` | tuple\[float, float\] | The (x, y) position of the point, in data coordinates. |
 | `label` | str, optional | Text to draw next to the point, offset from it by `label_offset`. Defaults to None (no label). |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to draw on. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to draw on (see `Canvas.plot_indices` for the accepted forms). Defaults to 0. |
 
 **Keyword Arguments:**
 
@@ -447,7 +447,7 @@ Sets the ticks of an axis to scientific notation.
 | Name | Type | Description |
 | --- | --- | --- |
 | `axis` | str | The axis to modify: 'x', 'y', or 'both'. |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to consider (see `Canvas.plot_indices` for the accepted forms). Defaults to 0. |
 | `limits` | tuple\[int, int\] or int, optional | Controls the scientific notation.<br>- `(m, n)`: Scientific notation is used for numbers outside 10^m to 10^n.<br>- `0`: Scientific notation is used for all numbers.<br>- `m`: Fixes the order of magnitude to 10^m. If only one int is passed, m=n is assumed. Defaults to (0, 0). |
 
 **Raises:**
@@ -474,7 +474,7 @@ Modifies the ticks of an axis.
 | `axis` | str | The axis to modify: 'x' or 'y'. |
 | `positions` | tuple\[float, ...\] | A tuple with the positions of the ticks. |
 | `labels` | tuple\[str, ...\], optional | A tuple with the labels for the ticks. If None, the labels will be the same as the positions. Defaults to None. |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to consider (see `Canvas.plot_indices` for the accepted forms). Defaults to 0. |
 
 **Raises:**
 
@@ -498,7 +498,7 @@ Removes the ticks (and their labels) from an axis.
 | Name | Type | Description |
 | --- | --- | --- |
 | `axis` | str | The axis to clear: 'x', 'y', or 'both'. |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to consider. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to consider (see `Canvas.plot_indices` for the accepted forms). Defaults to 0. |
 
 **Raises:**
 
@@ -523,7 +523,7 @@ Adds a scalebar (and, thus, removes the axis labels).
 | --- | --- | --- |
 | `size` | float | The horizontal size (in coordinates of axis). |
 | `label` | str | The label (e.g., "1 cm", "10 μm"). |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to target. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to target (see `Canvas.plot_indices` for the accepted forms). Defaults to 0. |
 
 **Keyword Arguments:**
 
@@ -559,7 +559,7 @@ via `some_drawable.draw(panel)`, exactly like a real `Canvas` subplot.
 | --- | --- | --- |
 | `xlim` | tuple\[float, float\] | The x-axis limits of the region to zoom into, in either order — each panel matches whichever direction (increasing or decreasing) its own source subplot's x-axis already has (e.g. an image drawn with the default `origin="upper"` has a decreasing y-axis). |
 | `ylim` | tuple\[float, float\] | The y-axis limits of the region to zoom into, same ordering behavior as `xlim`. |
-| `plot_n` | PlotN, optional | The index or indices of the subplots to zoom into. Defaults to 0. Options:<br>- int: The index of a single plot (e.g., 0, 1).<br>- str: 'all' to target all plots.<br>- tuple\[int, int\]: A range of plots to target, from `inf` to `sup` (inclusive).<br>- list\[int\]: An explicit, non-consecutive set of plot indices to target (e.g. \[0, 2\]). |
+| `plot_n` | PlotN, optional | The subplot(s) to zoom into (see `Canvas.plot_indices` for the accepted forms). Defaults to 0. |
 
 **Keyword Arguments:**
 

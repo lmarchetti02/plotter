@@ -116,7 +116,7 @@ class RawHist2D(Drawable):
         density (bool, optional): If `True`, the histogram is normalized
             such that the integral over the range is 1. Defaults to `False`.
         bin_vals (NArray2D[F64] or None): The array with the values corresponding to each bin.
-            It has shape (N_bins,).
+            It has shape (N_bins_X, N_bins_Y).
         xbins (NArray1D[F64] or None): The array with the edges of each x-bin (flattened).
             It has shape (N_bins_X+1,).
         ybins (NArray1D[F64] or None): The array with the edges of each y-bin (flattened).

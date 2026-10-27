@@ -673,14 +673,8 @@ class Canvas:
         Sets up the properties of the subplots.
 
         Args:
-            plot_n (PlotN, optional): The index or indices
-                of the subplots to configure. Defaults to 'all'. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to configure (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 'all'.
 
         Keyword Arguments:
             xlim (tuple[float, float]): The limits for the x-axis.
@@ -735,14 +729,8 @@ class Canvas:
 
         Args:
             title (str): The title to display.
-            plot_n (PlotN, optional): The index or indices
-                of the subplots to title. Defaults to 0. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to title (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 0.
 
         Raises:
             ValueError: If 'plot_n' is not a valid value.
@@ -804,14 +792,8 @@ class Canvas:
             orientation (str): The orientation of the line. Use 'v' for vertical
                 or 'h' for horizontal.
             point (float, optional): The coordinate of the line. Defaults to 0.
-            plot_n (PlotN, optional): The index or indices
-                of the subplots to draw on. Defaults to 0. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to draw on (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 0.
 
         Keyword Arguments:
             color (str): The color of the line. Defaults to 'black'.
@@ -841,14 +823,8 @@ class Canvas:
                 band (spanning between two y-coordinates).
             low (float): The lower edge of the band.
             high (float): The upper edge of the band.
-            plot_n (PlotN, optional): The index or indices
-                of the subplots to draw on. Defaults to 0. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to draw on (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 0.
 
         Keyword Arguments:
             color (str): The color of the band. Defaults to 'black'.
@@ -891,14 +867,8 @@ class Canvas:
             text (str): The text to display.
             position (tuple[float, float]): The position of the text in data
                 coordinates.
-            plot_n (PlotN, optional): The index or indices
-                of the subplots to draw on. Defaults to 0. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to draw on (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 0.
             point (tuple[float, float] | None, optional): A point to annotate.
                 When provided, an arrow is drawn from the text to this point.
 
@@ -941,14 +911,8 @@ class Canvas:
                 coordinates.
             label (str, optional): Text to draw next to the point, offset from it by
                 `label_offset`. Defaults to None (no label).
-            plot_n (PlotN, optional): The index or indices
-                of the subplots to draw on. Defaults to 0. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to draw on (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 0.
 
         Keyword Arguments:
             marker (str): The marker style. Defaults to 'o'.
@@ -1006,14 +970,8 @@ class Canvas:
 
         Args:
             axis (str): The axis to modify: 'x', 'y', or 'both'.
-            plot_n (PlotN, optional): The index or indices
-                of the subplots to consider. Defaults to 0. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to consider (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 0.
             limits (tuple[int, int] or int, optional): Controls the scientific
                 notation.
                 - `(m, n)`: Scientific notation is used for numbers outside
@@ -1048,14 +1006,8 @@ class Canvas:
             labels (tuple[str, ...], optional): A tuple with the labels for the
                 ticks. If None, the labels will be the same as the positions.
                 Defaults to None.
-            plot_n (PlotN, optional): The index or indices
-                of the subplots to consider. Defaults to 0. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to consider (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 0.
 
         Raises:
             ValueError: If the axis is not 'x' or 'y'.
@@ -1079,14 +1031,8 @@ class Canvas:
 
         Args:
             axis (str): The axis to clear: 'x', 'y', or 'both'.
-            plot_n (PlotN, optional): The index or indices
-                of the subplots to consider. Defaults to 0. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to consider (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 0.
 
         Raises:
             ValueError: If the axis is not 'x', 'y', or 'both'.
@@ -1107,14 +1053,8 @@ class Canvas:
         Args:
             size (float): The horizontal size (in coordinates of axis).
             label (str): The label (e.g., "1 cm", "10 μm").
-            plot_n (PlotN, optional): The index or indices
-                of the subplots to target. Defaults to 0. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to target (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 0.
 
         Keyword Arguments:
             location (str, tuple[float, float]): Where to put the scalebar.
@@ -1237,14 +1177,8 @@ class Canvas:
                 drawn with the default `origin="upper"` has a decreasing y-axis).
             ylim (tuple[float, float]): The y-axis limits of the region to zoom into,
                 same ordering behavior as `xlim`.
-            plot_n (PlotN, optional): The index or indices of the
-                subplots to zoom into. Defaults to 0. Options:
-                - int: The index of a single plot (e.g., 0, 1).
-                - str: 'all' to target all plots.
-                - tuple[int, int]: A range of plots to target, from
-                    `inf` to `sup` (inclusive).
-                - list[int]: An explicit, non-consecutive set of plot indices to
-                    target (e.g. [0, 2]).
+            plot_n (PlotN, optional): The subplot(s) to zoom into (see `Canvas.plot_indices`
+                for the accepted forms). Defaults to 0.
 
         Keyword Arguments:
             location (str): Where to place the inset panel. Defaults to "upper right".

@@ -32,44 +32,19 @@ def make_binned_hist2d() -> plt.BinnedHist2D:
 class TestDraw:
     """Tests for `Colorbar.draw`."""
 
-    def test_creates_a_colorbar_for_an_image_source(self, single_text_file, show_plots) -> None:
-        """A Colorbar attached to a single subplot should add one labeled Axes."""
+    @pytest.mark.parametrize("make_source", [make_image, make_hist2d, make_binned_hist2d])
+    def test_creates_a_labeled_colorbar_for_each_source_type(self, single_text_file, show_plots, make_source) -> None:
+        """A Colorbar attached to a single subplot should add one labeled Axes, for every source type."""
         with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
             canvas.setup()
-            image = make_image()
-            image.draw(canvas)
+            source = make_source()
+            source.draw(canvas)
 
-            colorbar = plt.Colorbar(source=image)
+            colorbar = plt.Colorbar(source=source)
             colorbar.draw(canvas, label="Intensity")
 
             assert len(canvas.figure.axes) == 2
             assert canvas.figure.axes[1].get_ylabel() == "Intensity"
-
-    def test_creates_a_colorbar_for_a_raw_hist2d_source(self, single_text_file, show_plots) -> None:
-        """A Colorbar should also work when its source is a RawHist2D."""
-        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
-            canvas.setup()
-            hist = make_hist2d()
-            hist.draw(canvas)
-
-            colorbar = plt.Colorbar(source=hist)
-            colorbar.draw(canvas, label="Density")
-
-            assert len(canvas.figure.axes) == 2
-            assert canvas.figure.axes[1].get_ylabel() == "Density"
-
-    def test_creates_a_colorbar_for_a_binned_hist2d_source(self, single_text_file, show_plots) -> None:
-        """A Colorbar should also work when its source is a BinnedHist2D."""
-        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
-            canvas.setup()
-            hist = make_binned_hist2d()
-            hist.draw(canvas)
-
-            colorbar = plt.Colorbar(source=hist)
-            colorbar.draw(canvas, label="Density")
-
-            assert len(canvas.figure.axes) == 2
-            assert canvas.figure.axes[1].get_ylabel() == "Density"
 
     def test_shares_a_colorbar_across_a_row(self, text_file, show_plots) -> None:
         """A single Colorbar drawn with row= should span all subplots in that row, not one per subplot."""
@@ -121,7 +96,7 @@ class TestDraw:
 
     def test_rejects_non_consecutive_plot_n(self, workspace, show_plots) -> None:
         """A colorbar's placement geometry has no meaning for a gapped subplot selection."""
-        with plt.Canvas("colorbar_non_consecutive_labels", (1, 3), show=show_plots) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=show_plots) as canvas:
             canvas.setup(plot_n="all")
             image = make_image()
             image.draw(canvas, plot_n=0)
@@ -349,7 +324,7 @@ class TestGridRealignment:
     def test_realigns_other_rows_to_match_a_row_colorbar(self, workspace, show_plots) -> None:
         """A colorbar on only one row of a 2x2 grid should shrink the untouched row's
         columns to match, not leave it wider than the row with the colorbar."""
-        with plt.Canvas("grid_row_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+        with plt.Canvas(rows_cols=(2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
             canvas.setup(plot_n="all")
             images = [make_image() for _ in range(4)]
             for i, image in enumerate(images):
@@ -382,7 +357,7 @@ class TestGridRealignment:
     def test_realigns_other_columns_to_match_a_column_colorbar(self, workspace, show_plots) -> None:
         """A 'top' colorbar on only one column of a 2x2 grid should shrink the other
         column's rows to match, row by row, not leave them taller than column 1."""
-        with plt.Canvas("grid_col_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+        with plt.Canvas(rows_cols=(2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
             canvas.setup(plot_n="all")
             images = [make_image() for _ in range(4)]
             for i, image in enumerate(images):
@@ -412,7 +387,7 @@ class TestGridRealignment:
     def test_does_not_realign_other_columns_for_a_column_colorbar(self, workspace, show_plots) -> None:
         """A 'right' colorbar on a whole column has no columns left to realign --
         every Axes sharing that column is already inside the target group."""
-        with plt.Canvas("grid_col_only_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+        with plt.Canvas(rows_cols=(2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
             canvas.setup(plot_n="all")
             images = [make_image() for _ in range(4)]
             for i, image in enumerate(images):
@@ -430,7 +405,7 @@ class TestGridRealignment:
     def test_realigns_only_the_shared_column_for_a_single_subplot_target(self, workspace, show_plots) -> None:
         """A colorbar on a single subplot should only realign the rest of its own
         column, leaving the other column untouched."""
-        with plt.Canvas("grid_single_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+        with plt.Canvas(rows_cols=(2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
             canvas.setup(plot_n="all")
             images = [make_image() for _ in range(4)]
             for i, image in enumerate(images):
@@ -459,7 +434,7 @@ class TestSharedMarginReuse:
         """Regression test: a second Colorbar on a sibling row used to shrink the grid
         a second time, since its own grid-realignment step treated the first
         colorbar's already-adjusted columns as the 'original' size to shrink from."""
-        with plt.Canvas("shared_margin_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+        with plt.Canvas(rows_cols=(2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
             canvas.setup(plot_n="all")
             images = [make_image() for _ in range(4)]
             for i, image in enumerate(images):
@@ -493,7 +468,7 @@ class TestSharedMarginReuse:
         """If a second colorbar on a sibling row needs more room than the first one
         reserved, the shared margin (and the first colorbar) should grow to fit it,
         rather than the two colorbars ending up different widths."""
-        with plt.Canvas("grow_margin_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+        with plt.Canvas(rows_cols=(2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
             canvas.setup(plot_n="all")
             images = [make_image() for _ in range(4)]
             for i, image in enumerate(images):
@@ -520,7 +495,7 @@ class TestSharedMarginReuse:
 
     def test_two_same_size_colorbars_on_different_columns_do_not_compound(self, workspace, show_plots) -> None:
         """Same as the row case, but for two 'top' colorbars on different columns."""
-        with plt.Canvas("shared_margin_col_labels", (2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
+        with plt.Canvas(rows_cols=(2, 2), figsize=(8.0, 8.0), show=show_plots) as canvas:
             canvas.setup(plot_n="all")
             images = [make_image() for _ in range(4)]
             for i, image in enumerate(images):

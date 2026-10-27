@@ -86,7 +86,7 @@ class TestCanvas:
 
     @pytest.mark.parametrize("rows_cols", [(0, 1), (1, 0), (-1, 1), (1, -1)])
     def test_rejects_non_positive_rows_or_columns(self, single_text_file: Path, rows_cols: tuple[int, int]) -> None:
-        """Zero or negative rows/columns should fail loudly instead of reaching `plt.subplots`."""
+        """Zero or negative rows/columns should fail loudly instead of reaching `Figure.subplot_mosaic`."""
         with pytest.raises(ValueError, match="must be at least 1"):
             plt.Canvas(str(single_text_file), rows_cols=rows_cols, show=False)
 
@@ -395,18 +395,18 @@ class TestPlotIndices:
         self, workspace: Path, plot_n: int | tuple[int, int] | list[int] | str, expected: list[int]
     ) -> None:
         """Each supported 'plot_n' form should resolve to its documented indices."""
-        with plt.Canvas("plot_indices_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             assert canvas.plot_indices(plot_n) == expected
 
     def test_rejects_duplicate_indices_in_a_list(self, workspace: Path) -> None:
         """A list 'plot_n' with repeated indices almost certainly signals a mistake."""
-        with plt.Canvas("plot_indices_labels_duplicate", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             with pytest.raises(ValueError, match="duplicate"):
                 canvas.plot_indices([0, 1, 0])
 
     def test_rejects_an_invalid_value(self, workspace: Path) -> None:
         """An unsupported 'plot_n' value should fail loudly."""
-        with plt.Canvas("plot_indices_labels_invalid", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             with pytest.raises(ValueError, match="not a valid value"):
                 canvas.plot_indices("first")
 
@@ -424,7 +424,7 @@ class TestPlotIndices:
         self, workspace: Path, row: int | None, col: int | None, expected: list[int]
     ) -> None:
         """'row'/'col' should resolve against the (row-major flattened) `rows_cols` grid."""
-        with plt.Canvas("plot_indices_row_col_labels", (2, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(2, 3), show=False) as canvas:
             assert canvas.plot_indices(row=row, col=col) == expected
 
     @pytest.mark.parametrize(
@@ -451,20 +451,20 @@ class TestPlotIndices:
 
     def test_rejects_more_than_one_of_plot_n_row_col(self, workspace: Path) -> None:
         """Ambiguous targeting (more than one of 'plot_n'/'row'/'col') should fail loudly."""
-        with plt.Canvas("plot_indices_ambiguous_labels", (2, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(2, 3), show=False) as canvas:
             with pytest.raises(ValueError, match="Exactly one of"):
                 canvas.plot_indices(plot_n=0, row=0)
 
     def test_rejects_none_of_plot_n_row_col(self, workspace: Path) -> None:
         """Targeting nothing at all should fail loudly rather than silently pick a default."""
-        with plt.Canvas("plot_indices_none_labels", (2, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(2, 3), show=False) as canvas:
             with pytest.raises(ValueError, match="Exactly one of"):
                 canvas.plot_indices()
 
     @pytest.mark.parametrize("row, col", [(2, None), (-1, None), (None, 3), (None, -1)])
     def test_rejects_an_out_of_range_row_or_col(self, workspace: Path, row: int | None, col: int | None) -> None:
         """A 'row'/'col' outside the `rows_cols` grid should fail loudly."""
-        with plt.Canvas("plot_indices_out_of_range_labels", (2, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(2, 3), show=False) as canvas:
             with pytest.raises(ValueError, match="must be between"):
                 canvas.plot_indices(row=row, col=col)
 
@@ -534,7 +534,7 @@ class TestSetup:
 
     def test_applies_to_a_range_of_subplots(self, workspace: Path) -> None:
         """A tuple plot_n should configure only the requested inclusive range."""
-        with plt.Canvas("setup_range_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             canvas.setup(plot_n=(0, 1), xlim=(0.0, 5.0))
 
             assert canvas.axes[0].get_xlim() == pytest.approx((0.0, 5.0))
@@ -798,7 +798,7 @@ class TestDrawLine:
 
     def test_can_draw_on_every_subplot_at_once(self, workspace: Path) -> None:
         """plot_n='all' should add the line to every subplot."""
-        with plt.Canvas("draw_line_all_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             canvas.setup()
 
             canvas.draw_line("h", point=1.5, plot_n="all", color="red")
@@ -838,7 +838,7 @@ class TestDrawBand:
 
     def test_can_draw_on_every_subplot_at_once(self, workspace: Path) -> None:
         """plot_n='all' should add the band to every subplot."""
-        with plt.Canvas("draw_band_all_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             canvas.setup()
 
             canvas.draw_band("h", low=1.0, high=2.0, plot_n="all", color="red")
@@ -887,7 +887,7 @@ class TestAddText:
 
     def test_can_add_text_to_a_range_of_subplots(self, workspace: Path) -> None:
         """A tuple plot_n should add the text to only the requested inclusive range."""
-        with plt.Canvas("add_text_range_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             canvas.setup()
 
             canvas.add_text("Note", position=(0.25, 0.75), plot_n=(0, 1))
@@ -986,7 +986,7 @@ class TestAddPoint:
 
     def test_can_draw_on_every_subplot_at_once(self, workspace: Path) -> None:
         """plot_n='all' should add the point to every subplot."""
-        with plt.Canvas("add_point_all_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             canvas.setup()
 
             canvas.add_point((1.0, 2.0), plot_n="all", color="red")
@@ -1007,7 +1007,7 @@ class TestTurnScientific:
 
     def test_can_apply_to_every_subplot_at_once(self, workspace: Path) -> None:
         """plot_n='all' should switch every subplot's axis to scientific notation."""
-        with plt.Canvas("turn_scientific_all_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             canvas.setup()
 
             canvas.turn_scientific("y", plot_n="all")
@@ -1041,7 +1041,7 @@ class TestSetTicks:
 
     def test_can_update_every_subplot_at_once(self, workspace: Path) -> None:
         """plot_n='all' should update the ticks of every subplot."""
-        with plt.Canvas("set_ticks_all_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             canvas.setup()
 
             canvas.set_ticks("x", (0.0, 1.0), labels=("left", "right"), plot_n="all")
@@ -1087,7 +1087,7 @@ class TestRemoveTicks:
 
     def test_can_clear_every_subplot_at_once(self, workspace: Path) -> None:
         """plot_n='all' should clear the ticks of every subplot."""
-        with plt.Canvas("remove_ticks_all_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             canvas.setup()
 
             canvas.remove_ticks("both", plot_n="all")
@@ -1114,7 +1114,7 @@ class TestAddScalebar:
 
     def test_can_add_a_scalebar_to_every_subplot_at_once(self, workspace: Path) -> None:
         """plot_n='all' should add a scalebar to every subplot."""
-        with plt.Canvas("add_scalebar_all_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             canvas.setup()
 
             canvas.add_scalebar(size=0.5, label="5 um", plot_n="all")
@@ -1272,7 +1272,7 @@ class TestAddZoomInset:
 
     def test_returns_one_panel_per_subplot_when_targeting_multiple(self, workspace: Path) -> None:
         """plot_n='all' should add an inset to every subplot and return one panel each."""
-        with plt.Canvas("add_zoom_inset_all_labels", (1, 3), show=False) as canvas:
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
             canvas.setup()
 
             insets = canvas.add_zoom_inset(xlim=(1.0, 2.0), ylim=(0.0, 1.0), plot_n="all")

@@ -11,27 +11,15 @@ familiar with the underlying plotting model.
 The current design revolves around:
 
 - a `Canvas` object, which owns the figure and axes and acts as a context manager;
-- drawable objects such as `ScatterPlot`, `LinePlot`, `FunctionPlot`, `BarChart`, `RawHist`,
-  `BinnedHist`, `RawHist2D`, `BinnedHist2D`, and `Image`;
+- drawable objects such as `ScatterPlot`, `LinePlot`, `FunctionPlot`, `BarChart`, `BoxPlot`,
+  `RawHist`, `BinnedHist`, `RawHist2D`, `BinnedHist2D`, and `Image`, plus an explicit
+  `Colorbar` for the last three;
 - optional JSON text files used to populate titles, axis labels, and legend labels.
 
 ## Installation
 
-On Unix-like systems:
-
-1. Clone the repository.
-2. Move into the project directory.
-3. Install the package:
-
-   ```bash
-   pip install .
-   ```
-
-4. Import it in Python:
-
-   ```python
-   import plotter
-   ```
+From the project root, run `pip install .`, then `import plotter` in Python. See the
+[Quickstart](https://lmarchetti02.github.io/plotter/quickstart/) for the full setup.
 
 ## Workspace Layout
 
@@ -56,8 +44,9 @@ These files have the following purposes:
 1. `plotter/img/` stores saved figures.
 2. `plotter/log/` stores log output.
 3. `plotter/text/` stores JSON files with plot titles, axis labels, and legend labels.
-   A subplot entry can include `scatter_plots`, `line_plots`, `bar_charts`,
-   `histograms`, `histograms_2d`, and `images`.
+   A subplot entry can include `title`, `x_label`, `y_label`, and the label lists
+   `scatter_plots`, `line_plots`, `bar_charts`, `box_plots`, and `histograms`.
+   `Image`, `RawHist2D`, and `BinnedHist2D` take no labels.
 4. `plotter/utils/` stores bundled helper assets and configuration files.
 
 ## Usage
@@ -66,35 +55,23 @@ These files have the following purposes:
 when the `with` block exits, Plotter finalizes the legend, saves the figure if requested, and
 shows or closes it depending on the canvas configuration.
 
-### Example
-
 ```python
 import numpy as np
 import plotter as p
 
 p.setup_workspace()
 
-
-def f(x):
-    return x**2
-
-
-# datasets to plot
 x = np.linspace(-5, 5, num=50)
 y = x**2
-y_err = np.full(50, 0.5)
-x_err = np.full(50, 0.2)
-categories = np.array([0.0, 1.0, 2.0])
-heights = np.array([2.0, 4.0, 3.0])
 
-with p.Canvas("example.json", rows_cols=(1, 2), show=False) as canvas:
-    canvas.setup(0)
-    canvas.setup(1)
-
-    p.ScatterPlot(x, y, y_err, x_err).draw(canvas, label="data")
-    p.FunctionPlot(x, f, wider=(0.01, 0.01)).draw(canvas, label=r"$f(x)=x^2$")
-    p.BarChart(categories, heights).draw(canvas, plot_n=1, label="counts")
+with p.Canvas("example.json", show=False) as canvas:
+    canvas.setup()
+    p.ScatterPlot(x, y, yerr=np.full(50, 0.5), xerr=np.full(50, 0.2)).draw(canvas, label="data")
+    p.FunctionPlot(x, lambda values: values**2, wider=(0.01, 0.01)).draw(canvas, label=r"$f(x)=x^2$")
 ```
+
+The [Quickstart](https://lmarchetti02.github.io/plotter/quickstart/) covers the JSON text-file
+format, custom layouts, and more.
 
 ### Available Drawables
 
@@ -102,11 +79,14 @@ with p.Canvas("example.json", rows_cols=(1, 2), show=False) as canvas:
 - `LinePlot`: explicit x/y line plots.
 - `FunctionPlot`: function plots over a (possibly widened/densified) domain.
 - `BarChart`: bar charts with optional y-error bars.
+- `BoxPlot`: groups of box-and-whisker plots.
 - `RawHist`: one-dimensional histograms computed from raw sample data.
 - `BinnedHist`: one-dimensional histograms drawn from already pre-computed bin values.
-- `RawHist2D`: two-dimensional histograms computed from raw sample data, with colorbars.
-- `BinnedHist2D`: two-dimensional histograms drawn from already pre-computed bin values, with colorbars.
-- `Image`: grayscale or RGB(A) image rendering.
+- `RawHist2D`: two-dimensional histograms computed from raw sample data (pair with `Colorbar` for a colorbar).
+- `BinnedHist2D`: two-dimensional histograms drawn from already pre-computed bin values (pair with `Colorbar` for a colorbar).
+- `Image`: grayscale or RGB(A) image rendering (pair with `Colorbar` for a colorbar).
+- `Colorbar`: an explicit colorbar for an already-drawn `RawHist2D`, `BinnedHist2D`, or `Image`,
+  attached to one subplot or shared across a row/column.
 
 All drawable classes inherit from `Drawable` and implement a `draw(canvas, ...)` method.
 

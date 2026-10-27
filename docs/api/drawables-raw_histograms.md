@@ -71,7 +71,7 @@ Class for creating a 2D histogram from raw sample data.
 | `y` | NArray1D\[Any\] | The array containing the y values to plot. |
 | `nbins` | int \| tuple \| list \| NArray2D | The number of bins for the histogram. It can be:<br>- an `int` for the same number of bins for both axes.<br>- a `tuple` or `list` of two ints for the number of bins for x and y respectively.<br>- a 2D array for the edges of the bins. |
 | `density` | bool, optional | If `True`, the histogram is normalized such that the integral over the range is 1. Defaults to `False`. |
-| `bin_vals` | NArray2D\[F64\] or None | The array with the values corresponding to each bin. It has shape (N_bins,). |
+| `bin_vals` | NArray2D\[F64\] or None | The array with the values corresponding to each bin. It has shape (N_bins_X, N_bins_Y). |
 | `xbins` | NArray1D\[F64\] or None | The array with the edges of each x-bin (flattened). It has shape (N_bins_X+1,). |
 | `ybins` | NArray1D\[F64\] or None | The array with the edges of each y-bin (flattened). It has shape (N_bins_Y+1,). |
 | `mappable` | QuadMesh or None | The mesh artist returned by `hist2d`, populated after `draw` runs. Pass it (via this `RawHist2D`) as a `Colorbar`'s `source`. |

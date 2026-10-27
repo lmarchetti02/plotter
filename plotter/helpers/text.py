@@ -113,7 +113,7 @@ class Text:
 
         Args:
             text_file (str): The name of the JSON file where the information about
-                the text to display on the calnvas is stored.
+                the text to display on the canvas is stored.
                 Note: The extension .json can be omitted.
         """
         logger.info("Called 'Text.read_json'")

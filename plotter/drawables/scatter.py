@@ -127,7 +127,7 @@ class ScatterPlot(Drawable):
             ms=kwargs.get("ms", 4.0),
             elinewidth=err_style.width,
             zorder=2,  # layer
-            ls="none",  # line size (none for disconnected dots)
+            ls="none",  # line style (none for disconnected dots)
             capsize=err_style.capsize,
             alpha=marker_alpha,
             label=label,

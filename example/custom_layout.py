@@ -73,9 +73,9 @@ def main() -> None:
         canvas.setup(plot_n=(0, 1))
         canvas.setup(plot_n=2, nogrid=True)
 
-        p.ScatterPlot(time_s, signal).draw(canvas, plot_n=0, markersize=3)
+        p.ScatterPlot(time_s, signal).draw(canvas, plot_n=0)
         p.LinePlot(time_s, model).draw(canvas, plot_n=0)
-        p.ScatterPlot(time_s, residuals).draw(canvas, plot_n=1, markersize=3)
+        p.ScatterPlot(time_s, residuals).draw(canvas, plot_n=1)
         canvas.draw_line("h", 0.0, plot_n=1)
 
         hist2d = p.RawHist2D(amplitude, amplitude_residuals, nbins=50)

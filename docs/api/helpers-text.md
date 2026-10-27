@@ -95,5 +95,5 @@ Parses data from the JSON file and stores it in the class attributes.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `text_file` | str | The name of the JSON file where the information about the text to display on the calnvas is stored. |
+| `text_file` | str | The name of the JSON file where the information about the text to display on the canvas is stored. |
 | `Note` | - | The extension .json can be omitted. |
