@@ -49,6 +49,24 @@ class TestDraw:
             assert_allclose(line.get_ydata(), x)  # type: ignore
             assert line.get_label() == "line"
 
+    def test_inverting_does_not_modify_the_plot_data(self, single_text_file, show_plots) -> None:
+        """Drawing with `inverted=True` twice should invert both lines, leaving `x`/`y` unchanged."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([0.0, 1.0, 4.0])
+
+        with plt.Canvas(str(single_text_file), show=show_plots) as canvas:
+            canvas.setup()
+            plot = plt.LinePlot(x, y)
+
+            plot.draw(canvas, inverted=True)
+            plot.draw(canvas, inverted=True)
+
+            for line in canvas.axes[0].lines:
+                assert_allclose(line.get_xdata(), y)  # type: ignore
+                assert_allclose(line.get_ydata(), x)  # type: ignore
+            assert_allclose(plot.x, x)
+            assert_allclose(plot.y, y)
+
     def test_alpha_defaults_to_opaque_and_is_overridable(self, single_text_file, show_plots) -> None:
         """The line should be fully opaque unless an `alpha` kwarg is given."""
         x = np.array([0.0, 1.0, 2.0])

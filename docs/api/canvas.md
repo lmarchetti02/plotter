@@ -183,6 +183,8 @@ of `n_cols`.
 | ValueError | If 'row' or 'col' is out of range for `rows_cols`. |
 | ValueError | If 'plot_n' is not a valid value. |
 | ValueError | If 'plot_n' is a list containing duplicate indices. |
+| ValueError | If 'plot_n' is a tuple whose start is after its end. |
+| ValueError | If 'plot_n' refers to a subplot outside `0` to `n_plots - 1`. |
 
 
 #### `setup`

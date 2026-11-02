@@ -25,6 +25,7 @@ Unlike `RawHist`, `bin_vals` and `bins` are the values to display directly, draw
 **Defined attributes:**
 
 - `label_name: ClassVar[str]`
+- `draw_kwargs: ClassVar[frozenset[str]]`
 - `bin_vals: NArray1D[Any]`
 - `bins: NArray1D[Any]`
 
@@ -57,6 +58,13 @@ Draws the histogram on the canvas.
 | `edgecolor` | str | The color of the histogram edges. Defaults to `"cornflowerblue"`. |
 | `lw` | float | The width of the histogram edges. Defaults to 0 if filled is `True`, else to 1.5. |
 
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `plot_n` is out of range for `canvas`. |
+| TypeError | If a keyword argument not listed above is given. |
+
 
 ## class `BinnedHist2D(Drawable)`
 
@@ -85,6 +93,7 @@ internally) -- no binning of raw samples takes place.
 
 **Defined attributes:**
 
+- `draw_kwargs: ClassVar[frozenset[str]]`
 - `bin_vals: NArray2D[Any]`
 - `xbins: NArray1D[Any]`
 - `ybins: NArray1D[Any]`
@@ -115,3 +124,10 @@ Draws the 2D histogram on the canvas.
 | `colormap` | str | The Matplotlib colormap to use for the histogram. Defaults to "plasma". |
 | `alpha` | float | The transparency of the histogram. Defaults to 1. |
 | `log` | bool or tuple\[bool, float\] | Controls the scale of the colormap.<br>- `bool`: `True` for a logarithmic scale, `False` for a linear one.<br>- `tuple`: `(False, _)` for a linear scale, `(True, 0)` for a logarithmic one, `(True, t)` for a 'symlog' scale that is linear within `(-t, t)`. Defaults to `False`. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `plot_n` is out of range for `canvas`. |
+| TypeError | If a keyword argument not listed above is given. |

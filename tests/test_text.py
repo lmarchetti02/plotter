@@ -9,12 +9,12 @@ from plotter.drawables.drawable import Drawable
 from plotter.helpers.text import PlotText, Text
 
 
-class TestGetEmpyText:
-    """Tests for `PlotText.get_empy_text`."""
+class TestGetEmptyText:
+    """Tests for `PlotText.get_empty_text`."""
 
     def test_returns_a_complete_placeholder(self) -> None:
         """The empty PlotText factory should populate every supported label collection."""
-        empty_text = PlotText.get_empy_text()
+        empty_text = PlotText.get_empty_text()
 
         assert empty_text.title == ""
         assert empty_text.x_label == ""
@@ -31,7 +31,7 @@ class TestSetEmpty:
         text = Text(3)
         text.set_empty()
 
-        assert text.subplots_text == [PlotText.get_empy_text() for _ in range(3)]
+        assert text.subplots_text == [PlotText.get_empty_text() for _ in range(3)]
 
 
 class TestReadJson:
@@ -64,7 +64,7 @@ class TestReadJson:
         text = Text(2)
         text.read_json(str(missing_file))
 
-        expected = [PlotText.get_empy_text(), PlotText.get_empy_text()]
+        expected = [PlotText.get_empty_text(), PlotText.get_empty_text()]
         assert missing_file.exists()
         assert text.subplots_text == expected
         assert missing_file.read_text() == dumps([subplot.to_dict() for subplot in expected], indent=2)
@@ -84,7 +84,7 @@ class TestReadJson:
         text = Text(2)
         text.read_json(str(corrupted_file))
 
-        assert text.subplots_text == [PlotText.get_empy_text(), PlotText.get_empy_text()]
+        assert text.subplots_text == [PlotText.get_empty_text(), PlotText.get_empty_text()]
 
     def test_raises_when_json_contains_the_wrong_number_of_subplots(
         self,

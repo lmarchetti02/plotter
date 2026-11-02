@@ -20,6 +20,7 @@ Class for creating a 1D histogram from raw sample data.
 **Defined attributes:**
 
 - `label_name: ClassVar[str]`
+- `draw_kwargs: ClassVar[frozenset[str]]`
 - `data: NArray1D[Any]`
 - `nbins: int | NArray1D[Any] | str`
 - `density: bool`
@@ -57,6 +58,13 @@ Draws the histogram on the canvas.
 | `edgecolor` | str | The color of the histogram edges. Defaults to `"cornflowerblue"`. |
 | `lw` | float | The width of the histogram edges. Defaults to 0 if filled is `True`, else to 1.5. |
 
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `plot_n` is out of range for `canvas`. |
+| TypeError | If a keyword argument not listed above is given. |
+
 
 ## class `RawHist2D(Drawable)`
 
@@ -79,6 +87,7 @@ Class for creating a 2D histogram from raw sample data.
 
 **Defined attributes:**
 
+- `draw_kwargs: ClassVar[frozenset[str]]`
 - `x: NArray1D[Any]`
 - `y: NArray1D[Any]`
 - `nbins: int | tuple[int, int] | list[int] | NArray2D[Any]`
@@ -114,3 +123,10 @@ Draws the 2D histogram on the canvas.
 | `colormap` | str | The Matplotlib colormap to use for the histogram. Defaults to "plasma". |
 | `alpha` | float | The transparency of the histogram. Defaults to 1. |
 | `log` | bool or tuple\[bool, float\] | Controls the scale of the colormap.<br>- `bool`: `True` for a logarithmic scale, `False` for a linear one.<br>- `tuple`: `(False, _)` for a linear scale, `(True, 0)` for a logarithmic one, `(True, t)` for a 'symlog' scale that is linear within `(-t, t)`. Defaults to `False`. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `plot_n` is out of range for `canvas`. |
+| TypeError | If a keyword argument not listed above is given. |

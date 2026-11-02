@@ -26,6 +26,7 @@ class LinePlot(Drawable):
     """
 
     label_name: ClassVar[str] = "line_plots"
+    draw_kwargs: ClassVar[frozenset[str]] = frozenset({"color", "lw", "style", "alpha", "inverted"})
 
     x: NArray1D[Any]
     y: NArray1D[Any]
@@ -70,13 +71,18 @@ class LinePlot(Drawable):
             alpha (float): The opacity of the line. Defaults to 1.0.
             inverted (bool): If `True`, plots the inverse function.
                 Defaults to `False`.
+
+        Raises:
+            ValueError: If `plot_n` is out of range for `canvas`.
+            TypeError: If a keyword argument not listed above is given.
         """
 
         logger.info("Called 'LinePlot.draw()'")
 
-        # exchange x and y
-        if kwargs.get("inverted", False):
-            self.x, self.y = self.y, self.x
+        self._check_draw_args(canvas, plot_n, kwargs)
+
+        # exchange x and y (locally, so the object's own data is left untouched)
+        x, y = (self.y, self.x) if kwargs.get("inverted", False) else (self.x, self.y)
 
         n, label = self._get_label(
             canvas,
@@ -87,8 +93,8 @@ class LinePlot(Drawable):
         )
 
         canvas.axes[plot_n].plot(
-            self.x,
-            self.y,
+            x,
+            y,
             color=kwargs.get("color", "darkgreen"),
             zorder=1,
             lw=kwargs.get("lw", 1.5),

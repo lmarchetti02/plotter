@@ -34,6 +34,7 @@ class RawHist(Drawable):
     """
 
     label_name: ClassVar[str] = "histograms"
+    draw_kwargs: ClassVar[frozenset[str]] = frozenset({"bin_ranges", "color", "alpha", "filled", "edgecolor", "lw"})
 
     data: NArray1D[Any]
     nbins: int | NArray1D[Any] | str = "auto"
@@ -66,9 +67,15 @@ class RawHist(Drawable):
             edgecolor (str): The color of the histogram edges. Defaults to `"cornflowerblue"`.
             lw (float): The width of the histogram edges. Defaults to 0 if filled is `True`,
                 else to 1.5.
+
+        Raises:
+            ValueError: If `plot_n` is out of range for `canvas`.
+            TypeError: If a keyword argument not listed above is given.
         """
 
         logger.info("Called 'RawHist.draw()'")
+
+        self._check_draw_args(canvas, plot_n, kwargs)
 
         n, label = self._get_label(
             canvas,
@@ -124,6 +131,8 @@ class RawHist2D(Drawable):
             after `draw` runs. Pass it (via this `RawHist2D`) as a `Colorbar`'s `source`.
     """
 
+    draw_kwargs: ClassVar[frozenset[str]] = frozenset({"bin_ranges", "colormap", "alpha", "log"})
+
     x: NArray1D[Any]
     y: NArray1D[Any]
     nbins: int | tuple[int, int] | list[int] | NArray2D[Any]
@@ -155,9 +164,15 @@ class RawHist2D(Drawable):
                 - `tuple`: `(False, _)` for a linear scale, `(True, 0)` for a logarithmic
                   one, `(True, t)` for a 'symlog' scale that is linear within `(-t, t)`.
                 Defaults to `False`.
+
+        Raises:
+            ValueError: If `plot_n` is out of range for `canvas`.
+            TypeError: If a keyword argument not listed above is given.
         """
 
         logger.info("Called 'RawHist2D.draw()'")
+
+        self._check_draw_args(canvas, plot_n, kwargs)
 
         normalization = resolve_log_normalization(kwargs.get("log", False))
 

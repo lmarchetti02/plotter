@@ -30,6 +30,11 @@ class BarChart(Drawable):
     """
 
     label_name: ClassVar[str] = "bar_charts"
+    draw_kwargs: ClassVar[frozenset[str]] = frozenset(
+        {
+            "bottom", "width", "color", "alpha", "err_color", "err_width", "err_capsize", "lw", "edgecolor"
+        }
+    )
 
     x: NArray1D[Any]
     heights: NArray1D[Any]
@@ -79,9 +84,15 @@ class BarChart(Drawable):
             err_capsize (float): The size of the error bar ticks. Defaults to 3.
             lw (float): The width of the bar edges. Defaults to 0.
             edgecolor (str): The color of the bar edges. Defaults to "midnightblue".
+
+        Raises:
+            ValueError: If `plot_n` is out of range for `canvas`.
+            TypeError: If a keyword argument not listed above is given.
         """
 
         logger.info("Called 'BarChart.draw()'")
+
+        self._check_draw_args(canvas, plot_n, kwargs)
 
         n, label = self._get_label(
             canvas,

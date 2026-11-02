@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -31,6 +31,8 @@ class Image(Drawable):
         ValueError: If the third dimension of a 3D array is not 3 or 4.
         ValueError: If the data is not real.
     """
+
+    draw_kwargs: ClassVar[frozenset[str]] = frozenset({"colormap", "log", "v_range", "aspect", "origin", "limits"})
 
     data: NArray2D[Any] | NArray3D[Any]
 
@@ -77,9 +79,15 @@ class Image(Drawable):
                 `ZoomInset` with `limits` left as `None`, `data` is instead expected to
                 be the same full-resolution array shown on the source subplot: it gets
                 automatically cropped and placed to match the panel's requested region.
+
+        Raises:
+            ValueError: If `plot_n` is out of range for `canvas`.
+            TypeError: If a keyword argument not listed above is given.
         """
 
         logger.info("Called 'Image.draw()'")
+
+        self._check_draw_args(canvas, plot_n, kwargs)
 
         v_range = kwargs.get("v_range", (None, None))
         # vmin/vmax must be set on the norm itself: matplotlib rejects passing a

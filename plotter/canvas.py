@@ -1,7 +1,7 @@
 from logging import getLogger
 from pathlib import Path
 from typing import Literal
-from warnings import catch_warnings, filterwarnings, simplefilter
+from warnings import catch_warnings, filterwarnings
 
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
@@ -341,14 +341,6 @@ class _Counters:
         except KeyError as exc:
             raise AttributeError(name) from exc
 
-    def is_empty(self) -> bool:
-        """Checks if there is any label that should be displayed."""
-        for value in self._values.values():
-            if sum(value):  # at least a label
-                return False
-
-        return True
-
     @classmethod
     def initialize_counters(cls, n_plots: int) -> "_Counters":
         """Initializes an object filled with zeros."""
@@ -600,7 +592,7 @@ class Canvas:
 
         # show plot
         if not self.show:
-            plt.close()
+            plt.close(self.figure)
             return
 
         plt.show()
@@ -637,6 +629,8 @@ class Canvas:
             ValueError: If 'row' or 'col' is out of range for `rows_cols`.
             ValueError: If 'plot_n' is not a valid value.
             ValueError: If 'plot_n' is a list containing duplicate indices.
+            ValueError: If 'plot_n' is a tuple whose start is after its end.
+            ValueError: If 'plot_n' refers to a subplot outside `0` to `n_plots - 1`.
         """
         n_rows, n_cols = self.rows_cols
         if sum(value is not None for value in (plot_n, row, col)) != 1:
@@ -652,21 +646,25 @@ class Canvas:
                 raise ValueError(f"'col' must be between 0 and {n_cols - 1}.")
             return [i for i, axes in enumerate(self.axes) if col in axes.get_subplotspec().colspan]
 
+        if isinstance(plot_n, str) and plot_n == "all":
+            return list(range(self._n_plots))
+
         if isinstance(plot_n, list):
             if len(set(plot_n)) != len(plot_n):
                 raise ValueError(f"'{plot_n}' contains duplicate indices.")
-            return sorted(plot_n)
-
-        if isinstance(plot_n, int):
-            limits = (plot_n, plot_n + 1)
-        elif isinstance(plot_n, str) and plot_n == "all":
-            limits = (0, self._n_plots)
+            indices = sorted(plot_n)
+        elif isinstance(plot_n, int) and not isinstance(plot_n, bool):  # bool is an int subclass
+            indices = [plot_n]
         elif isinstance(plot_n, tuple) and len(plot_n) == 2:
-            limits = (plot_n[0], plot_n[1] + 1)
+            if plot_n[0] > plot_n[1]:
+                raise ValueError(f"'{plot_n}' is not a valid range: its start is after its end.")
+            indices = list(range(plot_n[0], plot_n[1] + 1))
         else:
             raise ValueError(f"'{plot_n}' is not a valid value for 'plot_n'")
 
-        return list(range(*limits))
+        if not all(0 <= i < self._n_plots for i in indices):
+            raise ValueError(f"'plot_n' must be between 0 and {self._n_plots - 1}.")
+        return indices
 
     def setup(self, plot_n: PlotN = "all", **kwargs) -> None:
         """
@@ -1217,25 +1215,19 @@ class Canvas:
         """This function generates the plot legend."""
         logger.info("Called 'Canvas._legend()'")
 
-        if self.counters.is_empty():
-            logger.debug("No labelled drawable on any subplot: no legend added.")
-            return
+        for i in range(self._n_plots):
+            if self._no_legend[i]:
+                logger.debug(f"Legend disabled for subplot {i}.")
+                continue
 
-        with catch_warnings():
-            # promote UserWarning to error, scoped to this block only, so an
-            # unrelated UserWarning raised later (e.g. by savefig()) isn't affected
-            simplefilter("error", UserWarning)
+            # the same check `Axes.legend()` runs before warning about an empty legend
+            handles, _ = self.axes[i].get_legend_handles_labels()
+            if not handles:
+                logger.debug(f"Subplot {i} has no labelled artist: no legend added.")
+                continue
 
-            for i in range(self._n_plots):
-                if self._no_legend[i]:
-                    logger.debug(f"Legend disabled for subplot {i}.")
-                    continue
-
-                try:
-                    self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1, ncols=self._ncols_legend[i])
-                    logger.debug(f"Legend added to subplot {i}.")
-                except UserWarning:
-                    logger.warning(f"Subplot {i} has an empty legend.")
+            self.axes[i].legend(loc=self._loc_legend[i], labelspacing=1, ncols=self._ncols_legend[i])
+            logger.debug(f"Legend added to subplot {i}.")
 
     def _auto_layout(self) -> None:
         """

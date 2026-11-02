@@ -53,7 +53,7 @@ class PlotText:
         }
 
     @classmethod
-    def get_empy_text(cls) -> Self:
+    def get_empty_text(cls) -> Self:
         """
         Creates an empty object to use as blueprint to dump
         into a JSON file.
@@ -67,7 +67,7 @@ class PlotText:
     @classmethod
     def get_empty_json(cls, n_plots: int = 1) -> list[dict[str, str | list[str]]]:
         """Builds the default JSON payload for one or more empty subplots."""
-        return [cls.get_empy_text().to_dict() for _ in range(n_plots)]
+        return [cls.get_empty_text().to_dict() for _ in range(n_plots)]
 
 
 class Text:
@@ -105,7 +105,7 @@ class Text:
 
     def set_empty(self) -> None:
         """Fills every subplot with blank title, axis labels, and label lists."""
-        self.subplots_text = [PlotText.get_empy_text() for _ in range(self.n_plots)]
+        self.subplots_text = [PlotText.get_empty_text() for _ in range(self.n_plots)]
 
     def read_json(self, text_file: str) -> None:
         """

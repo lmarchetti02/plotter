@@ -24,6 +24,7 @@ Class for creating a bar chart.
 **Defined attributes:**
 
 - `label_name: ClassVar[str]`
+- `draw_kwargs: ClassVar[frozenset[str]]`
 - `x: NArray1D[Any]`
 - `heights: NArray1D[Any]`
 - `yerr: ErrorBars | None`
@@ -61,3 +62,10 @@ Draws the bar chart on the canvas.
 | `err_capsize` | float | The size of the error bar ticks. Defaults to 3. |
 | `lw` | float | The width of the bar edges. Defaults to 0. |
 | `edgecolor` | str | The color of the bar edges. Defaults to "midnightblue". |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `plot_n` is out of range for `canvas`. |
+| TypeError | If a keyword argument not listed above is given. |

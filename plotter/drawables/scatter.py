@@ -35,6 +35,12 @@ class ScatterPlot(Drawable):
     """
 
     label_name: ClassVar[str] = "scatter_plots"
+    draw_kwargs: ClassVar[frozenset[str]] = frozenset(
+        {
+            "color", "err_color", "marker", "ms", "err_width", "err_capsize", "alpha", "line", "line_color", "line_width", "line_style",
+            "line_alpha"
+        }
+    )
 
     x: NArray1D[Any]
     y: NArray1D[Any]
@@ -98,9 +104,15 @@ class ScatterPlot(Drawable):
             line_style (str): The Matplotlib style of the connecting line. Defaults to `"-"`.
             line_alpha (float): The opacity of the connecting line. Defaults to the points'
                 own `alpha`.
+
+        Raises:
+            ValueError: If `plot_n` is out of range for `canvas`.
+            TypeError: If a keyword argument not listed above is given.
         """
 
         logger.info("Called 'ScatterPlot.draw()'")
+
+        self._check_draw_args(canvas, plot_n, kwargs)
 
         n, label = self._get_label(
             canvas,

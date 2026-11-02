@@ -3,11 +3,11 @@
 from json import dumps
 from pathlib import Path
 from unittest.mock import patch
-from warnings import warn
 
 import matplotlib
 import numpy as np
 import pytest
+from matplotlib import pyplot
 from matplotlib.artist import Artist
 from matplotlib.colors import to_rgb
 from matplotlib.layout_engine import PlaceHolderLayoutEngine
@@ -42,18 +42,12 @@ class TestCounters:
     """Tests for `_Counters`."""
 
     def test_initializes_with_one_slot_per_subplot(self) -> None:
-        """Counters should start empty and track each drawable family independently."""
+        """Counters should start at zero, with one slot per subplot, for every drawable family."""
         counters = plt.canvas._Counters.initialize_counters(2)
 
         for name in plt.Drawable.get_label_names():
             assert getattr(counters, name) == [0, 0]
 
-        assert counters.is_empty()
-
-        counters.histograms[0] += 1
-        counters.scatter_plots[1] += 1
-
-        assert not counters.is_empty()
 
 
 class TestCanvas:
@@ -75,14 +69,18 @@ class TestCanvas:
 
         assert output_file.exists()
 
-    def test_exiting_does_not_leak_the_promoted_warnings_filter(self, single_text_file: Path) -> None:
-        """`_legend` promotes UserWarning to an error to detect empty legends; that must not
-        outlive the `with` block, or an unrelated later UserWarning (e.g. from `savefig`)
-        would incorrectly raise instead of just being emitted."""
-        with plt.Canvas(str(single_text_file), show=False) as canvas:
-            canvas.setup()
+    def test_exiting_closes_only_its_own_figure(self, workspace: Path) -> None:
+        """Exiting with show=False should close this canvas's figure, not whichever figure
+        pyplot considers current (here the second canvas's, created last)."""
+        first = plt.Canvas(show=False)
+        second = plt.Canvas(show=False)
 
-        warn("unrelated warning raised after the canvas context has exited", UserWarning)
+        with first:
+            pass
+
+        assert not pyplot.fignum_exists(first.figure.number)
+        assert pyplot.fignum_exists(second.figure.number)
+        pyplot.close(second.figure)
 
     @pytest.mark.parametrize("rows_cols", [(0, 1), (1, 0), (-1, 1), (1, -1)])
     def test_rejects_non_positive_rows_or_columns(self, single_text_file: Path, rows_cols: tuple[int, int]) -> None:
@@ -410,6 +408,25 @@ class TestPlotIndices:
             with pytest.raises(ValueError, match="not a valid value"):
                 canvas.plot_indices("first")
 
+    @pytest.mark.parametrize("plot_n", [3, -1, [0, 3], [-1, 0], (0, 3), (-1, 1)])
+    def test_rejects_an_out_of_range_plot_n(self, workspace: Path, plot_n: int | tuple[int, int] | list[int]) -> None:
+        """Every index 'plot_n' refers to must exist; negative ones are rejected like a negative row/col."""
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
+            with pytest.raises(ValueError, match="must be between 0 and 2"):
+                canvas.plot_indices(plot_n)
+
+    def test_rejects_a_reversed_range(self, workspace: Path) -> None:
+        """A tuple whose start is after its end would otherwise silently target nothing."""
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
+            with pytest.raises(ValueError, match="start is after its end"):
+                canvas.plot_indices((2, 0))
+
+    def test_rejects_a_bool(self, workspace: Path) -> None:
+        """`True` is an int subclass, but almost certainly not meant as subplot index 1."""
+        with plt.Canvas(rows_cols=(1, 3), show=False) as canvas:
+            with pytest.raises(ValueError, match="not a valid value"):
+                canvas.plot_indices(True)
+
     @pytest.mark.parametrize(
         "row, col, expected",
         [
@@ -512,6 +529,32 @@ class TestSetup:
                 plt.LinePlot(x=np.array([0.0, 1.0]), y=np.array([0.0, 1.0])).draw(canvas, plot_n=plot_i, label="line")
 
         assert all(axes.get_legend() is not None for axes in canvas.axes)
+
+    def test_draws_a_legend_for_labelled_reference_lines_alone(self, workspace: Path) -> None:
+        """A labelled `draw_line` should get a legend even when no drawable was drawn."""
+        with plt.Canvas(show=False) as canvas:
+            canvas.draw_line("h", 1.0, label="threshold")
+
+        assert canvas.axes[0].get_legend() is not None
+
+    def test_draws_a_legend_for_a_labelled_band_on_an_image(self, workspace: Path) -> None:
+        """An `Image` takes no label, but a labelled `draw_band` on top of it should still get a legend."""
+        with plt.Canvas(show=False) as canvas:
+            plt.Image(np.ones((4, 4))).draw(canvas)
+            canvas.draw_band("v", 1.0, 2.0, label="ROI")
+
+        assert canvas.axes[0].get_legend() is not None
+
+    def test_skips_subplots_without_labels_silently(self, workspace: Path) -> None:
+        """A subplot with nothing labelled should get no legend, and that is not worth a warning."""
+        # plotter's logger doesn't propagate to the root logger, so caplog can't see its records
+        with patch.object(plt.canvas.logger, "warning") as warning:
+            with plt.Canvas(rows_cols=(1, 2), show=False) as canvas:
+                plt.LinePlot(x=np.array([0.0, 1.0]), y=np.array([0.0, 1.0])).draw(canvas, plot_n=0, label="line")
+
+        assert canvas.axes[0].get_legend() is not None
+        assert canvas.axes[1].get_legend() is None
+        assert not [call for call in warning.call_args_list if "legend" in call.args[0]]
 
     def test_nolegend_removes_the_legend_only_from_the_targeted_subplots(self, text_file: Path) -> None:
         """'nolegend' should skip the legend on the given subplot and leave the others alone."""

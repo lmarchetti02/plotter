@@ -31,6 +31,7 @@ class BinnedHist(Drawable):
     """
 
     label_name: ClassVar[str] = "histograms"
+    draw_kwargs: ClassVar[frozenset[str]] = frozenset({"color", "alpha", "filled", "edgecolor", "lw"})
 
     bin_vals: NArray1D[Any]
     bins: NArray1D[Any]
@@ -60,9 +61,15 @@ class BinnedHist(Drawable):
             edgecolor (str): The color of the histogram edges. Defaults to `"cornflowerblue"`.
             lw (float): The width of the histogram edges. Defaults to 0 if filled is `True`,
                 else to 1.5.
+
+        Raises:
+            ValueError: If `plot_n` is out of range for `canvas`.
+            TypeError: If a keyword argument not listed above is given.
         """
 
         logger.info("Called 'BinnedHist.draw()'")
+
+        self._check_draw_args(canvas, plot_n, kwargs)
 
         n, label = self._get_label(
             canvas,
@@ -113,6 +120,8 @@ class BinnedHist2D(Drawable):
         ValueError: If `bin_vals.shape` doesn't equal `(len(xbins) - 1, len(ybins) - 1)`.
     """
 
+    draw_kwargs: ClassVar[frozenset[str]] = frozenset({"colormap", "alpha", "log"})
+
     bin_vals: NArray2D[Any]
     xbins: NArray1D[Any]
     ybins: NArray1D[Any]
@@ -142,9 +151,15 @@ class BinnedHist2D(Drawable):
                 - `tuple`: `(False, _)` for a linear scale, `(True, 0)` for a logarithmic
                   one, `(True, t)` for a 'symlog' scale that is linear within `(-t, t)`.
                 Defaults to `False`.
+
+        Raises:
+            ValueError: If `plot_n` is out of range for `canvas`.
+            TypeError: If a keyword argument not listed above is given.
         """
 
         logger.info("Called 'BinnedHist2D.draw()'")
+
+        self._check_draw_args(canvas, plot_n, kwargs)
 
         normalization = resolve_log_normalization(kwargs.get("log", False))
 

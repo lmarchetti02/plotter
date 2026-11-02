@@ -26,10 +26,10 @@ to_dict(self) -> dict[str, str | list[str]]
 Converts the object to a JSON-serializable dictionary.
 
 
-#### `get_empy_text`
+#### `get_empty_text`
 
 ```python
-get_empy_text(cls) -> Self
+get_empty_text(cls) -> Self
 ```
 
 Creates an empty object to use as blueprint to dump

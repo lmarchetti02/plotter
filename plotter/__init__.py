@@ -5,6 +5,8 @@ by Luca Marchetti
 A small Python library for plotting beautiful graphs.
 """
 
+from logging import NullHandler, getLogger
+
 from .canvas import Canvas, ZoomInset  # noqa: F401
 from .colorbar import Colorbar  # noqa: F401
 from .drawables.bars import BarChart  # noqa: F401
@@ -17,3 +19,6 @@ from .drawables.lines import LinePlot  # noqa: F401
 from .drawables.raw_histograms import RawHist, RawHist2D  # noqa: F401
 from .drawables.scatter import ScatterPlot  # noqa: F401
 from .helpers import get_colors, setup_workspace, stack_bottoms  # noqa: F401
+
+# silent until `setup_workspace()` configures plotter's own handlers: a library must not log by default
+getLogger(__name__).addHandler(NullHandler())

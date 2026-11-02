@@ -30,6 +30,7 @@ class FunctionPlot(Drawable):
     """
 
     label_name: ClassVar[str] = "line_plots"
+    draw_kwargs: ClassVar[frozenset[str]] = LinePlot.draw_kwargs  # forwarded to `LinePlot.draw`
 
     x: NArray1D[Any]
     f: Callable[[NArray1D[Any]], NArray1D[Any]]
@@ -61,9 +62,15 @@ class FunctionPlot(Drawable):
             alpha (float): The opacity of the line. Defaults to 1.0.
             inverted (bool): If `True`, plots the inverse function.
                 Defaults to `False`.
+
+        Raises:
+            ValueError: If `plot_n` is out of range for `canvas`.
+            TypeError: If a keyword argument not listed above is given.
         """
 
         logger.info("Called 'FunctionPlot.draw()'")
+
+        self._check_draw_args(canvas, plot_n, kwargs)
 
         LinePlot(self.x, self.y).draw(canvas, plot_n, label, **kwargs)
 

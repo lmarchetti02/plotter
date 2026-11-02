@@ -19,6 +19,7 @@ Class for creating a plot of a mathematical function to be drawn on a canvas.
 **Defined attributes:**
 
 - `label_name: ClassVar[str]`
+- `draw_kwargs: ClassVar[frozenset[str]]`
 - `x: NArray1D[Any]`
 - `f: Callable[[NArray1D[Any]], NArray1D[Any]]`
 - `wider: tuple[float, float]`
@@ -53,3 +54,10 @@ Draws the plot on the canvas.
 | `style` | str | The line style. Defaults to `"-"`. |
 | `alpha` | float | The opacity of the line. Defaults to 1.0. |
 | `inverted` | bool | If `True`, plots the inverse function. Defaults to `False`. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `plot_n` is out of range for `canvas`. |
+| TypeError | If a keyword argument not listed above is given. |

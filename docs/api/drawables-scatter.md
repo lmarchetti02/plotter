@@ -26,6 +26,7 @@ Class for creating a scatter plot with error bars.
 **Defined attributes:**
 
 - `label_name: ClassVar[str]`
+- `draw_kwargs: ClassVar[frozenset[str]]`
 - `x: NArray1D[Any]`
 - `y: NArray1D[Any]`
 - `yerr: ErrorBars | None`
@@ -94,3 +95,10 @@ Draws the scatter plot on the canvas.
 | `line_width` | float | The width of the connecting line. Defaults to 1.5. |
 | `line_style` | str | The Matplotlib style of the connecting line. Defaults to `"-"`. |
 | `line_alpha` | float | The opacity of the connecting line. Defaults to the points' own `alpha`. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `plot_n` is out of range for `canvas`. |
+| TypeError | If a keyword argument not listed above is given. |

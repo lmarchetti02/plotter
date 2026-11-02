@@ -22,6 +22,7 @@ Class for creating a line plot from raw (x, y) data to be drawn on a canvas.
 **Defined attributes:**
 
 - `label_name: ClassVar[str]`
+- `draw_kwargs: ClassVar[frozenset[str]]`
 - `x: NArray1D[Any]`
 - `y: NArray1D[Any]`
 
@@ -81,3 +82,10 @@ Draws the plot on the canvas.
 | `style` | str | The line style. Defaults to `"-"`. |
 | `alpha` | float | The opacity of the line. Defaults to 1.0. |
 | `inverted` | bool | If `True`, plots the inverse function. Defaults to `False`. |
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `plot_n` is out of range for `canvas`. |
+| TypeError | If a keyword argument not listed above is given. |

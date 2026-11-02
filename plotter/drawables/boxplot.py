@@ -35,6 +35,13 @@ class BoxPlot(Drawable):
     """
 
     label_name: ClassVar[str] = "box_plots"
+    draw_kwargs: ClassVar[frozenset[str]] = frozenset(
+        {
+            "color", "edgecolor", "alpha", "lw", "zorder", "patch_artist", "notch", "whis", "widths",
+            "median_color", "showmeans", "meanline", "mean_color", "showfliers", "tick_labels",
+            "orientation", "medianprops", "meanprops",
+        }
+    )  # fmt: skip
 
     data: list[NArray1D[Any]]
     positions: NArray1D[Any] | None = None
@@ -107,12 +114,16 @@ class BoxPlot(Drawable):
             The first `BoxPlot` drawn on a given subplot additionally labels its median
             and mean lines "Median"/"Mean" for the legend -- later groups on the same
             subplot skip this, since every group shares the same median/mean styling and
-            one legend entry is enough. Any other keyword argument accepted by
-            `Axes.boxplot` (e.g. `bootstrap`, `capwidths`, `flierprops`) is forwarded
-            straight through.
+            one legend entry is enough.
+
+        Raises:
+            ValueError: If `plot_n` is out of range for `canvas`.
+            TypeError: If a keyword argument not listed above is given.
         """
 
         logger.info("Called 'BoxPlot.draw()'")
+
+        self._check_draw_args(canvas, plot_n, kwargs)
 
         n, label = self._get_label(
             canvas,

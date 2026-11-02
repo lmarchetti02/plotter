@@ -1,5 +1,6 @@
 """Tests for package-level workspace initialization."""
 
+import logging
 from json import loads
 from pathlib import Path
 
@@ -57,3 +58,17 @@ class TestSetupWorkspace:
 
         text_example = tmp_path / "plotter" / "text" / "text_example.json"
         assert loads(text_example.read_text()) == PlotText.get_empty_json()
+
+    def test_leaves_the_root_logger_untouched(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Configuring plotter's logging must not change the calling application's root logger."""
+        root = logging.getLogger()
+        app_handler = logging.StreamHandler()
+        # monkeypatch restores the root logger's real level and handlers after the test
+        monkeypatch.setattr(root, "level", logging.INFO)
+        monkeypatch.setattr(root, "handlers", [app_handler])
+
+        plotter.setup_workspace(tmp_path)
+
+        assert root.level == logging.INFO
+        assert root.handlers == [app_handler]
+        assert root.isEnabledFor(logging.INFO)

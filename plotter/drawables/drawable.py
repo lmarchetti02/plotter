@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 # avoid importing Canvas at runtime
 if TYPE_CHECKING:
@@ -20,6 +20,7 @@ class Drawable(ABC):
     """Abstract base class for objects that can be drawn on a canvas."""
 
     label_name: ClassVar[str]
+    draw_kwargs: ClassVar[frozenset[str]]
 
     @staticmethod
     def get_label_names() -> tuple[str, ...]:
@@ -50,6 +51,31 @@ class Drawable(ABC):
 
         return n, resolved_label
 
+    def _check_draw_args(self, canvas: "Canvas | ZoomInset", plot_n: int, kwargs: dict[str, Any]) -> None:
+        """
+        Rejects an out-of-range `plot_n`, and the keyword arguments `draw()` doesn't use.
+
+        Args:
+            canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) being drawn on.
+            plot_n (int): The index of the subplot passed to `draw()`.
+            kwargs (dict[str, Any]): The keyword arguments passed to `draw()`.
+
+        Raises:
+            ValueError: If `plot_n` is not an integer between 0 and `len(canvas.axes) - 1`.
+            TypeError: If `kwargs` has a key not listed in `draw_kwargs`.
+        """
+
+        # bool is an int subclass; negative ints would silently index from the end
+        n_plots = len(canvas.axes)
+        if isinstance(plot_n, bool) or not isinstance(plot_n, int) or not 0 <= plot_n < n_plots:
+            raise ValueError(f"'plot_n' must be an integer between 0 and {n_plots - 1}, got {plot_n!r}.")
+
+        unknown = sorted(kwargs.keys() - self.draw_kwargs)
+        if unknown:
+            raise TypeError(
+                f"{type(self).__name__}.draw() got unexpected keyword argument(s) {unknown}; accepted ones are {sorted(self.draw_kwargs)}"
+            )
+
     def _increment_counter(self, canvas: "Canvas | ZoomInset", plot_n: int) -> None:
         """Counts one more drawable of this `label_name` family as drawn on subplot `plot_n`."""
         getattr(canvas.counters, self.label_name)[plot_n] += 1
@@ -62,10 +88,16 @@ class Drawable(ABC):
         Not every concrete drawable accepts the same keyword arguments -- see each
         subclass's own docstring. In particular, drawables that participate in label
         bookkeeping (see `Drawable.get_label_names`) additionally accept a `label`
-        keyword argument; `Image`, `RawHist2D`, and `BinnedHist2D` do not.
+        keyword argument; `Image`, `RawHist2D`, and `BinnedHist2D` do not. Each subclass
+        lists the keyword arguments it accepts in `draw_kwargs`, and its `draw()` raises
+        on any other one instead of silently ignoring it.
 
         Args:
             canvas (Canvas | ZoomInset): The canvas (or zoom-inset panel) to draw on.
             plot_n (int, optional): The index of the subplot to draw on.
                 Defaults to 0.
+
+        Raises:
+            ValueError: If `plot_n` is not an index of `canvas.axes`.
+            TypeError: If a keyword argument not listed in `draw_kwargs` is given.
         """

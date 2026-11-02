@@ -26,10 +26,6 @@
     }
   },
   "loggers": {
-    "": {
-      "level": "CRITICAL",
-      "handlers": ["stderr", "file"]
-    },
     "plotter": {
       "level": "DEBUG",
       "handlers": ["stderr", "file"],

@@ -24,6 +24,7 @@ Class for creating a group of box-and-whisker plots.
 **Defined attributes:**
 
 - `label_name: ClassVar[str]`
+- `draw_kwargs: ClassVar[frozenset[str]]`
 - `data: list[NArray1D[Any]]`
 - `positions: NArray1D[Any] | None`
 - `bxp: dict[str, list[Any]] | None`
@@ -75,6 +76,12 @@ Draws the group of boxes on the canvas.
 The first `BoxPlot` drawn on a given subplot additionally labels its median
 and mean lines "Median"/"Mean" for the legend -- later groups on the same
 subplot skip this, since every group shares the same median/mean styling and
-one legend entry is enough. Any other keyword argument accepted by
-`Axes.boxplot` (e.g. `bootstrap`, `capwidths`, `flierprops`) is forwarded
-straight through.
+one legend entry is enough.
+
+
+**Raises:**
+
+| Type | Description |
+| --- | --- |
+| ValueError | If `plot_n` is out of range for `canvas`. |
+| TypeError | If a keyword argument not listed above is given. |
